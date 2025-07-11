@@ -1,0 +1,27 @@
+# Railway deployment configuration
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python -m src.mcp.server"
+restartPolicyType = "always"
+healthcheckPath = "/"
+healthcheckTimeout = 10
+
+# Environment variables (will be overridden by Railway dashboard)
+[[envs]]
+name = "PORT"
+value = "8000"
+
+[[envs]]
+name = "LOG_LEVEL"
+value = "INFO"
+
+[[envs]]
+name = "MCP_SERVER_HOST"
+value = "0.0.0.0"
+
+[[envs]]
+name = "VECTOR_DB_TYPE"
+value = "faiss"
