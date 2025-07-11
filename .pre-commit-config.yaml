@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-json
+      - id: pretty-format-json
+        args: ['--autofix']
+      
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3
+        
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: ['--max-line-length=100', '--ignore=E203,W503']
+        
+  - repo: local
+    hooks:
+      - id: check-sensitive-files
+        name: Check for sensitive files
+        entry: bash -c 'git diff --cached --name-only | grep -E "(\.env|password|secret|key|token)" && echo "ERROR: Attempting to commit sensitive files!" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+        
+      - id: validate-no-credentials
+        name: Validate no hardcoded credentials
+        entry: bash -c 'git diff --cached --name-only --diff-filter=ACM | xargs grep -E "(api_key|api_secret|access_token|private_key|password)\s*=\s*[\"'\'']\w+" && echo "ERROR: Hardcoded credentials detected!" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false

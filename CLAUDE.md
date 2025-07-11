@@ -54,3 +54,19 @@ The application follows a modular architecture with three main components:
 - Vector index is persisted to disk and loaded on startup
 - MCP tools always return structured data with metadata
 - The system prompt ensures the LLM only uses knowledge base content
+
+## Security and Deployment Best Practices
+
+- Never check in sensitive files like .env
+- Before checking in, always validate that new files are not security-sensitive
+- Use git and GitHub CLI for version control
+- Use Railway CLI for automatic deployment
+- Create a Railway subdomain with Strunz
+- Always run tests locally before deploying to GitHub and Railway
+- After successful deployment, run tests on the cloud side
+- Log deployment success with Railway CLI
+- Create two environments:
+  - Local: Use 1Password CLI (`op`) 
+  - Create a 1Password project vault for local setup
+- Store production secrets in GitHub project secrets vault for Railway
+- Always check logs in Docker and Railway CLI
