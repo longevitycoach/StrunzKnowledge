@@ -69,6 +69,7 @@ data/processed/
 !README.md
 !CLAUDE.md
 !docs/*.md
+!deployment-log.md
 
 # Vector indices
 *.faiss
