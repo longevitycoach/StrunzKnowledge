@@ -280,6 +280,11 @@ app.mount("/mcp", mcp)
 
 def run_server(host: str = "0.0.0.0", port: int = 8000):
     """Run the MCP server."""
+    import os
+    
+    # Use Railway's PORT environment variable if available
+    port = int(os.environ.get('PORT', port))
+    
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
