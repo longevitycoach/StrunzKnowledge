@@ -91,7 +91,7 @@ tmp/
 temp/
 
 # Docker
-.dockerignore
+# (dockerignore is needed in repo)
 
 # Railway
 .railway/
