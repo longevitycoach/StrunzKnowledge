@@ -31,10 +31,16 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy application source code
 COPY src/ ./src/
-COPY config/ ./config/
+COPY main.py ./
+COPY start_server.py ./
+COPY config/ ./config/ 2>/dev/null || true
+
+# Copy data files (including FAISS indices)
+COPY data/faiss_indices/ ./data/faiss_indices/
+COPY data/processed/ ./data/processed/
 
 # Create necessary directories
-RUN mkdir -p data/raw data/processed data/processed/docling data/processed/faiss_index logs
+RUN mkdir -p data/raw data/processed/docling logs
 
 # Create a non-root user to run the application
 RUN useradd -m -u 1000 appuser && \
@@ -51,7 +57,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/').raise_for_status()"
 
 # Default command to run the MCP server
-CMD ["python", "-m", "src.mcp.server"]
+CMD ["python", "start_server.py"]
 
 # Labels for container metadata
 LABEL maintainer="Strunz Knowledge Base Team" \
