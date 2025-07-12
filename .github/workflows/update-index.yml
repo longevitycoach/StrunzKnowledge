@@ -1,0 +1,171 @@
+name: Update Knowledge Base Index
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC (3 AM CET / 4 AM CEST)
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      force_update:
+        description: 'Force update all indices'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  update-index:
+    name: Update FAISS Indices
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Check for new content
+        id: check_updates
+        run: |
+          echo "Checking for new content..."
+          python src/scripts/check_new_content.py
+          
+          # Set output based on whether updates are needed
+          if [ -f ".needs_update" ]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "Updates needed - proceeding with index update"
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "No new content found - skipping update"
+          fi
+      
+      - name: Scrape new news articles
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Scraping new news articles..."
+          python src/scrapers/news_scraper.py --update-only
+        env:
+          LOG_LEVEL: INFO
+      
+      - name: Process new content
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Processing new content..."
+          python src/rag/news_processor.py --update-only
+          
+          # Also check for new forum content if available
+          if [ -d "data/raw/forum/new" ]; then
+            python src/rag/forum_processor.py --update-only
+          fi
+      
+      - name: Update combined FAISS index
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Updating combined FAISS index..."
+          python src/rag/update_combined_index.py
+      
+      - name: Validate indices
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Validating updated indices..."
+          python src/scripts/validate_indices.py
+      
+      - name: Generate update report
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Generating update report..."
+          python src/scripts/generate_update_report.py > update_report.md
+          
+          # Add report to commit message
+          echo "UPDATE_REPORT<<EOF" >> $GITHUB_ENV
+          cat update_report.md >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      
+      - name: Commit and push changes
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          
+          # Add changed files
+          git add data/faiss_indices/
+          git add data/processed/
+          git add update_report.md
+          
+          # Commit with detailed message
+          git commit -m "chore: update FAISS indices [skip ci]" -m "$UPDATE_REPORT" || {
+            echo "No changes to commit"
+            exit 0
+          }
+          
+          # Push changes
+          git push
+      
+      - name: Trigger Railway deployment
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Triggering Railway deployment..."
+          curl -X POST https://api.railway.app/v1/deployments \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "projectId": "${{ secrets.RAILWAY_PROJECT_ID }}",
+              "environmentId": "${{ secrets.RAILWAY_ENVIRONMENT_ID }}",
+              "serviceId": "${{ secrets.RAILWAY_SERVICE_ID }}"
+            }'
+      
+      - name: Send notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Knowledge Base Index Update
+            Status: ${{ job.status }}
+            Updates: ${{ steps.check_updates.outputs.has_updates }}
+            Triggered by: ${{ github.event_name }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+  # Cleanup old indices
+  cleanup:
+    name: Cleanup Old Indices
+    runs-on: ubuntu-latest
+    needs: update-index
+    if: success()
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Cleanup old indices
+        run: |
+          echo "Cleaning up old index files..."
+          python src/scripts/cleanup_old_indices.py --keep-last 3
+      
+      - name: Commit cleanup
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore: cleanup old indices [skip ci]"
+            git push
+          fi

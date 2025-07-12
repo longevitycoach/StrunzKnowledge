@@ -47,6 +47,12 @@ logs/
 .env
 .env.*
 !.env.example
+data/raw/
+data/processed/
+data/delta/
+*.faiss
+*.pkl
+*.bin
 
 # Git
 .git/

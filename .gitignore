@@ -60,16 +60,24 @@ nosetests.xml
 # Logs
 logs/
 *.log
+*_download.log
+nohup.out
+*.out
 
 # Data files (contains scraped content)
 data/raw/
 data/processed/
+data/books/
 *.json
 *.md
 !README.md
 !CLAUDE.md
 !docs/*.md
 !deployment-log.md
+
+# PDF files
+*.pdf
+*.epub
 
 # Vector indices
 *.faiss

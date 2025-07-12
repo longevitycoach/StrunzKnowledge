@@ -1,72 +1,69 @@
-# CLAUDE.md
+# Dr. Strunz Knowledge Base - Technical Documentation
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Content Sources
 
-## Project Overview
+### 1. Books (13 total)
+The following Dr. Ulrich Strunz books have been processed:
 
-This is the Dr. Strunz Knowledge Base application - a comprehensive RAG (Retrieval-Augmented Generation) system that scrapes, processes, and serves content from www.strunz.com through an MCP (Meta-Cognitive Prompting) server.
+| Title | Year | Filename |
+|-------|------|----------|
+| Fitness drinks | 2002 | Dr.Ulrich-Strunz_Fitness_drinks_2002.pdf |
+| Die neue Diaet Das Fitnessbuch | 2010 | Dr.Ulrich-Strunz_Die_neue_Diaet_Das_Fitnessbuch_2010.pdf |
+| Das Geheimnis der Gesundheit | 2010 | Dr.Ulrich-Strunz_Das_Geheimnis_der_Gesundheit_2010.pdf |
+| Das neue Anti-Krebs-Programm - dem Krebs keine Chance geben  | 2012 | Dr.Ulrich-Strunz_Das_neue_Anti-Krebs-Programm_-_dem_Krebs_keine_Chance_geben__2012.pdf |
+| No-Carb-Smoothies | 2015 | Dr.Ulrich-Strunz_No-Carb-Smoothies_2015.pdf |
+| Wunder der Heilung | 2015 | Dr.Ulrich-Strunz_Wunder_der_Heilung_2015.pdf |
+| Blut - Die Geheimnisse Unseres flussigen Organs | 2016 | Dr.Ulrich-Strunz_Blut_-_Die_Geheimnisse_Unseres_flussigen_Organs_2016.pdf |
+| Das Strunz-Low-Carb-Kochbuch | 2016 | Dr.Ulrich-Strunz_Das_Strunz-Low-Carb-Kochbuch_2016.pdf |
+| Heilung erfahren | 2019 | Dr.Ulrich-Strunz_Heilung_erfahren_2019.pdf |
+| 77 Tipps fuer Ruecken und Gelenke | 2021 | Dr.Ulrich-Strunz_77_Tipps_fuer_Ruecken_und_Gelenke_2021.pdf |
+| Das Stress-weg-Buch | 2022 | Dr.Ulrich-Strunz_Das_Stress-weg-Buch_2022.pdf |
+| Die Amino-Revolution | 2022 | Dr.Ulrich-Strunz_Die_Amino-Revolution_2022.pdf |
+| Der Gen-Trick | 2025 | Dr.Ulrich-Strunz_Der_Gen-Trick_2025.pdf |
 
-## Key Commands
+### 2. News Articles
+- **Total articles**: 6,953 unique articles
+- **Date range**: 2004-09-28 to 2025-07-11
+- **Base URL**: https://www.strunz.com/news/
+- **URL pattern**: https://www.strunz.com/news/[article-slug].html
 
-### Development Commands
-- `python main.py scrape` - Scrape all content from strunz.com
-- `python main.py index` - Build the FAISS vector index
-- `python main.py server` - Start the FastMCP server
-- `pytest` - Run the test suite
-- `docker-compose up` - Run the entire application stack
+### 3. Forum Content
+- **Total chunks**: 6,400
+- **Status**: Limited data available (only showing date 02.05.2020)
+- **Note**: Forum scraping appears incomplete and may need to be redone
 
-### Testing
-- `pytest src/tests/test_mcp_integration.py` - Run MCP integration tests
-- `pytest --cov=src` - Run tests with coverage
+## Data Processing Details
 
-## Architecture Overview
+### Text Chunking
+- **News**: ~843 characters per chunk with 200 char overlap
+- **Books**: ~1,333 characters per chunk with 300 char overlap
+- **Forum**: Variable chunk sizes
 
-The application follows a modular architecture with three main components:
+### Vector Database
+- **Model**: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+- **Dimensions**: 384
+- **Index Type**: FAISS IndexFlatL2
+- **Total Vectors**: 28,938
 
-1. **Scraper Module** (`src/scraper/`)
-   - `base_scraper.py`: Core scraping logic with pagination handling
-   - `markdown_generator.py`: Converts JSON to structured markdown
-   - Handles German text encoding (UTF-8) properly
+## Update Information
+- News articles can be updated incrementally using wget with -N flag
+- Books are manually added to data/books/ directory
+- Forum content needs complete re-scraping
 
-2. **RAG Module** (`src/rag/`)
-   - `vector_store.py`: FAISS-based vector storage implementation
-   - `document_processor.py`: Text chunking and embedding generation
-   - `docling_processor.py`: Optional OCR integration
-   - Uses sentence-transformers for multilingual embeddings
-
-3. **MCP Module** (`src/mcp/`)
-   - `server.py`: FastMCP server with SSE endpoint
-   - Implements 4 main tools: knowledge_search, summarize_posts, get_latest_insights, get_most_discussed_topics
-   - System prompt enforces citation of sources
-
-## Important Design Decisions
-
-1. **FAISS over AlloyDB**: Chosen for zero cost, better performance for similarity search, and ability to run in-container
-2. **Embedding Model**: Using `paraphrase-multilingual-MiniLM-L12-v2` for German language support
-3. **Chunking Strategy**: 1000 character chunks with 200 character overlap
-4. **Content Organization**: Each category gets its own markdown file with standardized structure
-5. **Pagination Handling**: Recursive crawling with visited URL tracking
-
-## Development Notes
-
-- All text processing must handle German special characters (ä, ö, ü, ß)
-- The scraper respects rate limits with configurable delays
-- Vector index is persisted to disk and loaded on startup
-- MCP tools always return structured data with metadata
-- The system prompt ensures the LLM only uses knowledge base content
-
-## Security and Deployment Best Practices
-
-- Never check in sensitive files like .env
-- Before checking in, always validate that new files are not security-sensitive
-- Use git and GitHub CLI for version control
-- Use Railway CLI for automatic deployment
-- Create a Railway subdomain with Strunz
-- Always run tests locally before deploying to GitHub and Railway
-- After successful deployment, run tests on the cloud side
-- Log deployment success with Railway CLI
-- Create two environments:
-  - Local: Use 1Password CLI (`op`) 
-  - Create a 1Password project vault for local setup
-- Store production secrets in GitHub project secrets vault for Railway
-- Always check logs in Docker and Railway CLI
+## Directory Structure
+```
+data/
+├── books/                    # PDF books
+├── raw/
+│   ├── news/                # HTML news articles
+│   └── forum/               # Forum HTML (incomplete)
+├── processed/
+│   ├── books/               # Processed book chunks
+│   ├── news/                # Processed news chunks
+│   └── forum/               # Processed forum chunks
+└── faiss_indices/
+    ├── books/               # Book vector index
+    ├── news/                # News vector index
+    ├── forum/               # Forum vector index
+    └── combined_index.faiss # Combined searchable index
+```
