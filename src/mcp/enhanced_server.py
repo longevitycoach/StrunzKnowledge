@@ -808,19 +808,19 @@ class StrunzKnowledgeMCP:
             
             return vector_stats
         
-        # Resources
-        @self.app.resource()
-        async def knowledge_statistics() -> Dict:
+        # Additional Tools (converted from resources)
+        @self.app.tool()
+        async def get_knowledge_statistics() -> Dict:
             """Get comprehensive knowledge base statistics."""
             return await self._get_knowledge_stats()
         
-        @self.app.resource()
-        async def user_journey_guide(user_role: str) -> Dict:
+        @self.app.tool()
+        async def get_user_journey_guide(user_role: str) -> Dict:
             """Get personalized journey guide for user role."""
             return await self._get_user_journey(user_role)
         
-        @self.app.resource()
-        async def strunz_book_recommendations(
+        @self.app.tool()
+        async def get_book_recommendations(
             user_profile: Dict,
             specific_interest: Optional[str] = None
         ) -> Dict:
@@ -1551,7 +1551,7 @@ def main():
 def create_fastapi_app():
     """Create FastAPI app with enhanced MCP server."""
     from fastapi import FastAPI
-    from fastapi.responses import JSONResponse
+    from fastapi.responses import JSONResponse, Response
     from sse_starlette.sse import EventSourceResponse
     import asyncio
     import json
@@ -1572,6 +1572,17 @@ def create_fastapi_app():
             "mcp_tools": 19,
             "timestamp": datetime.now().isoformat()
         })
+    
+    @fastapi_app.get("/metrics")
+    async def metrics():
+        """Prometheus metrics endpoint."""
+        try:
+            from ..monitoring.resource_monitor import ResourceMonitor
+            monitor = ResourceMonitor()
+            metrics_data = monitor.export_prometheus_metrics()
+            return Response(content=metrics_data, media_type="text/plain")
+        except ImportError:
+            return JSONResponse({"error": "Monitoring not available"}, status_code=503)
     
     @fastapi_app.get("/sse")
     async def sse_endpoint():

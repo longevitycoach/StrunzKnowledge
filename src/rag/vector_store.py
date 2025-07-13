@@ -7,7 +7,12 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import logging
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    # Use lightweight alternative if sentence-transformers not available
+    from ..mcp.lightweight_embeddings import SentenceTransformer
+    logger.warning("Using lightweight embeddings instead of sentence-transformers")
 
 logger = logging.getLogger(__name__)
 

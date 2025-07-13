@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Staging MCP Server
+  mcp-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: strunz-mcp:staging
+    container_name: strunz-mcp-staging
+    ports:
+      - "8001:8000"  # Different port for staging
+    environment:
+      - ENVIRONMENT=staging
+      - PORT=8000
+      - MCP_SERVER_HOST=0.0.0.0
+      - LOG_LEVEL=DEBUG
+      - USE_LIGHTWEIGHT_EMBEDDINGS=true
+      - MEMORY_LIMIT=512M
+      - CPU_LIMIT=1
+    volumes:
+      - ./data/faiss_indices:/app/data/faiss_indices:ro
+      - ./logs/staging:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    networks:
+      - staging-network
+    restart: unless-stopped
+
+  # Resource Monitor
+  monitoring:
+    image: google/cadvisor:latest
+    container_name: strunz-monitoring
+    ports:
+      - "8002:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - staging-network
+    restart: unless-stopped
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: strunz-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - staging-network
+    restart: unless-stopped
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: strunz-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - staging-network
+    restart: unless-stopped
+
+networks:
+  staging-network:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
