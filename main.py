@@ -33,9 +33,9 @@ def main():
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
     
     if is_railway and is_production:
-        # Production Railway deployment with SSE
-        print("Starting production Railway deployment with SSE...")
-        from src.scripts.deployment.railway_mcp_sse_server import main as run_server
+        # Production Railway deployment with enhanced server
+        print("Starting production Railway deployment with enhanced server...")
+        from src.scripts.deployment.railway_production_server import main as run_server
     elif is_railway:
         # Non-production Railway deployment
         print("Starting Railway deployment...")
@@ -46,8 +46,13 @@ def main():
         from src.mcp.enhanced_server import main as run_server
     
     # Run the appropriate server
-    import asyncio
-    asyncio.run(run_server())
+    if is_railway and is_production:
+        # Direct function call for production (no asyncio.run)
+        run_server()
+    else:
+        # Use asyncio for other servers
+        import asyncio
+        asyncio.run(run_server())
 
 if __name__ == "__main__":
     main()
