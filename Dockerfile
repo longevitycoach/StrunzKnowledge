@@ -29,6 +29,7 @@ WORKDIR $APP_HOME
 
 # Copy requirements first for better caching
 COPY requirements-prod.txt .
+COPY requirements-flexible.txt .
 
 # Install Python dependencies with memory optimization
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
@@ -37,8 +38,8 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 # First install numpy separately as it's a large dependency
 RUN pip install --no-cache-dir numpy==1.26.3
 
-# Then install the rest
-RUN pip install --no-cache-dir -r requirements-prod.txt
+# Then install the rest using flexible requirements
+RUN pip install --no-cache-dir -r requirements-flexible.txt
 
 # Copy application source code
 COPY src/ ./src/
