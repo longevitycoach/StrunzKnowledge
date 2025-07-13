@@ -57,7 +57,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/').raise_for_status()"
 
 # Default command to run the MCP server
-CMD ["python", "start_server.py"]
+CMD ["python", "-u", "start_server.py"]
 
 # Labels for container metadata
 LABEL maintainer="Strunz Knowledge Base Team" \

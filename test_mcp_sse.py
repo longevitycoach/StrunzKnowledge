@@ -10,8 +10,9 @@ import time
 from typing import AsyncGenerator
 
 # Configuration
-BASE_URL = "https://strunz-knowledge.up.railway.app"
-# For local testing, use: BASE_URL = "http://localhost:8000"
+# BASE_URL = "https://strunz-knowledge.up.railway.app"
+# For local testing, use:
+BASE_URL = "http://localhost:8000"
 
 async def test_health_check():
     """Test basic health check endpoint."""
