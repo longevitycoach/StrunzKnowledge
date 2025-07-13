@@ -14,6 +14,11 @@ os.environ.setdefault('PORT', '8000')
 os.environ.setdefault('MCP_SERVER_HOST', '0.0.0.0')
 os.environ.setdefault('LOG_LEVEL', 'INFO')
 
+# Check if we're in a minimal deployment (no FAISS indices)
+if not Path("data/faiss_indices/combined_index.faiss").exists():
+    print("WARNING: FAISS indices not found. Running in demo mode.")
+    print("The full knowledge base will not be available.")
+
 # Import and run the enhanced server
 try:
     from src.mcp.enhanced_server import create_fastapi_app
@@ -34,12 +39,18 @@ try:
     )
 except ImportError as e:
     print(f"Import error: {e}")
-    print("Trying original server as fallback...")
+    print(f"Error details: {type(e).__name__}")
     
-    # Try original server as fallback
+    # For Railway deployment, run the simple server as fallback
+    print("Running simple server for Railway deployment...")
     try:
-        from src.mcp.server import run_server
-        run_server()
-    except Exception as fallback_error:
-        print(f"Fallback also failed: {fallback_error}")
+        from simple_server import app
+        import uvicorn
+        uvicorn.run(
+            app,
+            host=os.environ.get('MCP_SERVER_HOST', '0.0.0.0'),
+            port=int(os.environ.get('PORT', '8000'))
+        )
+    except Exception as simple_error:
+        print(f"Simple server also failed: {simple_error}")
         sys.exit(1)

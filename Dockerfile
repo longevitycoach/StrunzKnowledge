@@ -35,12 +35,12 @@ COPY main.py ./
 COPY start_server.py ./
 COPY config/ ./config/ 2>/dev/null || true
 
-# Copy data files (including FAISS indices)
-COPY data/faiss_indices/ ./data/faiss_indices/
-COPY data/processed/ ./data/processed/
-
 # Create necessary directories
-RUN mkdir -p data/raw data/processed/docling logs
+RUN mkdir -p data/raw data/processed data/faiss_indices logs
+
+# Note: FAISS indices and processed data are not in git due to size
+# In production, these would be downloaded or generated during deployment
+# For now, create empty directories to prevent errors
 
 # Create a non-root user to run the application
 RUN useradd -m -u 1000 appuser && \
