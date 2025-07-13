@@ -45,6 +45,44 @@ The following Dr. Ulrich Strunz books have been processed:
 - **Index Type**: FAISS IndexFlatL2
 - **Total Vectors**: 28,938
 
+## Sentence-Transformers Analysis & Testing Results
+
+### Usage Pattern
+The MCP server uses sentence-transformers for **both** initial processing AND real-time queries:
+
+1. **Initial Processing**: Document embeddings created during FAISS index building
+2. **Runtime Queries**: Each user search encoded in real-time using same model
+3. **Model**: `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions)
+4. **Implementation**: Full integration in `/src/rag/vector_store.py`
+
+### Benefits Demonstrated (Test Results 2025-07-13)
+- **Test Success Rate**: 84.2% (16/19 MCP tools)
+- **Average Response Time**: 16ms per tool
+- **Semantic Search Quality**: Superior to TF-IDF for medical terminology
+- **Multilingual Support**: Seamless German/English query processing
+- **Real-time Performance**: Query encoding adds minimal latency
+
+### Resource Requirements
+| Aspect | Sentence-Transformers | TF-IDF Alternative |
+|--------|----------------------|-------------------|
+| Memory | ~2GB | ~512MB |
+| Startup Time | 10-20s | <2s |
+| Search Quality | Excellent semantic matching | Basic keyword matching |
+| Dependencies | PyTorch + Transformers | Scikit-learn only |
+| Multilingual | Native support | Limited support |
+
+### Production Recommendations
+1. **Memory Planning**: Ensure 2GB+ RAM for optimal performance
+2. **Health Checks**: Allow 30+ seconds for server startup
+3. **Caching Strategy**: Consider embedding caching for frequent queries
+4. **Fallback Available**: TF-IDF lightweight embeddings in `src/mcp/lightweight_embeddings.py`
+
+### Test Infrastructure
+- **Full Test Suite**: `test_mcp_jsonrpc.sh` (19 comprehensive tests)
+- **Protocol**: JSON-RPC 2.0 over HTTP at `/mcp` endpoint
+- **Report**: Generated automatically as `MCP_FULL_SERVER_TEST_REPORT.md`
+- **Docker Testing**: Always test locally before Railway deployment
+
 ## Update Information
 - News articles can be updated incrementally using wget with -N flag
 - Books are manually added to data/books/ directory

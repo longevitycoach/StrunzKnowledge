@@ -46,6 +46,7 @@ COPY src/ ./src/
 COPY main.py ./
 COPY start_server.py ./
 COPY simple_server.py ./
+COPY railway_mcp_server.py ./
 COPY scripts/ ./scripts/
 
 # Create config directory (it may be empty)
@@ -74,8 +75,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Default command to run the MCP server
-CMD ["python", "-u", "start_server.py"]
+# Default command to run the MCP server (Railway production)
+CMD ["python", "-u", "railway_mcp_server.py"]
 
 # Labels for container metadata
 LABEL maintainer="Strunz Knowledge Base Team" \

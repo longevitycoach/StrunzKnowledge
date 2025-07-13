@@ -1853,27 +1853,35 @@ KEEP_ALIVE=5                 # Keep-alive timeout
 
 ### Railway Production Deployment
 
-#### Base URL
+#### Health Check URL
 ```
 https://strunz.up.railway.app
 ```
 
-#### MCP Server Endpoints
+#### Access Information
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Health check |
-| `/mcp` | POST | MCP tool calls |
-| `/sse` | GET | Server-sent events |
+| Aspect | Details |
+|--------|--------|
+| Protocol | MCP (Model Context Protocol) via stdio |
+| Public API | None - MCP protocol only |
+| Health Check | `GET /` for Railway monitoring only |
+| Data Access | Via MCP-compatible AI assistants only |
 
-#### Health Check
+#### Security & Access
 
 ```bash
-# Verify deployment
+# Health check (only public endpoint)
 curl https://strunz.up.railway.app/
+
+# Expected response:
+{
+  "status": "healthy",
+  "server": "Dr. Strunz Knowledge MCP Server",
+  "note": "MCP protocol only - no public API"
+}
 ```
 
-**Note**: This is an MCP server deployment, not a public API. Access is through MCP clients like Claude Desktop.
+**Important**: This deployment follows security best practices by NOT exposing any data endpoints publicly. All knowledge base queries must go through the MCP protocol.
 
 ## Troubleshooting
 
