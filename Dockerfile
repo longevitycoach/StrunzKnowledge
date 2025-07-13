@@ -33,7 +33,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY src/ ./src/
 COPY main.py ./
 COPY start_server.py ./
+COPY simple_server.py ./
 COPY config/ ./config/ 2>/dev/null || true
+COPY scripts/ ./scripts/
 
 # Create necessary directories
 RUN mkdir -p data/raw data/processed data/faiss_indices logs
