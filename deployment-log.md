@@ -15,7 +15,7 @@
 - **Project ID**: 7ef3bc5d-a4f2-4b8e-a69d-4e0e21c42f0c
 - **Service ID**: 12715d6d-2025-4e43-aa3f-1bc55dd2ef51
 - **Latest Deployment**: 61de6655-3e76-44bf-8982-3074cee32157
-- **Production URL**: https://strunz-knowledge-production.up.railway.app
+- **Production URL**: https://strunz.up.railway.app
 - **Status**: ⚠️ Deployment in progress / Needs investigation
 
 ### Security Validation

@@ -1704,7 +1704,7 @@ Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health
 # Using the MCP client
 from mcp import Client
 
-client = Client("https://strunz-knowledge.up.railway.app")
+client = Client("https://strunz.up.railway.app")
 
 # Search for information
 results = await client.call_tool(
@@ -1855,7 +1855,7 @@ KEEP_ALIVE=5                 # Keep-alive timeout
 
 #### Base URL
 ```
-https://strunz-knowledge.up.railway.app
+https://strunz.up.railway.app
 ```
 
 #### MCP Server Endpoints
@@ -1870,7 +1870,7 @@ https://strunz-knowledge.up.railway.app
 
 ```bash
 # Verify deployment
-curl https://strunz-knowledge.up.railway.app/
+curl https://strunz.up.railway.app/
 ```
 
 **Note**: This is an MCP server deployment, not a public API. Access is through MCP clients like Claude Desktop.
@@ -2002,10 +2002,10 @@ git push origin main
 #### 4. Production Verification
 ```bash
 # Check deployment status
-curl -I https://strunz-knowledge.up.railway.app/
+curl -I https://strunz.up.railway.app/
 
 # Test SSE endpoint
-curl https://strunz-knowledge.up.railway.app/sse
+curl https://strunz.up.railway.app/sse
 
 # Run integration tests
 python src/tests/test_production_mcp.py

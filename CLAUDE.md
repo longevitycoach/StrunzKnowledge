@@ -143,7 +143,7 @@ git push origin main
 #### Monitoring Deployment
 ```bash
 # Check deployment status
-curl -I https://strunz-knowledge.up.railway.app/
+curl -I https://strunz.up.railway.app/
 
 # Expected response when ready:
 # HTTP/2 200
@@ -155,10 +155,10 @@ curl -I https://strunz-knowledge.up.railway.app/
 #### Health Checks
 ```bash
 # Basic health check
-curl https://strunz-knowledge.up.railway.app/
+curl https://strunz.up.railway.app/
 
 # SSE endpoint test
-curl https://strunz-knowledge.up.railway.app/sse
+curl https://strunz.up.railway.app/sse
 
 # Should see:
 # data: {"type": "message", "data": "Connected to Dr. Strunz Knowledge MCP Server"}
@@ -273,7 +273,7 @@ python src/tests/test_production_mcp.py
 railway logs
 
 # Test specific tool
-curl -X POST https://strunz-knowledge.up.railway.app/tools/knowledge_search \
+curl -X POST https://strunz.up.railway.app/tools/knowledge_search \
   -H "Content-Type: application/json" \
   -d '{"query": "Vitamin D"}'
 ```

@@ -95,7 +95,7 @@ def test_deployment(base_url):
 
 if __name__ == "__main__":
     # Default to Railway URL
-    url = "https://strunz-knowledge-production.up.railway.app"
+    url = "https://strunz.up.railway.app"
     
     if len(sys.argv) > 1:
         url = sys.argv[1]

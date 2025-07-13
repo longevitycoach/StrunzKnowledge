@@ -10,7 +10,7 @@ import time
 from typing import AsyncGenerator
 
 # Configuration
-# BASE_URL = "https://strunz-knowledge.up.railway.app"
+# BASE_URL = "https://strunz.up.railway.app"
 # For local testing, use:
 BASE_URL = "http://localhost:8000"
 

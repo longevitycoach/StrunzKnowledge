@@ -28,7 +28,7 @@ jobs:
       run: |
         echo "Waiting for Railway deployment to complete..."
         for i in {1..20}; do
-          if curl -f -I https://strunz-knowledge.up.railway.app/ 2>/dev/null; then
+          if curl -f -I https://strunz.up.railway.app/ 2>/dev/null; then
             echo "Railway deployment is ready!"
             break
           fi
@@ -38,21 +38,21 @@ jobs:
     
     - name: Run integration tests
       env:
-        MCP_SERVER_URL: https://strunz-knowledge.up.railway.app
+        MCP_SERVER_URL: https://strunz.up.railway.app
       run: |
         python -m pytest src/tests/test_production_mcp.py -v
     
     - name: Test SSE endpoint
       run: |
         echo "Testing SSE endpoint..."
-        timeout 10s curl https://strunz-knowledge.up.railway.app/sse || true
+        timeout 10s curl https://strunz.up.railway.app/sse || true
     
     - name: Health check summary
       if: always()
       run: |
         echo "=== Health Check Summary ==="
         echo "Root endpoint:"
-        curl -I https://strunz-knowledge.up.railway.app/ 2>/dev/null | head -5
+        curl -I https://strunz.up.railway.app/ 2>/dev/null | head -5
         echo ""
         echo "SSE endpoint:"
-        curl -I https://strunz-knowledge.up.railway.app/sse 2>/dev/null | head -5
+        curl -I https://strunz.up.railway.app/sse 2>/dev/null | head -5

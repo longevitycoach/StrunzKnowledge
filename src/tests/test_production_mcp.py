@@ -12,7 +12,7 @@ import pytest
 from typing import Dict, List, AsyncGenerator
 
 # Production endpoint
-PRODUCTION_URL = "https://strunz-knowledge.up.railway.app"
+PRODUCTION_URL = "https://strunz.up.railway.app"
 MCP_ENDPOINT = f"{PRODUCTION_URL}/mcp"
 SSE_ENDPOINT = f"{PRODUCTION_URL}/sse"
 HEALTH_ENDPOINT = f"{PRODUCTION_URL}/"
