@@ -109,18 +109,6 @@ After each successful release:
 3. **Update Latest**: `docker push longevitycoach/strunz-mcp:latest`
 4. **Verify on Docker Hub**: Check https://hub.docker.com/r/longevitycoach/strunz-mcp
 
-## Related Documentation
-
-### Essential Docs
-- [Scripts Guide](docs/SCRIPTS.md) - All scripts documentation
-- [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md) - Production deployment steps
-- [Project Structure](docs/PROJECT_STRUCTURE.md) - Directory organization
-- [Release Notes](docs/RELEASE_NOTES_v0.2.0.md) - Latest release information
-
-### Test Reports
-- [Latest Test Report](docs/test-reports/MCP_FULL_SERVER_TEST_REPORT.md) - v0.2.0 test results
-- [All Test Reports](docs/test-reports/) - Historical test documentation
-
 ## Update Information
 - News articles can be updated incrementally using wget with -N flag
 - Books are manually added to data/books/ directory
@@ -394,7 +382,7 @@ curl -X POST https://strunz.up.railway.app/tools/knowledge_search \
 
 2. **Split large files** using provided script:
    ```bash
-   python scripts/split_faiss_index.py
+   python src/scripts/data/split_faiss_index.py
    ```
 
 3. **Always commit chunks**, never the full files:
@@ -416,3 +404,36 @@ curl -X POST https://strunz.up.railway.app/tools/knowledge_search \
 
 ### CI/CD Checklist
 - **Always run a second test-run against the local container docker deployment before checkin to Github and deploy to railways.**
+- **Use the full MCP Server - NO MINIMAL Server, always full functions!**
+- **Please always make an integration with FAISS vector DB and with real content**
+- **Please always test locally with docker**
+
+### Important Rules
+1. **Source Citations**: Always add specific source citations to all MCP tool responses
+   - Books: Include chapter and page numbers
+   - News: Include article dates and URLs  
+   - Forum: Include thread IDs
+   
+2. **Testing Protocol**: 
+   - Build Docker image locally
+   - Run comprehensive tests
+   - Verify SSE endpoint works
+   - Check memory usage < 512MB for Railway
+
+3. **Script Organization**: All scripts under `src/scripts/`
+   - deployment/ - Server scripts
+   - testing/ - Test scripts
+   - analysis/ - Analysis tools
+   - data/ - Data utilities
+
+## Related Documentation
+
+### Essential Docs
+- [Scripts Guide](docs/SCRIPTS.md) - All scripts documentation
+- [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md) - Production deployment steps
+- [Project Structure](docs/PROJECT_STRUCTURE.md) - Directory organization
+- [Release Notes](docs/RELEASE_NOTES_v0.2.0.md) - Latest release information
+
+### Test Reports
+- [Latest Test Report](docs/test-reports/MCP_FULL_SERVER_TEST_REPORT.md) - v0.2.0 test results
+- [All Test Reports](docs/test-reports/) - Historical test documentation
