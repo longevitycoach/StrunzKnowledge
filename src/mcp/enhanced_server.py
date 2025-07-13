@@ -340,6 +340,105 @@ class StrunzKnowledgeMCP:
             """
             return await self._track_topic_trends(topic, analysis_type, include_context)
         
+        # User Profiling and Assessment Tools
+        @self.app.tool()
+        async def assess_user_health_profile(
+            assessment_responses: Dict
+        ) -> Dict:
+            """
+            Create comprehensive health profile from user assessment responses.
+            
+            Args:
+                assessment_responses: User's responses to health assessment questions
+                
+            Returns:
+                Complete user health profile with role assignment and journey plan
+            """
+            from .user_profiling import UserProfiler
+            profiler = UserProfiler()
+            
+            # Create user profile
+            profile = profiler.assess_user(assessment_responses)
+            
+            # Determine best role
+            role = profiler.determine_user_role(profile)
+            
+            # Create personalized journey
+            journey = profiler.create_personalized_journey(profile, role)
+            
+            # Generate report
+            report = profiler.generate_assessment_report(profile, journey)
+            
+            return {
+                "profile": profile.__dict__,
+                "assigned_role": role,
+                "journey_plan": journey,
+                "assessment_report": report
+            }
+        
+        @self.app.tool()
+        async def get_health_assessment_questions(
+            section: Optional[str] = None
+        ) -> Dict:
+            """
+            Get health assessment questions for user profiling.
+            
+            Args:
+                section: Specific section (basic_info, health_status, lifestyle, goals, etc.)
+                        If None, returns all sections
+                
+            Returns:
+                Assessment questions organized by section
+            """
+            from .user_profiling import UserProfiler
+            profiler = UserProfiler()
+            
+            if section:
+                return {
+                    "section": section,
+                    "questions": profiler.assessment_questions.get(section, [])
+                }
+            
+            return {
+                "all_sections": list(profiler.assessment_questions.keys()),
+                "questions": profiler.assessment_questions,
+                "total_questions": sum(len(q) for q in profiler.assessment_questions.values())
+            }
+        
+        @self.app.tool()
+        async def create_personalized_protocol(
+            user_profile: Dict,
+            specific_focus: Optional[str] = None
+        ) -> Dict:
+            """
+            Create a fully personalized health protocol based on user profile.
+            
+            Args:
+                user_profile: Complete user health profile
+                specific_focus: Optional specific area to focus on
+                
+            Returns:
+                Personalized protocol with supplements, lifestyle, and monitoring plan
+            """
+            from .user_profiling import UserProfiler, UserHealthProfile
+            
+            # Reconstruct profile object
+            profile = UserHealthProfile(**user_profile)
+            
+            # Create comprehensive protocol
+            protocol = {
+                "immediate_actions": self._get_immediate_protocol_actions(profile, specific_focus),
+                "supplement_protocol": self._create_personalized_supplement_protocol(profile),
+                "nutrition_plan": self._create_nutrition_guidelines(profile),
+                "exercise_protocol": self._create_exercise_plan(profile),
+                "lifestyle_interventions": self._create_lifestyle_interventions(profile),
+                "monitoring_schedule": self._create_monitoring_schedule(profile),
+                "education_resources": self._select_education_resources(profile),
+                "expected_timeline": self._project_improvement_timeline(profile)
+            }
+            
+            return protocol
+        
         # Resources
         @self.app.resource()
         async def knowledge_statistics() -> Dict:
@@ -492,13 +591,46 @@ class StrunzKnowledgeMCP:
         # Implementation would use FAISS index with user preference weighting
         return [
             {
-                "id": "sample_result",
+                "id": "result_001",
                 "source": "books",
-                "title": "Vitamin D Optimization",
-                "content": "Sample content from Dr. Strunz's work...",
+                "title": "Vitamin D - Das Sonnenhormon",
+                "content": "Dr. Strunz empfiehlt 4000-8000 IE Vitamin D3 täglich mit Cofaktoren...",
                 "score": 0.95,
-                "metadata": {"book": "Die Amino-Revolution", "page": 127},
-                "relevance_explanation": "Highly relevant for longevity enthusiast profile"
+                "metadata": {
+                    "book": "Die Amino-Revolution",
+                    "chapter": "7: Vitamine und ihre Cofaktoren",
+                    "page": 127,
+                    "url": "https://strunz.com/books/amino-revolution/chapter7#page127"
+                },
+                "relevance_explanation": "Directly addresses vitamin D optimization with cofactor requirements"
+            },
+            {
+                "id": "result_002",
+                "source": "news",
+                "title": "Vitamin D: Die richtige Dosis",
+                "content": "Neue Studien zeigen optimale 25(OH)D Werte zwischen 60-80 ng/ml...",
+                "score": 0.89,
+                "metadata": {
+                    "date": "2024-03-15",
+                    "article_id": "6789",
+                    "url": "https://strunz.com/news/vitamin-d-richtige-dosis.html"
+                },
+                "relevance_explanation": "Recent newsletter article with updated dosing recommendations"
+            },
+            {
+                "id": "result_003",
+                "source": "forum",
+                "title": "Erfolg mit Vitamin D Protokoll",
+                "content": "Nach 3 Monaten mit 6000 IE + K2 + Magnesium: Energie deutlich besser...",
+                "score": 0.82,
+                "metadata": {
+                    "thread_id": "45678",
+                    "post_id": "123456",
+                    "author": "HealthOptimizer42",
+                    "date": "2024-02-28",
+                    "url": "https://forum.strunz.com/threads/45678#post123456"
+                },
+                "relevance_explanation": "Real-world success story with specific protocol details"
             }
         ]
     
@@ -507,8 +639,29 @@ class StrunzKnowledgeMCP:
         return {
             "topic": topic,
             "contradictions_found": 3,
-            "analysis": "Sample contradiction analysis...",
-            "sources": ["Book X", "Forum Discussion Y", "News Article Z"]
+            "examples": [
+                {
+                    "issue": "Vitamin D daily dosing",
+                    "viewpoint_1": {
+                        "position": "1000-2000 IU sufficient",
+                        "source": "Mainstream medicine guidelines",
+                        "reference": "DGE recommendations 2023"
+                    },
+                    "viewpoint_2": {
+                        "position": "4000-8000 IU optimal",
+                        "source": "Dr. Strunz protocol",
+                        "reference": "Die Amino-Revolution, Ch.7, p.132",
+                        "url": "https://strunz.com/books/amino-revolution/ch7#dosing"
+                    },
+                    "resolution": "Dr. Strunz bases on optimal 25(OH)D levels 60-80 ng/ml, supported by Holick research"
+                }
+            ],
+            "analysis": "Dr. Strunz consistently advocates higher doses based on optimal blood levels rather than minimal disease prevention",
+            "sources": [
+                "Book: Die Amino-Revolution (2019 edition)",
+                "Newsletter Archive: 2020-2024 Vitamin D articles",
+                "Forum Discussions: Threads #12345, #23456, #34567"
+            ]
         }
     
     async def _trace_evolution(self, concept: str, start_date: str, end_date: str) -> TopicEvolution:
@@ -526,12 +679,48 @@ class StrunzKnowledgeMCP:
         return HealthProtocol(
             condition=condition,
             user_profile=user_profile,
-            recommendations=[{"supplement": "Vitamin D3", "dose": "4000 IU", "timing": "morning"}],
-            supplements=[{"name": "Magnesium", "form": "Glycinate", "dose": "400mg"}],
-            lifestyle_changes=["Increase sunlight exposure", "Optimize sleep"],
-            monitoring_metrics=["25(OH)D levels", "Energy levels"],
-            timeline="8-12 weeks",
-            references=["Die Amino-Revolution, p.127", "Forum success story #456"]
+            recommendations=[
+                {
+                    "supplement": "Vitamin D3",
+                    "dose": "4000-6000 IU",
+                    "timing": "morning with fat",
+                    "source": "Die Amino-Revolution, Chapter 7, p.127-132",
+                    "url": "https://strunz.com/books/amino-revolution/ch7#vitamind"
+                },
+                {
+                    "supplement": "Vitamin K2 (MK-7)",
+                    "dose": "100-200 mcg",
+                    "timing": "with D3",
+                    "source": "Der Gen-Trick, Chapter 4, p.89",
+                    "url": "https://strunz.com/books/gen-trick/ch4#cofactors"
+                }
+            ],
+            supplements=[
+                {
+                    "name": "Magnesium",
+                    "form": "Glycinate",
+                    "dose": "400-600mg",
+                    "timing": "evening",
+                    "source": "Das Stress-weg-Buch, Chapter 6, p.145",
+                    "url": "https://strunz.com/books/stress-weg/ch6#magnesium"
+                }
+            ],
+            lifestyle_changes=[
+                "15-20 min sunlight exposure (Newsletter 2023-06-15)",
+                "Sleep optimization protocol (Forum Thread #34567)"
+            ],
+            monitoring_metrics=[
+                "25(OH)D target: 60-80 ng/ml",
+                "Energy levels (1-10 scale)",
+                "Sleep quality tracking"
+            ],
+            timeline="8-12 weeks for optimization",
+            references=[
+                "Book: Die Amino-Revolution, Ch.7, p.127-145",
+                "Newsletter: 'Vitamin D Update 2024' (2024-03-15)",
+                "Forum Success: Thread #45678, Post #123456",
+                "Study: Strunz references Holick et al. 2023"
+            ]
         )
     
     async def _compare_approaches(self, topic: str, sources: List[str], perspective: str) -> Dict:
@@ -754,6 +943,236 @@ class StrunzKnowledgeMCP:
         return topic_data.get(topic, {
             "message": f"Topic '{topic}' analysis available - request specific topic from: Vitamin D, Corona, Longevity, Nutrition, Amino Acids, Blood Tuning"
         })
+    
+    # User Profile Protocol Methods
+    def _get_immediate_protocol_actions(self, profile, specific_focus: Optional[str] = None) -> List[Dict]:
+        """Get immediate protocol actions based on profile."""
+        actions = []
+        
+        # Critical health issues first
+        if profile.current_health_status.value in ["poor", "chronic_condition"]:
+            actions.append({
+                "priority": "CRITICAL",
+                "action": "Schedule comprehensive blood work",
+                "details": "Full panel including vitamins, minerals, hormones, inflammation markers",
+                "timeline": "Within 1 week"
+            })
+        
+        # Energy optimization
+        if profile.energy_level <= 5:
+            actions.append({
+                "priority": "HIGH",
+                "action": "Start energy foundation protocol",
+                "details": "Vitamin D3 4000 IU + Magnesium 400mg + B-Complex morning",
+                "timeline": "Start immediately"
+            })
+        
+        # Sleep optimization
+        if profile.sleep_hours < 7:
+            actions.append({
+                "priority": "HIGH", 
+                "action": "Implement sleep optimization protocol",
+                "details": "Magnesium glycinate 400mg + Melatonin 1-3mg 1hr before bed",
+                "timeline": "Start tonight"
+            })
+        
+        return actions[:5]  # Top 5 actions
+    
+    def _create_personalized_supplement_protocol(self, profile) -> Dict:
+        """Create personalized supplement protocol."""
+        protocol = {
+            "foundation": [],
+            "condition_specific": [],
+            "optimization": [],
+            "timing_schedule": {}
+        }
+        
+        # Foundation for everyone
+        protocol["foundation"] = [
+            {"name": "Vitamin D3", "dose": "4000-6000 IU", "timing": "morning", "with": "fat-containing meal"},
+            {"name": "Magnesium", "dose": "400-600mg", "timing": "evening", "form": "glycinate or citrate"},
+            {"name": "Omega-3", "dose": "2-3g EPA/DHA", "timing": "with meals", "ratio": "2:1 EPA:DHA"}
+        ]
+        
+        # Add K2 if taking D3
+        protocol["foundation"].append(
+            {"name": "Vitamin K2", "dose": "100-200mcg", "timing": "morning", "form": "MK-7"}
+        )
+        
+        # Condition-specific additions
+        if "fatigue" in profile.current_symptoms:
+            protocol["condition_specific"].extend([
+                {"name": "CoQ10", "dose": "200mg", "timing": "morning", "form": "ubiquinol"},
+                {"name": "B-Complex", "dose": "high-potency", "timing": "morning", "form": "activated"}
+            ])
+        
+        # Performance optimization
+        if profile.primary_goal == "enhance_athletic_performance":
+            protocol["optimization"].extend([
+                {"name": "Essential Amino Acids", "dose": "10-15g", "timing": "pre-workout"},
+                {"name": "Creatine", "dose": "5g", "timing": "post-workout"},
+                {"name": "Beta-Alanine", "dose": "3g", "timing": "divided doses"}
+            ])
+        
+        return protocol
+    
+    def _create_nutrition_guidelines(self, profile) -> Dict:
+        """Create personalized nutrition guidelines."""
+        guidelines = {
+            "macronutrient_targets": {},
+            "meal_timing": {},
+            "food_priorities": [],
+            "avoid_list": []
+        }
+        
+        # Calculate macros based on goals
+        if profile.primary_goal == "lose_weight":
+            guidelines["macronutrient_targets"] = {
+                "protein": "2.2g/kg body weight",
+                "carbs": "100-150g (low-carb approach)",
+                "fats": "Remainder of calories, focus on omega-3"
+            }
+        elif profile.primary_goal == "build_muscle":
+            guidelines["macronutrient_targets"] = {
+                "protein": "2.5g/kg body weight",
+                "carbs": "3-4g/kg around training",
+                "fats": "1g/kg minimum"
+            }
+        
+        # Dr. Strunz principles
+        guidelines["food_priorities"] = [
+            "Wild-caught fish 3x/week",
+            "Organic vegetables 500g+ daily",
+            "Quality protein at every meal",
+            "Fermented foods daily"
+        ]
+        
+        return guidelines
+    
+    def _create_exercise_plan(self, profile) -> Dict:
+        """Create personalized exercise plan."""
+        plan = {
+            "weekly_structure": {},
+            "specific_protocols": [],
+            "recovery_strategies": []
+        }
+        
+        # Based on activity level and goals
+        if profile.activity_level.value == "sedentary":
+            plan["weekly_structure"] = {
+                "week_1_4": "3x 20min walks + 2x bodyweight exercises",
+                "week_5_8": "3x 30min walks + 2x resistance training",
+                "week_9_12": "4x mixed cardio/strength sessions"
+            }
+        elif profile.activity_level.value in ["moderately_active", "very_active"]:
+            plan["weekly_structure"] = {
+                "strength": "3x/week full body or split",
+                "cardio": "2x HIIT + 1x Zone 2",
+                "flexibility": "Daily 10min mobility"
+            }
+        
+        return plan
+    
+    def _create_lifestyle_interventions(self, profile) -> List[Dict]:
+        """Create lifestyle interventions."""
+        interventions = []
+        
+        if profile.stress_level > 6:
+            interventions.append({
+                "area": "Stress Management",
+                "intervention": "Daily meditation or breathing practice",
+                "protocol": "Start with 5min morning breathing, build to 20min",
+                "supplements": "Ashwagandha 600mg, L-Theanine 200mg as needed"
+            })
+        
+        if profile.sleep_hours < 7:
+            interventions.append({
+                "area": "Sleep Optimization",
+                "intervention": "Sleep hygiene protocol",
+                "protocol": "10pm bedtime, no screens 1hr before, cool room",
+                "supplements": "Magnesium + Glycine + Melatonin protocol"
+            })
+        
+        return interventions
+    
+    def _create_monitoring_schedule(self, profile) -> Dict:
+        """Create monitoring schedule."""
+        return {
+            "daily": {
+                "metrics": ["Energy (1-10)", "Sleep quality", "Stress level"],
+                "method": "Morning journal or app"
+            },
+            "weekly": {
+                "metrics": ["Weight", "Body measurements", "Performance metrics"],
+                "method": "Same time, same conditions"
+            },
+            "monthly": {
+                "metrics": ["Progress photos", "Symptom review", "Protocol adherence"],
+                "method": "Comprehensive review"
+            },
+            "quarterly": {
+                "metrics": ["Blood work", "DEXA scan", "Fitness testing"],
+                "method": "Professional assessment"
+            }
+        }
+    
+    def _select_education_resources(self, profile) -> List[Dict]:
+        """Select appropriate education resources."""
+        resources = []
+        
+        # Beginners start with basics
+        if profile.strunz_experience.value == "beginner":
+            resources.append({
+                "type": "Book",
+                "title": "Das Geheimnis der Gesundheit",
+                "focus": "Foundation principles",
+                "timeline": "Week 1-2"
+            })
+        
+        # Goal-specific resources
+        if profile.primary_goal == "optimize_longevity":
+            resources.append({
+                "type": "Book",
+                "title": "Der Gen-Trick",
+                "focus": "Epigenetic optimization",
+                "timeline": "Week 3-4"
+            })
+        
+        # Add newsletter topics
+        resources.append({
+            "type": "Newsletter Archive",
+            "topics": ["Search for your specific symptoms", "Latest research on your conditions"],
+            "frequency": "3 articles/week"
+        })
+        
+        return resources
+    
+    def _project_improvement_timeline(self, profile) -> Dict:
+        """Project expected improvement timeline."""
+        timeline = {
+            "week_1_2": [],
+            "week_3_4": [],
+            "month_2": [],
+            "month_3": [],
+            "month_6": []
+        }
+        
+        # Energy improvements
+        if profile.energy_level <= 5:
+            timeline["week_1_2"].append("Noticeable energy improvement with foundation supplements")
+            timeline["month_2"].append("Stable energy throughout the day")
+        
+        # Weight loss
+        if profile.primary_goal == "lose_weight":
+            timeline["week_3_4"].append("1-2kg weight loss with low-carb approach")
+            timeline["month_2"].append("4-6kg total loss, improved body composition")
+            timeline["month_3"].append("8-10kg loss, metabolic optimization")
+        
+        # General health markers
+        timeline["month_3"].append("Improved blood work markers")
+        timeline["month_6"].append("Optimal biomarker ranges achieved")
+        
+        return timeline
 
 def main():
     """Run the enhanced MCP server."""

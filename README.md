@@ -64,18 +64,19 @@ Dr. Strunz's books represent decades of clinical experience and scientific resea
 
 ### 🌟 For Health Enthusiasts & Practitioners
 - [User Journey & Roles](#user-journey--roles)
-  - [Functional Medicine Expert](#functional-medicine-expert)
-  - [Community Researcher](#community-researcher)
-  - [Longevity Enthusiast](#longevity-enthusiast)
-  - [Dr. Strunz Fan](#dr-strunz-fan)
-  - [Health Optimizer](#health-optimizer)
+  - [Functional Medicine Expert](#-functional-medicine-expert)
+  - [Community Researcher](#-community-researcher)
+  - [Longevity Enthusiast](#-longevity-enthusiast)
+  - [Dr. Strunz Fan](#-dr-strunz-fan)
+  - [Health Optimizer](#-health-optimizer)
 - [Use Cases & LLM Integration](#use-cases--llm-integration)
-- [Dr. Strunz Newsletter Analysis (2004-2025)](#-dr-strunz-newsletter-analysis-2004-2025)
+- [Personalized Health Assessment](#-personalized-health-assessment--journey-mapping)
+- [Dr. Strunz Newsletter Analysis](#-dr-strunz-newsletter-analysis-2004-2025)
 - [Knowledge Activation Principle](#knowledge-activation-principle)
-- [Content Sources & Statistics](#content-sources--statistics)
-- [Forum Analysis & Insights](#forum-analysis--insights)
+- [Content Sources & Statistics](#content-sources)
+- [Forum Analysis & Insights](#forum-analysis)
 - [Getting Started](#getting-started)
-- [MCP Tools & Capabilities](#mcp-tools--capabilities)
+- [Search Guide](#search-guide)
 
 ### 🔧 For Developers & Integrators
 - [Technical Architecture](#technical-architecture)
@@ -883,6 +884,104 @@ Comprehensive longevity protocol with:
 - Monitoring and adjustment protocols
 - Timeline and expectations
 ```
+
+## 🎯 Personalized Health Assessment & Journey Mapping
+
+### Dynamic User Profiling System
+
+The enhanced MCP server now includes comprehensive health assessment capabilities that create personalized health journeys based on individual profiles.
+
+**New MCP Tools for Personalization:**
+
+#### 1. `get_health_assessment_questions()`
+Provides comprehensive health questionnaire covering:
+- Basic demographics and health status
+- Current symptoms and medical conditions
+- Lifestyle factors (sleep, stress, activity)
+- Supplement usage and experience
+- Goals and commitment level
+- Dr. Strunz experience level
+
+#### 2. `assess_user_health_profile()`
+Creates detailed health profile including:
+- Automatic role assignment (Functional Expert, Longevity Enthusiast, etc.)
+- Personalized journey plan
+- Immediate action priorities
+- Comprehensive assessment report
+
+#### 3. `create_personalized_protocol()`
+Generates fully customized protocols with:
+- Foundation supplements with timing
+- Condition-specific interventions
+- Nutrition guidelines based on goals
+- Exercise plans adapted to fitness level
+- Lifestyle modifications
+- Monitoring schedules
+- Expected improvement timeline
+
+### Example User Assessment Flow
+
+```mermaid
+flowchart TB
+    A[User Starts Assessment] --> B[Health Questions]
+    B --> C[Current Symptoms]
+    C --> D[Lifestyle Analysis]
+    D --> E[Goal Setting]
+    E --> F[Experience Level]
+    
+    F --> G{Profile Creation}
+    G --> H[Role Assignment]
+    G --> I[Health Priorities]
+    G --> J[Resource Selection]
+    
+    H --> K[Journey Mapping]
+    I --> K
+    J --> K
+    
+    K --> L[Personalized Protocol]
+    L --> M[Foundation Stack]
+    L --> N[Specific Interventions]
+    L --> O[Timeline & Milestones]
+    
+    M --> P[Implementation Plan]
+    N --> P
+    O --> P
+    
+    P --> Q[Monitoring Schedule]
+    Q --> R[Success Tracking]
+    
+    style A fill:#e1f5fe
+    style G fill:#c8e6c9
+    style L fill:#fff9c4
+    style R fill:#f3e5f5
+```
+
+### Sample Personalized Protocol Output
+
+**For a 45-year-old with fatigue and longevity goals:**
+
+**Immediate Actions (Week 1):**
+1. **Foundation Protocol Start**
+   - Vitamin D3 4000 IU + K2 100mcg (morning)
+   - Magnesium Glycinate 400mg (evening)
+   - Omega-3 2g EPA/DHA (with meals)
+
+2. **Energy Restoration**
+   - CoQ10 200mg (morning)
+   - B-Complex activated forms (morning)
+   - Amino acids 10g (pre-activity)
+
+3. **Lifestyle Modifications**
+   - Sleep optimization: 10pm bedtime routine
+   - Stress reduction: 5-min morning breathing
+   - Movement: 20-min daily walks
+
+**Expected Timeline:**
+- Week 1-2: Noticeable energy improvement
+- Week 3-4: Better sleep quality
+- Month 2: Stable all-day energy
+- Month 3: Optimal biomarker improvements
+- Month 6: Full protocol integration
 
 ## Overview
 
