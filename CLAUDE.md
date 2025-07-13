@@ -335,3 +335,8 @@ curl -X POST https://strunz.up.railway.app/tools/knowledge_search \
 - `data/raw/` - Scraped HTML content
 - `data/processed/` - Processed text chunks
 - Full FAISS index files (use chunks instead)
+
+## Development Best Practices
+
+### CI/CD Checklist
+- **Always run a second test-run against the local container docker deployment before checkin to Github and deploy to railways.**
