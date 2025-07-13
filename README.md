@@ -1921,6 +1921,147 @@ from src.debug import debug_search
 debug_search("test query", verbose=True)
 ```
 
+## SDLC Process (Software Development Lifecycle)
+
+### Complete Development to Production Workflow
+
+The Dr. Strunz Knowledge Base follows a comprehensive SDLC process from development through deployment to production monitoring.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Local as Local Environment
+    participant Git as GitHub Repository
+    participant Railway as Railway Platform
+    participant Prod as Production Tests
+    
+    Note over Dev,Local: 1. Development Phase
+    Dev->>Local: Develop/modify code
+    Local->>Local: Run tests locally (pytest)
+    Local->>Local: Test MCP tools
+    
+    Note over Dev,Git: 2. Version Control
+    Dev->>Git: git add -A
+    Dev->>Git: git commit -m "feat: description"
+    Dev->>Git: git push origin main
+    
+    Note over Git,Railway: 3. Deployment Phase
+    Git->>Railway: Webhook triggers build
+    Railway->>Railway: Docker build (5-7 min)
+    Railway->>Railway: Copy FAISS indices
+    Railway->>Railway: Start MCP server
+    
+    Note over Railway,Prod: 4. Production Testing
+    Prod->>Railway: Health check /
+    Prod->>Railway: SSE test /sse
+    Prod->>Railway: Integration tests
+    Railway-->>Prod: All tests pass ✓
+    
+    Note over Railway: 5. Monitoring
+    Railway->>Railway: Check logs
+    Railway->>Railway: Monitor memory (~1.2GB)
+    Railway->>Railway: Track response times
+```
+
+### Development Workflow
+
+#### 1. Local Development
+```bash
+# Make changes to MCP tools
+vi src/mcp/enhanced_server.py
+
+# Test locally
+python -m src.mcp.server
+
+# Run tests
+pytest src/tests/ -v
+```
+
+#### 2. Commit & Push
+```bash
+git add -A
+git commit -m "feat: Add new MCP tools for user profiling
+
+- get_dr_strunz_biography() - Comprehensive bio
+- get_mcp_server_purpose() - Server explanation  
+- get_vector_db_analysis() - Database statistics
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+git push origin main
+```
+
+#### 3. Railway Deployment (Automatic)
+- Triggered by push to main branch
+- Docker build process (5-7 minutes)
+- Automatic health checks
+- Zero-downtime deployment
+
+#### 4. Production Verification
+```bash
+# Check deployment status
+curl -I https://strunz-knowledge.up.railway.app/
+
+# Test SSE endpoint
+curl https://strunz-knowledge.up.railway.app/sse
+
+# Run integration tests
+python src/tests/test_production_mcp.py
+```
+
+#### 5. Monitor Logs
+```bash
+# Via Railway dashboard or CLI
+railway logs
+
+# Check for errors
+railway logs | grep ERROR
+```
+
+### Key Files in SDLC
+
+| File | Purpose | Update Frequency |
+|------|---------|------------------|
+| `src/mcp/enhanced_server.py` | Main MCP server (19 tools) | Feature additions |
+| `src/mcp/user_profiling.py` | Health assessment system | Enhancement |
+| `requirements.txt` | Python dependencies | As needed |
+| `Dockerfile` | Container configuration | Infrastructure changes |
+| `railway.toml` | Deployment config | Rarely |
+| `CLAUDE.md` | Development guide | With major changes |
+
+### Best Practices
+
+1. **Always test locally first**
+   - Run pytest before committing
+   - Test new MCP tools manually
+   - Verify no import errors
+
+2. **Commit messages**
+   - Use conventional commits (feat:, fix:, docs:)
+   - Include co-author attribution
+   - List all changes clearly
+
+3. **Monitor deployment**
+   - Watch Railway logs during build
+   - Verify health checks pass
+   - Test production endpoints
+
+4. **Performance tracking**
+   - Response times <100ms
+   - Memory usage ~1.2GB
+   - Error rate <1%
+
+### Troubleshooting Deployment
+
+If deployment fails:
+1. Check Railway build logs
+2. Verify requirements.txt compatibility
+3. Ensure FAISS indices are included
+4. Test Docker build locally
+5. Check environment variables
+
 ## Data Privacy
 
 This knowledge base is for research and personal use. All content belongs to Dr. Ulrich Strunz and should be used in accordance with applicable copyright laws. The system:
