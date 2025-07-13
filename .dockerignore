@@ -49,8 +49,13 @@ logs/
 !.env.example
 data/raw/
 data/processed/
+data/books/
 data/delta/
+# Exclude full FAISS files but keep chunks
 *.faiss
+!data/faiss_indices/chunks/*.part*
+!data/faiss_indices/chunks/*.metadata.json
+!data/faiss_indices/chunks/*.py
 *.pkl
 *.bin
 

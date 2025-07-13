@@ -34,15 +34,16 @@ COPY src/ ./src/
 COPY main.py ./
 COPY start_server.py ./
 COPY simple_server.py ./
-COPY config/ ./config/ 2>/dev/null || true
 COPY scripts/ ./scripts/
 
-# Create necessary directories
-RUN mkdir -p data/raw data/processed data/faiss_indices logs
+# Create config directory (it may be empty)
+RUN mkdir -p config
 
-# Copy FAISS index chunks and reconstruction scripts
+# Copy FAISS index chunks
 COPY data/faiss_indices/chunks/ ./data/faiss_indices/chunks/
-COPY scripts/reconstruct_indices.sh ./scripts/
+
+# Create necessary directories
+RUN mkdir -p data/raw data/processed logs
 
 # Reconstruct FAISS indices from chunks
 RUN cd /app && bash scripts/reconstruct_indices.sh
