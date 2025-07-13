@@ -784,16 +784,16 @@ gantt
     title 12-Week Optimization Journey
     dateFormat  YYYY-MM-DD
     section Foundation
-    Baseline Testing           :done, 2025-01-01, 7d
-    Deficiency Correction      :done, 2025-01-08, 14d
-    Core Stack Implementation  :done, 2025-01-15, 14d
+    Baseline Testing           :done, task1, 2025-01-01, 7d
+    Deficiency Correction      :done, task2, after task1, 14d
+    Core Stack Implementation  :done, task3, after task2, 14d
     section Optimization
-    Cofactor Addition          :active, 2025-01-29, 14d
-    Performance Testing        :2025-02-12, 7d
-    Protocol Refinement        :2025-02-19, 14d
+    Cofactor Addition          :active, task4, after task3, 14d
+    Performance Testing        :task5, after task4, 7d
+    Protocol Refinement        :task6, after task5, 14d
     section Elite Phase
-    Advanced Protocols         :2025-03-05, 14d
-    Final Assessment          :2025-03-19, 7d
+    Advanced Protocols         :task7, after task6, 14d
+    Final Assessment          :task8, after task7, 7d
 ```
 
 **💡 Health Optimizer MCP Integration:**
@@ -1486,51 +1486,55 @@ sequenceDiagram
 
 ### GitHub Actions Workflow
 
-```yaml
-# .github/workflows/update-index.yml
-name: Update Knowledge Base Index
+The StrunzKnowledge project uses GitHub Actions for continuous integration, automated testing, and daily content updates. Our workflows ensure code quality, maintain up-to-date FAISS indices, and validate deployments.
 
-on:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:  # Manual trigger
+#### 🔄 Automated Workflows
 
-jobs:
-  update-index:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      
-      - name: Check for new content
-        id: check
-        run: |
-          python src/scripts/check_new_content.py
-      
-      - name: Update indices
-        if: steps.check.outputs.has_updates == 'true'
-        run: |
-          python src/rag/news_processor.py --update-only
-          python src/rag/update_combined_index.py
-      
-      - name: Commit changes
-        if: steps.check.outputs.has_updates == 'true'
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add data/faiss_indices/
-          git commit -m "chore: update FAISS indices [skip ci]"
-          git push
-```
+**1. Daily Knowledge Base Updates** ([.github/workflows/daily_update.yml](.github/workflows/daily_update.yml))
+- **Schedule**: Runs daily at 2 AM UTC
+- **Purpose**: Automatically fetches new Dr. Strunz newsletter articles and updates FAISS indices
+- **Process**:
+  - Checks for new content on Dr. Strunz website
+  - Downloads and processes new articles
+  - Updates FAISS vector embeddings
+  - Commits changes automatically
+  - Triggers deployment to Railway
+
+**2. Continuous Integration** ([.github/workflows/ci.yml](.github/workflows/ci.yml))
+- **Trigger**: On every push and pull request
+- **Purpose**: Validates code quality and runs tests
+- **Checks**:
+  - Python linting with ruff
+  - Type checking with mypy
+  - Unit test execution
+  - Docker build validation
+  - Security scanning
+
+**3. Integration Tests** ([.github/workflows/integration-tests.yml](.github/workflows/integration-tests.yml))
+- **Trigger**: After deployment to Railway
+- **Purpose**: Validates production deployment
+- **Tests**:
+  - MCP server health checks
+  - SSE endpoint functionality
+  - FAISS search operations
+  - JSON-RPC protocol compliance
+
+**4. Index Updates** ([.github/workflows/update-index.yml](.github/workflows/update-index.yml))
+- **Trigger**: Manual or scheduled
+- **Purpose**: Rebuild and optimize FAISS indices
+- **Features**:
+  - Incremental index updates
+  - Index size optimization
+  - Metadata validation
+  - Performance benchmarking
+
+#### 🚀 Workflow Benefits
+
+- **Automated Content Updates**: New Dr. Strunz articles are automatically integrated
+- **Quality Assurance**: Every change is validated before deployment
+- **Zero Downtime**: Blue-green deployment strategy
+- **Monitoring**: Automated alerts for failures
+- **Reproducibility**: All workflows are version controlled
 
 ## Scripts & Tools
 
@@ -1778,7 +1782,7 @@ python -m pytest src/tests/ -v -s
 💾 **Storage**: 2.0 GB across 11,228 files  
 🎯 **Quality**: 100% metadata coverage, 0% empty content  
 
-**📋 [View Enhanced Test Report](ENHANCED_TEST_REPORT.md)** | [Original Test Report](TEST_REPORT.md) | [Production Test Report](PRODUCTION_TEST_REPORT.md)
+**📋 [View Enhanced Test Report](docs/test-reports/ENHANCED_TEST_REPORT.md)** | [Original Test Report](docs/test-reports/TEST_REPORT.md) | [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md)
 
 ## Deployment
 
