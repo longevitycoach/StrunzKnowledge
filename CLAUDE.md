@@ -301,3 +301,37 @@ curl -X POST https://strunz-knowledge.up.railway.app/tools/knowledge_search \
 - Update dependencies
 - Performance review
 - Backup data
+
+## GitHub File Size Management
+
+### File Size Rules
+- **GitHub limit**: 100 MB per file (warning at 50 MB)
+- **Our approach**: Split files larger than 40 MB into chunks
+- **FAISS indices**: Stored as chunks in `data/faiss_indices/chunks/`
+- **Reconstruction**: Automatic during Docker build
+
+### Managing Large Files
+1. **Check file sizes** before committing:
+   ```bash
+   find . -type f -size +40M -exec ls -lh {} \;
+   ```
+
+2. **Split large files** using provided script:
+   ```bash
+   python scripts/split_faiss_index.py
+   ```
+
+3. **Always commit chunks**, never the full files:
+   - ✅ `data/faiss_indices/chunks/*.part*`
+   - ❌ `data/faiss_indices/combined_index.faiss`
+
+4. **Monitor repository size**:
+   ```bash
+   git count-objects -vH
+   ```
+
+### Protected Directories (Never Commit)
+- `data/books/` - PDF books (copyright)
+- `data/raw/` - Scraped HTML content
+- `data/processed/` - Processed text chunks
+- Full FAISS index files (use chunks instead)
