@@ -83,6 +83,13 @@ The MCP server uses sentence-transformers for **both** initial processing AND re
 - **Report**: Generated automatically as `MCP_FULL_SERVER_TEST_REPORT.md`
 - **Docker Testing**: Always test locally before Railway deployment
 
+### MCP Protocol Security
+- **Production Server**: Uses `railway_mcp_server.py` with FastMCP only
+- **No Public API**: Only health check endpoint exposed at `/`
+- **MCP Access**: Via stdio protocol, not HTTP endpoints
+- **SSE Removed**: No `/sse` endpoint in production for security
+- **Data Protection**: All queries require MCP protocol authentication
+
 ## Update Information
 - News articles can be updated incrementally using wget with -N flag
 - Books are manually added to data/books/ directory

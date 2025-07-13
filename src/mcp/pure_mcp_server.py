@@ -237,7 +237,9 @@ async def trace_topic_evolution(topic: str) -> Dict:
 async def main():
     """Run the pure MCP server."""
     logger.info("Starting Pure MCP Server (no HTTP API)")
-    logger.info(f"MCP tools available: {len(mcp.tools)}")
+    # Count tools manually
+    tool_count = len([name for name in dir(mcp) if hasattr(getattr(mcp, name), '_tool_metadata')])
+    logger.info(f"MCP tools available: {tool_count}")
     
     # Run the MCP server
     await mcp.run()
