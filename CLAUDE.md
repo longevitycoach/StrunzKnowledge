@@ -92,10 +92,15 @@ The MCP server uses sentence-transformers for **both** initial processing AND re
 
 ### Railway Testing Protocol
 After each deployment to Railway:
-1. **Health Check**: `curl https://strunz-knowledge-production.up.railway.app/`
-2. **SSE Test**: `./test_sse_endpoint.sh https://strunz-knowledge-production.up.railway.app/sse`
+1. **Health Check**: `curl https://strunz.up.railway.app/`
+2. **SSE Test**: `./src/scripts/testing/test_sse_endpoint.sh https://strunz.up.railway.app/sse`
 3. **Monitor Logs**: Check Railway dashboard for deployment status
 4. **Verify Version**: Ensure correct version number in health response
+
+### Railway Domains
+- **Public Domain**: `strunz.up.railway.app` (RAILWAY_PUBLIC_DOMAIN)
+- **Private Domain**: `strunz.railway.internal` (RAILWAY_PRIVATE_DOMAIN)
+- **Alternative**: `strunz-knowledge-production.up.railway.app`
 
 ### Docker Publishing
 After each successful release:

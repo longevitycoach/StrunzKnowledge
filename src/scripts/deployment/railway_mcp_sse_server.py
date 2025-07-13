@@ -12,8 +12,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import AsyncGenerator
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 # Configure logging
 logging.basicConfig(
@@ -34,11 +34,13 @@ app = FastAPI(title="MCP Server with SSE")
 @app.get("/")
 async def health_check():
     """Health check for Railway."""
+    public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'strunz.up.railway.app')
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
         "version": "0.2.0",
         "timestamp": datetime.now().isoformat(),
+        "domain": public_domain,
         "endpoints": {
             "health": "/",
             "sse": "/sse",

@@ -1532,6 +1532,28 @@ jobs:
           git push
 ```
 
+## Scripts & Tools
+
+All scripts are organized under `src/scripts/` for better maintainability:
+
+### 📁 Script Categories
+- **deployment/** - Server deployment scripts
+- **testing/** - Test suites and validation tools  
+- **analysis/** - Content analysis utilities
+- **data/** - Data processing scripts
+
+### 🚀 Key Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `main.py` | Main entry point | `python main.py` |
+| `test_sse_endpoint.sh` | Test SSE endpoint | `./src/scripts/testing/test_sse_endpoint.sh` |
+| `test_mcp_jsonrpc.sh` | Test MCP tools | `./src/scripts/testing/test_mcp_jsonrpc.sh` |
+| `reconstruct_indices.sh` | Rebuild FAISS indices | Used in Docker build |
+| `split_faiss_index.py` | Split large indices | `python src/scripts/data/split_faiss_index.py` |
+
+For detailed documentation, see [SCRIPTS.md](SCRIPTS.md).
+
 ## Development Setup
 
 ### Prerequisites
@@ -1855,8 +1877,8 @@ KEEP_ALIVE=5                 # Keep-alive timeout
 
 #### Health Check URLs
 ```
-Production: https://strunz-knowledge-production.up.railway.app
-Custom Domain: https://strunz.up.railway.app (when configured)
+Production: https://strunz.up.railway.app
+Alternative: https://strunz-knowledge-production.up.railway.app
 ```
 
 #### Access Information
@@ -1872,10 +1894,10 @@ Custom Domain: https://strunz.up.railway.app (when configured)
 
 ```bash
 # Health check (only public endpoint)
-curl https://strunz-knowledge-production.up.railway.app/
+curl https://strunz.up.railway.app/
 
 # SSE monitoring endpoint
-curl -N -H "Accept: text/event-stream" https://strunz-knowledge-production.up.railway.app/sse
+curl -N -H "Accept: text/event-stream" https://strunz.up.railway.app/sse
 
 # Expected health response:
 {
