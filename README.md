@@ -1552,7 +1552,7 @@ All scripts are organized under `src/scripts/` for better maintainability:
 | `reconstruct_indices.sh` | Rebuild FAISS indices | Used in Docker build |
 | `split_faiss_index.py` | Split large indices | `python src/scripts/data/split_faiss_index.py` |
 
-For detailed documentation, see [SCRIPTS.md](SCRIPTS.md).
+For detailed documentation, see [SCRIPTS.md](docs/SCRIPTS.md).
 
 ## Development Setup
 
@@ -2111,6 +2111,28 @@ This knowledge base is for research and personal use. All content belongs to Dr.
 - Implements rate limiting for web scraping
 - Uses secure HTTPS connections in production
 - Follows GDPR compliance guidelines
+
+## 📚 Documentation
+
+### Core Documentation
+- [CLAUDE.md](CLAUDE.md) - Development guide and technical details
+- [Scripts Documentation](docs/SCRIPTS.md) - Comprehensive guide to all scripts
+- [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md) - Production deployment steps
+- [Project Structure](docs/PROJECT_STRUCTURE.md) - Directory organization
+
+### Release Information
+- [Release Notes v0.2.0](docs/RELEASE_NOTES_v0.2.0.md) - Latest release details
+- [Enhancement Summary](docs/ENHANCEMENT_SUMMARY.md) - Feature improvements
+- [Deployment Status](docs/DEPLOYMENT_STATUS.md) - Current deployment info
+
+### Test Reports
+- [MCP Full Server Test Report](docs/test-reports/MCP_FULL_SERVER_TEST_REPORT.md) - Comprehensive test results
+- [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md) - Production environment tests
+- [All Test Reports](docs/test-reports/) - Historical test documentation
+
+### Analysis & Research
+- [Forum Analysis Report](docs/analysis/forum_analysis_report.md) - Forum content analysis
+- [Archive](docs/archive/) - Deprecated documentation
 
 ## License
 

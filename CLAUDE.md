@@ -109,6 +109,18 @@ After each successful release:
 3. **Update Latest**: `docker push longevitycoach/strunz-mcp:latest`
 4. **Verify on Docker Hub**: Check https://hub.docker.com/r/longevitycoach/strunz-mcp
 
+## Related Documentation
+
+### Essential Docs
+- [Scripts Guide](docs/SCRIPTS.md) - All scripts documentation
+- [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md) - Production deployment steps
+- [Project Structure](docs/PROJECT_STRUCTURE.md) - Directory organization
+- [Release Notes](docs/RELEASE_NOTES_v0.2.0.md) - Latest release information
+
+### Test Reports
+- [Latest Test Report](docs/test-reports/MCP_FULL_SERVER_TEST_REPORT.md) - v0.2.0 test results
+- [All Test Reports](docs/test-reports/) - Historical test documentation
+
 ## Update Information
 - News articles can be updated incrementally using wget with -N flag
 - Books are manually added to data/books/ directory
