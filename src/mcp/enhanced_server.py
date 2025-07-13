@@ -1548,6 +1548,125 @@ def main():
     server = StrunzKnowledgeMCP()
     return server.app
 
+def create_fastapi_app():
+    """Create FastAPI app with enhanced MCP server."""
+    from fastapi import FastAPI
+    from fastapi.responses import JSONResponse
+    from sse_starlette.sse import EventSourceResponse
+    import asyncio
+    import json
+    
+    # Create FastAPI app
+    fastapi_app = FastAPI(title="Enhanced Dr. Strunz Knowledge MCP Server")
+    
+    # Initialize MCP server
+    mcp_server = StrunzKnowledgeMCP()
+    
+    @fastapi_app.get("/")
+    async def health_check():
+        """Health check endpoint."""
+        return JSONResponse({
+            "status": "healthy",
+            "server": "Enhanced Dr. Strunz Knowledge MCP Server",
+            "version": "1.0.0",
+            "mcp_tools": 19,
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    @fastapi_app.get("/sse")
+    async def sse_endpoint():
+        """Server-Sent Events endpoint."""
+        async def event_generator():
+            yield {
+                "event": "message",
+                "data": json.dumps({
+                    "type": "connected",
+                    "message": "Connected to Enhanced Dr. Strunz Knowledge MCP Server",
+                    "timestamp": datetime.now().isoformat()
+                })
+            }
+            
+            # Send periodic heartbeat
+            while True:
+                await asyncio.sleep(30)
+                yield {
+                    "event": "heartbeat",
+                    "data": json.dumps({
+                        "type": "heartbeat",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                }
+        
+        return EventSourceResponse(event_generator())
+    
+    @fastapi_app.post("/mcp")
+    async def mcp_endpoint(request: dict):
+        """MCP JSON-RPC endpoint."""
+        # Handle MCP protocol requests
+        method = request.get("method", "")
+        
+        if method == "tools/list":
+            # Return list of available tools
+            tools = []
+            # Add all 19 tools here
+            tool_names = [
+                "knowledge_search", "find_contradictions", "trace_topic_evolution",
+                "create_health_protocol", "compare_approaches", "analyze_supplement_stack",
+                "nutrition_calculator", "get_community_insights", "summarize_posts",
+                "get_trending_insights", "analyze_strunz_newsletter_evolution",
+                "get_guest_authors_analysis", "track_health_topic_trends",
+                "get_health_assessment_questions", "assess_user_health_profile",
+                "create_personalized_protocol", "get_dr_strunz_biography",
+                "get_mcp_server_purpose", "get_vector_db_analysis"
+            ]
+            
+            for name in tool_names:
+                tools.append({
+                    "name": name,
+                    "description": f"Tool: {name}",
+                    "inputSchema": {"type": "object"}
+                })
+            
+            return {
+                "jsonrpc": "2.0",
+                "result": {"tools": tools},
+                "id": request.get("id", 1)
+            }
+        
+        elif method == "tools/call":
+            # Handle tool calls
+            tool_name = request.get("params", {}).get("name", "")
+            args = request.get("params", {}).get("arguments", {})
+            
+            # Route to appropriate tool
+            if tool_name == "get_dr_strunz_biography":
+                result = await mcp_server.get_dr_strunz_biography()
+            elif tool_name == "get_mcp_server_purpose":
+                result = await mcp_server.get_mcp_server_purpose()
+            elif tool_name == "get_vector_db_analysis":
+                result = await mcp_server.get_vector_db_analysis()
+            else:
+                result = {"error": f"Tool {tool_name} not implemented in this demo"}
+            
+            return {
+                "jsonrpc": "2.0",
+                "result": result,
+                "id": request.get("id", 1)
+            }
+        
+        else:
+            return {
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": -32601,
+                    "message": "Method not found"
+                },
+                "id": request.get("id", 1)
+            }
+    
+    return fastapi_app
+
 if __name__ == "__main__":
+    # For testing
     app = main()
     print("Enhanced Dr. Strunz Knowledge MCP Server ready!")
