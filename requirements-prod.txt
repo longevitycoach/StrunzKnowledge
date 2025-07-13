@@ -30,4 +30,4 @@ pydantic-settings>=2.6.1
 loguru==0.7.2
 
 # HTTP client for health checks
-httpx==0.26.0
+httpx>=0.28.1
