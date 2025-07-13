@@ -20,7 +20,7 @@ sse-starlette==2.0.0
 
 # LLM Integration
 langchain==0.1.5
-langchain-community==0.0.16
+langchain-community>=0.0.17
 tiktoken==0.5.2
 
 # Utilities
