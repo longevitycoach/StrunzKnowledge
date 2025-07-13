@@ -79,10 +79,16 @@ data/books/
 *.pdf
 *.epub
 
-# Vector indices
+# Vector indices (but allow chunks)
 *.faiss
+!*.faiss.part*
+!*.faiss.metadata.json
 *.pkl
 *.bin
+# Don't include the full metadata json
+data/faiss_indices/combined_metadata.json
+# But allow the chunks
+!data/faiss_indices/chunks/
 
 # OS
 .DS_Store

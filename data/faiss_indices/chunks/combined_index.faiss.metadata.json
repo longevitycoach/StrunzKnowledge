@@ -1,0 +1,10 @@
+{
+  "original_file": "combined_index.faiss",
+  "original_size": 66620973,
+  "num_chunks": 2,
+  "chunk_size": 41943040,
+  "chunks": [
+    "combined_index.faiss.part000",
+    "combined_index.faiss.part001"
+  ]
+}

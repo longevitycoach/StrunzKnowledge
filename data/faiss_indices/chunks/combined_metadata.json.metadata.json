@@ -1,0 +1,10 @@
+{
+  "original_file": "combined_metadata.json",
+  "original_size": 60744527,
+  "num_chunks": 2,
+  "chunk_size": 41943040,
+  "chunks": [
+    "combined_metadata.json.part000",
+    "combined_metadata.json.part001"
+  ]
+}

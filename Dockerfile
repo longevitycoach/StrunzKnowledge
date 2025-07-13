@@ -38,9 +38,12 @@ COPY config/ ./config/ 2>/dev/null || true
 # Create necessary directories
 RUN mkdir -p data/raw data/processed data/faiss_indices logs
 
-# Note: FAISS indices and processed data are not in git due to size
-# In production, these would be downloaded or generated during deployment
-# For now, create empty directories to prevent errors
+# Copy FAISS index chunks and reconstruction scripts
+COPY data/faiss_indices/chunks/ ./data/faiss_indices/chunks/
+COPY scripts/reconstruct_indices.sh ./scripts/
+
+# Reconstruct FAISS indices from chunks
+RUN cd /app && bash scripts/reconstruct_indices.sh
 
 # Create a non-root user to run the application
 RUN useradd -m -u 1000 appuser && \
