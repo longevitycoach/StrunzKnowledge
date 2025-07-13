@@ -1853,9 +1853,10 @@ KEEP_ALIVE=5                 # Keep-alive timeout
 
 ### Railway Production Deployment
 
-#### Health Check URL
+#### Health Check URLs
 ```
-https://strunz.up.railway.app
+Production: https://strunz-knowledge-production.up.railway.app
+Custom Domain: https://strunz.up.railway.app (when configured)
 ```
 
 #### Access Information
@@ -1871,13 +1872,21 @@ https://strunz.up.railway.app
 
 ```bash
 # Health check (only public endpoint)
-curl https://strunz.up.railway.app/
+curl https://strunz-knowledge-production.up.railway.app/
 
-# Expected response:
+# SSE monitoring endpoint
+curl -N -H "Accept: text/event-stream" https://strunz-knowledge-production.up.railway.app/sse
+
+# Expected health response:
 {
   "status": "healthy",
   "server": "Dr. Strunz Knowledge MCP Server",
-  "note": "MCP protocol only - no public API"
+  "version": "0.2.0",
+  "endpoints": {
+    "health": "/",
+    "sse": "/sse",
+    "mcp": "via stdio protocol only"
+  }
 }
 ```
 

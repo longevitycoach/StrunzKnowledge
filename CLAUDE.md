@@ -84,11 +84,25 @@ The MCP server uses sentence-transformers for **both** initial processing AND re
 - **Docker Testing**: Always test locally before Railway deployment
 
 ### MCP Protocol Security
-- **Production Server**: Uses `railway_mcp_server.py` with FastMCP only
-- **No Public API**: Only health check endpoint exposed at `/`
+- **Production Server**: Uses `railway_mcp_sse_server.py` with FastMCP + SSE monitoring
+- **No Public API**: Only health check (/) and SSE (/sse) endpoints exposed
 - **MCP Access**: Via stdio protocol, not HTTP endpoints
-- **SSE Removed**: No `/sse` endpoint in production for security
+- **SSE Endpoint**: Available at `/sse` for monitoring and testing only
 - **Data Protection**: All queries require MCP protocol authentication
+
+### Railway Testing Protocol
+After each deployment to Railway:
+1. **Health Check**: `curl https://strunz-knowledge-production.up.railway.app/`
+2. **SSE Test**: `./test_sse_endpoint.sh https://strunz-knowledge-production.up.railway.app/sse`
+3. **Monitor Logs**: Check Railway dashboard for deployment status
+4. **Verify Version**: Ensure correct version number in health response
+
+### Docker Publishing
+After each successful release:
+1. **Tag Images**: `docker tag strunz-mcp:VERSION longevitycoach/strunz-mcp:VERSION`
+2. **Push to Registry**: `docker push longevitycoach/strunz-mcp:VERSION`
+3. **Update Latest**: `docker push longevitycoach/strunz-mcp:latest`
+4. **Verify on Docker Hub**: Check https://hub.docker.com/r/longevitycoach/strunz-mcp
 
 ## Update Information
 - News articles can be updated incrementally using wget with -N flag
