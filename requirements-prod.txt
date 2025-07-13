@@ -22,6 +22,7 @@ sse-starlette==2.0.0
 langchain==0.1.5
 langchain-community>=0.0.17
 tiktoken==0.5.2
+sentence-transformers>=2.2.0
 
 # Utilities
 python-dotenv==1.0.0
