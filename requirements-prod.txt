@@ -1,0 +1,33 @@
+# Core dependencies only for production
+# Web Scraping - minimal
+beautifulsoup4==4.12.3
+requests==2.31.0
+lxml==5.1.0
+
+# Data Processing
+pandas==2.2.0
+python-dateutil==2.8.2
+
+# Vector Database
+faiss-cpu==1.7.4
+numpy==1.26.3
+
+# MCP Server
+fastmcp==0.1.0
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+sse-starlette==2.0.0
+
+# LLM Integration
+langchain==0.1.5
+langchain-community==0.0.16
+tiktoken==0.5.2
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.7.0
+pydantic-settings==2.3.0
+loguru==0.7.2
+
+# HTTP client for health checks
+httpx==0.26.0

@@ -7,27 +7,38 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     APP_HOME=/app \
     POETRY_VERSION=1.7.1
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    # Build essentials for some Python packages
-    build-essential \
-    # For web scraping
+# Install system dependencies in smaller chunks to reduce memory usage
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install build dependencies separately
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    make \
     libxml2-dev \
     libxslt-dev \
-    # For SSL/TLS
-    ca-certificates \
-    # Cleanup
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR $APP_HOME
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements-prod.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with memory optimization
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install dependencies in smaller batches to reduce memory usage
+# First install numpy separately as it's a large dependency
+RUN pip install --no-cache-dir numpy==1.26.3
+
+# Then install the rest
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Copy application source code
 COPY src/ ./src/
@@ -58,9 +69,9 @@ USER appuser
 # Expose the MCP server port
 EXPOSE 8000
 
-# Add health check
+# Add health check using curl (lighter than Python with requests)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/').raise_for_status()"
+    CMD curl -f http://localhost:8000/ || exit 1
 
 # Default command to run the MCP server
 CMD ["python", "-u", "start_server.py"]
