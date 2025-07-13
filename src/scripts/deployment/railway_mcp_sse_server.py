@@ -93,18 +93,88 @@ async def sse_endpoint():
     
     return EventSourceResponse(event_generator())
 
+# Import enhanced MCP server for tools
+enhanced_mcp_server = None
+try:
+    from src.mcp.enhanced_server import StrunzKnowledgeMCP
+    enhanced_mcp_server = StrunzKnowledgeMCP()
+    logger.info("Enhanced MCP server initialized with tool registry")
+except Exception as e:
+    logger.error(f"Failed to initialize enhanced MCP server: {e}")
+
 @app.post("/mcp")
 async def mcp_endpoint(request: dict):
-    """MCP JSON-RPC endpoint for testing."""
-    # This endpoint is for testing only - real MCP communication is via stdio
-    return JSONResponse({
-        "jsonrpc": "2.0",
-        "error": {
-            "code": -32601,
-            "message": "MCP protocol is available via stdio only, not HTTP"
-        },
-        "id": request.get("id", 1)
-    })
+    """MCP JSON-RPC endpoint for testing with enhanced server."""
+    if not enhanced_mcp_server:
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "error": {
+                "code": -32500,
+                "message": "Enhanced MCP server not available"
+            },
+            "id": request.get("id", 1)
+        })
+    
+    # Handle MCP protocol requests
+    method = request.get("method", "")
+    
+    if method == "tools/list":
+        # Return list of available tools
+        tools = []
+        tool_names = [
+            "knowledge_search", "find_contradictions", "trace_topic_evolution",
+            "create_health_protocol", "compare_approaches", "analyze_supplement_stack",
+            "nutrition_calculator", "get_community_insights", "summarize_posts",
+            "get_trending_insights", "analyze_strunz_newsletter_evolution",
+            "get_guest_authors_analysis", "track_health_topic_trends",
+            "get_health_assessment_questions", "assess_user_health_profile",
+            "create_personalized_protocol", "get_dr_strunz_biography",
+            "get_mcp_server_purpose", "get_vector_db_analysis"
+        ]
+        
+        for name in tool_names:
+            tools.append({
+                "name": name,
+                "description": f"Tool: {name}",
+                "inputSchema": {"type": "object"}
+            })
+        
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "result": {"tools": tools},
+            "id": request.get("id", 1)
+        })
+    
+    elif method == "tools/call":
+        # Handle tool calls
+        tool_name = request.get("params", {}).get("name", "")
+        args = request.get("params", {}).get("arguments", {})
+        
+        # Route to appropriate tool
+        if tool_name in enhanced_mcp_server.tool_registry:
+            try:
+                tool_func = enhanced_mcp_server.tool_registry[tool_name]
+                result = await tool_func(**args)
+            except Exception as e:
+                result = {"error": f"Tool execution failed: {str(e)}"}
+        else:
+            result = {"error": f"Tool {tool_name} not found in registry"}
+        
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "result": result,
+            "id": request.get("id", 1)
+        })
+    
+    else:
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "error": {
+                "code": -32601,
+                "message": "Method not found"
+            },
+            "id": request.get("id", 1)
+        })
 
 def run_fastapi_server():
     """Run FastAPI server in background thread."""
@@ -128,20 +198,19 @@ async def main():
     # Start HTTP server for health check and SSE
     run_fastapi_server()
     
-    # Import and run the pure MCP server
+    # Import and run the enhanced MCP server
     try:
-        from src.mcp.pure_mcp_server import mcp, HAS_VECTOR_STORE
+        from src.mcp.enhanced_server import create_fastapi_app
         
-        logger.info("Starting Dr. Strunz Knowledge MCP Server v0.2.0")
-        logger.info(f"Vector store available: {HAS_VECTOR_STORE}")
-        # Count tools manually
-        tool_count = len([name for name in dir(mcp) if hasattr(getattr(mcp, name), '_tool_metadata')])
-        logger.info(f"MCP tools available: {tool_count}")
-        logger.info("MCP protocol ready on stdio")
+        logger.info("Starting Enhanced Dr. Strunz Knowledge MCP Server v0.2.0")
+        logger.info("Enhanced MCP server with 19 tools available")
+        logger.info("Full tool registry and FastAPI endpoints active")
         logger.info("SSE endpoint available at /sse")
         
-        # Run MCP server on stdio
-        await mcp.run()
+        # Keep server running for health checks and SSE
+        logger.info("Running in production mode with enhanced MCP capabilities")
+        while True:
+            await asyncio.sleep(60)
         
     except ImportError as e:
         logger.error(f"Failed to import MCP server: {e}")

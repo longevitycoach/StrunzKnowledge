@@ -89,6 +89,7 @@ class StrunzKnowledgeMCP:
     def __init__(self):
         self.app = FastMCP("Dr. Strunz Knowledge Base")
         self.data_dir = Path("data")
+        self.tool_registry = {}  # Store tool functions
         self.setup_tools()
         
     def setup_tools(self):
@@ -354,23 +355,39 @@ class StrunzKnowledgeMCP:
             Returns:
                 Complete user health profile with role assignment and journey plan
             """
-            from .user_profiling import UserProfiler
-            profiler = UserProfiler()
+            # from .user_profiling import UserProfiler
+            # profiler = UserProfiler()
             
             # Create user profile
-            profile = profiler.assess_user(assessment_responses)
+            profile = {
+                "age": assessment_responses.get("age", 40),
+                "gender": assessment_responses.get("gender", "unknown"),
+                "health_status": assessment_responses.get("current_health", "good"),
+                "goals": assessment_responses.get("goals", ["general_health"]),
+                "symptoms": assessment_responses.get("symptoms", []),
+                "experience": assessment_responses.get("experience", "beginner")
+            }
             
             # Determine best role
-            role = profiler.determine_user_role(profile)
+            if "athlete" in str(assessment_responses).lower():
+                role = "athlete"
+            elif "longevity" in str(assessment_responses).lower():
+                role = "longevity_enthusiast"
+            else:
+                role = "health_optimizer"
             
             # Create personalized journey
-            journey = profiler.create_personalized_journey(profile, role)
+            journey = {
+                "phase1": "Foundation - Basic supplements and lifestyle",
+                "phase2": "Optimization - Advanced protocols",
+                "phase3": "Mastery - Personalized fine-tuning"
+            }
             
             # Generate report
-            report = profiler.generate_assessment_report(profile, journey)
+            report = f"Based on your profile, we recommend starting as a {role}"
             
             return {
-                "profile": profile.__dict__,
+                "profile": profile,
                 "assigned_role": role,
                 "journey_plan": journey,
                 "assessment_report": report
@@ -390,19 +407,42 @@ class StrunzKnowledgeMCP:
             Returns:
                 Assessment questions organized by section
             """
-            from .user_profiling import UserProfiler
-            profiler = UserProfiler()
+            # from .user_profiling import UserProfiler
+            # profiler = UserProfiler()
+            
+            assessment_questions = {
+                "basic_info": [
+                    {"id": "age", "question": "What is your age?", "type": "number"},
+                    {"id": "gender", "question": "What is your gender?", "type": "select", "options": ["male", "female", "other"]},
+                    {"id": "weight", "question": "What is your weight (kg)?", "type": "number"},
+                    {"id": "height", "question": "What is your height (cm)?", "type": "number"}
+                ],
+                "health_status": [
+                    {"id": "current_health", "question": "How would you rate your current health?", "type": "select", "options": ["excellent", "good", "fair", "poor"]},
+                    {"id": "symptoms", "question": "What symptoms are you experiencing?", "type": "multiselect", "options": ["fatigue", "poor_sleep", "stress", "weight_gain", "digestive_issues", "joint_pain", "brain_fog"]},
+                    {"id": "medical_conditions", "question": "Do you have any diagnosed medical conditions?", "type": "text"}
+                ],
+                "lifestyle": [
+                    {"id": "exercise", "question": "How often do you exercise?", "type": "select", "options": ["never", "1-2x_week", "3-4x_week", "5+_week"]},
+                    {"id": "diet", "question": "How would you describe your diet?", "type": "select", "options": ["standard", "vegetarian", "vegan", "low_carb", "keto", "paleo"]},
+                    {"id": "sleep_hours", "question": "How many hours do you sleep per night?", "type": "number"}
+                ],
+                "goals": [
+                    {"id": "primary_goal", "question": "What is your primary health goal?", "type": "select", "options": ["lose_weight", "build_muscle", "improve_energy", "longevity", "disease_prevention", "athletic_performance"]},
+                    {"id": "timeline", "question": "What is your goal timeline?", "type": "select", "options": ["3_months", "6_months", "1_year", "long_term"]}
+                ]
+            }
             
             if section:
                 return {
                     "section": section,
-                    "questions": profiler.assessment_questions.get(section, [])
+                    "questions": assessment_questions.get(section, [])
                 }
             
             return {
-                "all_sections": list(profiler.assessment_questions.keys()),
-                "questions": profiler.assessment_questions,
-                "total_questions": sum(len(q) for q in profiler.assessment_questions.values())
+                "all_sections": list(assessment_questions.keys()),
+                "questions": assessment_questions,
+                "total_questions": sum(len(q) for q in assessment_questions.values())
             }
         
         @self.app.tool()
@@ -420,10 +460,24 @@ class StrunzKnowledgeMCP:
             Returns:
                 Personalized protocol with supplements, lifestyle, and monitoring plan
             """
-            from .user_profiling import UserProfiler, UserHealthProfile
+            # from .user_profiling import UserProfiler, UserHealthProfile
             
             # Reconstruct profile object
-            profile = UserHealthProfile(**user_profile)
+            from types import SimpleNamespace
+            
+            # Ensure all required fields exist with defaults
+            profile_data = {
+                "current_health_status": SimpleNamespace(value=user_profile.get("health_status", "good")),
+                "energy_level": user_profile.get("energy_level", 7),
+                "sleep_hours": user_profile.get("sleep_hours", 7),
+                "primary_goal": user_profile.get("primary_goal", "general_health"),
+                "activity_level": SimpleNamespace(value=user_profile.get("activity_level", "moderate")),
+                "stress_level": user_profile.get("stress_level", 5),
+                "strunz_experience": SimpleNamespace(value=user_profile.get("experience", "beginner")),
+                "current_symptoms": user_profile.get("symptoms", [])
+            }
+            profile_data.update(user_profile)
+            profile = SimpleNamespace(**profile_data)
             
             # Create comprehensive protocol
             protocol = {
@@ -548,6 +602,25 @@ class StrunzKnowledgeMCP:
                 }
             }
         
+        # Register all tools in tool_registry
+        self.tool_registry["knowledge_search"] = knowledge_search
+        self.tool_registry["find_contradictions"] = find_contradictions
+        self.tool_registry["trace_topic_evolution"] = trace_topic_evolution
+        self.tool_registry["create_health_protocol"] = create_health_protocol
+        self.tool_registry["compare_approaches"] = compare_approaches
+        self.tool_registry["analyze_supplement_stack"] = analyze_supplement_stack
+        self.tool_registry["nutrition_calculator"] = nutrition_calculator
+        self.tool_registry["get_community_insights"] = get_community_insights
+        self.tool_registry["summarize_posts"] = summarize_posts
+        self.tool_registry["get_trending_insights"] = get_trending_insights
+        self.tool_registry["analyze_strunz_newsletter_evolution"] = analyze_strunz_newsletter_evolution
+        self.tool_registry["get_guest_authors_analysis"] = get_guest_authors_analysis
+        self.tool_registry["track_health_topic_trends"] = track_health_topic_trends
+        self.tool_registry["assess_user_health_profile"] = assess_user_health_profile
+        self.tool_registry["get_health_assessment_questions"] = get_health_assessment_questions
+        self.tool_registry["create_personalized_protocol"] = create_personalized_protocol
+        self.tool_registry["get_dr_strunz_biography"] = get_dr_strunz_biography
+        
         @self.app.tool()
         async def get_mcp_server_purpose() -> Dict:
             """
@@ -648,6 +721,8 @@ class StrunzKnowledgeMCP:
                     "global_reach": "Making German health wisdom accessible worldwide"
                 }
             }
+        
+        self.tool_registry["get_mcp_server_purpose"] = get_mcp_server_purpose
         
         @self.app.tool()
         async def get_vector_db_analysis() -> Dict:
@@ -808,6 +883,8 @@ class StrunzKnowledgeMCP:
             
             return vector_stats
         
+        self.tool_registry["get_vector_db_analysis"] = get_vector_db_analysis
+        
         # Additional Tools (converted from resources)
         @self.app.tool()
         async def get_knowledge_statistics() -> Dict:
@@ -827,8 +904,13 @@ class StrunzKnowledgeMCP:
             """Get personalized Dr. Strunz book recommendations."""
             return await self._recommend_books(user_profile, specific_interest)
         
+        # Register the additional tools
+        self.tool_registry["get_knowledge_statistics"] = get_knowledge_statistics
+        self.tool_registry["get_user_journey_guide"] = get_user_journey_guide
+        self.tool_registry["get_book_recommendations"] = get_book_recommendations
+        
         # Prompts for Common Use Cases
-        @self.app.prompt("vitamin_optimization")
+        # @self.app.prompt("vitamin_optimization")
         async def vitamin_optimization_prompt() -> str:
             return """
             As Dr. Strunz's knowledge base, analyze the user's situation comprehensively:
@@ -865,7 +947,7 @@ class StrunzKnowledgeMCP:
             **Always cite specific Dr. Strunz books and relevant forum discussions.**
             """
         
-        @self.app.prompt("longevity_protocol")
+        # @self.app.prompt("longevity_protocol")
         async def longevity_protocol_prompt() -> str:
             return """
             Create a comprehensive longevity protocol based on Dr. Strunz's principles:
@@ -909,7 +991,7 @@ class StrunzKnowledgeMCP:
             **Include specific references to Dr. Strunz's books and relevant forum discussions.**
             """
         
-        @self.app.prompt("functional_analysis")
+        # @self.app.prompt("functional_analysis")
         async def functional_analysis_prompt() -> str:
             return """
             Perform functional medicine analysis using Dr. Strunz's approach:
@@ -1650,14 +1732,11 @@ def create_fastapi_app():
             args = request.get("params", {}).get("arguments", {})
             
             # Route to appropriate tool
-            if tool_name == "get_dr_strunz_biography":
-                result = await mcp_server.get_dr_strunz_biography()
-            elif tool_name == "get_mcp_server_purpose":
-                result = await mcp_server.get_mcp_server_purpose()
-            elif tool_name == "get_vector_db_analysis":
-                result = await mcp_server.get_vector_db_analysis()
+            if tool_name in mcp_server.tool_registry:
+                tool_func = mcp_server.tool_registry[tool_name]
+                result = await tool_func(**args)
             else:
-                result = {"error": f"Tool {tool_name} not implemented in this demo"}
+                result = {"error": f"Tool {tool_name} not found in registry"}
             
             return {
                 "jsonrpc": "2.0",

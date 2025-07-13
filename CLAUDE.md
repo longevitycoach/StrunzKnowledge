@@ -426,6 +426,12 @@ curl -X POST https://strunz.up.railway.app/tools/knowledge_search \
    - analysis/ - Analysis tools
    - data/ - Data utilities
 
+4. **Production Testing**: After each Railway deployment
+   - Test health endpoint: `curl https://strunz.up.railway.app/`
+   - Verify SSE endpoint: `python src/scripts/testing/test_mcp_sse.py --url https://strunz.up.railway.app`
+   - Check server type in health response (should be "railway_mcp_sse_server")
+   - Monitor Railway logs for startup messages
+
 ## Related Documentation
 
 ### Essential Docs
