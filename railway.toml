@@ -4,7 +4,7 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "python start_server.py"
+startCommand = "python main.py"
 restartPolicyType = "always"
 healthcheckPath = "/"
 healthcheckTimeout = 10
@@ -25,3 +25,15 @@ value = "0.0.0.0"
 [[envs]]
 name = "VECTOR_DB_TYPE"
 value = "faiss"
+
+[[envs]]
+name = "RAILWAY_ENVIRONMENT"
+value = "production"
+
+[[envs]]
+name = "RAILWAY_PUBLIC_DOMAIN"
+value = "strunz.up.railway.app"
+
+[[envs]]
+name = "RAILWAY_PRIVATE_DOMAIN"
+value = "strunz.railway.internal"

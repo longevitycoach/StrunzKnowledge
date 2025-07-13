@@ -10,9 +10,16 @@ import time
 from typing import AsyncGenerator
 
 # Configuration
-# BASE_URL = "https://strunz.up.railway.app"
-# For local testing, use:
-BASE_URL = "http://localhost:8000"
+import os
+import sys
+
+# Get BASE_URL from command line argument or environment variable
+if len(sys.argv) > 1 and sys.argv[1].startswith('--url='):
+    BASE_URL = sys.argv[1].replace('--url=', '')
+elif len(sys.argv) > 2 and sys.argv[1] == '--url':
+    BASE_URL = sys.argv[2]
+else:
+    BASE_URL = os.environ.get('MCP_TEST_URL', 'http://localhost:8000')
 
 async def test_health_check():
     """Test basic health check endpoint."""
