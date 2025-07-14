@@ -58,7 +58,7 @@ jobs:
       - name: Run syntax check
         run: |
           python -m py_compile main.py
-          python -m py_compile src/**/*.py
+          find src -name "*.py" -exec python -m py_compile {} \;
           
       - name: Run tests
         run: |
@@ -90,7 +90,7 @@ jobs:
           
       - name: Test Docker image
         run: |
-          docker run --rm strunz-knowledge:test python -c "import src.mcp.server; print('Server module loaded successfully')"
+          docker run --rm strunz-knowledge:test python -c "import src.mcp.enhanced_server; print('Server module loaded successfully')"
           
   deploy:
     runs-on: ubuntu-latest
@@ -113,8 +113,8 @@ jobs:
       - name: Verify deployment
         run: |
           sleep 60
-          curl -f https://strunz-knowledge-production.up.railway.app/ || exit 1
+          curl -f https://strunz.up.railway.app/ || exit 1
           
       - name: Run deployment tests
         run: |
-          python test_deployment.py https://strunz-knowledge-production.up.railway.app
+          python src/tests/test_production_mcp.py

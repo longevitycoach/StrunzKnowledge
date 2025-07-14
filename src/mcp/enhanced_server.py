@@ -2286,14 +2286,24 @@ def main():
 
 def create_fastapi_app():
     """Create FastAPI app with enhanced MCP server."""
-    from fastapi import FastAPI
+    from fastapi import FastAPI, Request
     from fastapi.responses import JSONResponse, Response
+    from fastapi.middleware.cors import CORSMiddleware
     from sse_starlette.sse import EventSourceResponse
     import asyncio
     import json
     
     # Create FastAPI app
     fastapi_app = FastAPI(title="Enhanced Dr. Strunz Knowledge MCP Server")
+    
+    # Add CORS middleware for Claude Web
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["https://claude.ai", "https://*.claude.ai"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
     
     # Initialize MCP server
     mcp_server = StrunzKnowledgeMCP()
@@ -2306,7 +2316,31 @@ def create_fastapi_app():
             "server": "Enhanced Dr. Strunz Knowledge MCP Server",
             "version": "1.0.0",
             "mcp_tools": 20,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "auth_supported": True,
+            "claude_web_compatible": True
+        })
+    
+    @fastapi_app.options("/mcp")
+    async def mcp_options():
+        """Handle CORS preflight for MCP endpoint."""
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            }
+        )
+    
+    @fastapi_app.post("/auth/token")
+    async def auth_token(request: Request):
+        """Simple authentication endpoint for Claude Web."""
+        # For now, return a simple token - in production, implement proper auth
+        return JSONResponse({
+            "access_token": "sk-strunz-knowledge-demo-token",
+            "token_type": "bearer",
+            "expires_in": 3600
         })
     
     @fastapi_app.get("/metrics")
@@ -2347,43 +2381,87 @@ def create_fastapi_app():
         return EventSourceResponse(event_generator())
     
     @fastapi_app.post("/mcp")
-    async def mcp_endpoint(request: dict):
+    async def mcp_endpoint(request: Request):
         """MCP JSON-RPC endpoint."""
-        # Handle MCP protocol requests
-        method = request.get("method", "")
+        # Parse request body
+        request_data = await request.json()
+        method = request_data.get("method", "")
         
         if method == "tools/list":
-            # Return list of available tools
-            tools = []
-            # Add all 19 tools here
-            tool_names = [
-                "knowledge_search", "find_contradictions", "trace_topic_evolution",
-                "create_health_protocol", "compare_approaches", "analyze_supplement_stack",
-                "nutrition_calculator", "get_community_insights", "summarize_posts",
-                "get_trending_insights", "analyze_strunz_newsletter_evolution",
-                "get_guest_authors_analysis", "track_health_topic_trends",
-                "get_health_assessment_questions", "assess_user_health_profile",
-                "create_personalized_protocol", "get_dr_strunz_biography",
-                "get_mcp_server_purpose", "get_vector_db_analysis"
+            # Return list of available tools with proper schemas
+            tools = [
+                {
+                    "name": "knowledge_search",
+                    "description": "Search Dr. Strunz knowledge base across books, news, and forum",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "query": {"type": "string", "description": "Search query"},
+                            "filters": {"type": "object", "description": "Search filters"}
+                        },
+                        "required": ["query"]
+                    }
+                },
+                {
+                    "name": "get_optimal_diagnostic_values",
+                    "description": "Get optimal diagnostic values based on age, gender, and health conditions",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "age": {"type": "integer", "description": "Age in years"},
+                            "gender": {"type": "string", "enum": ["male", "female"], "description": "Gender"},
+                            "weight": {"type": "number", "description": "Weight in kg (optional)"},
+                            "height": {"type": "number", "description": "Height in cm (optional)"},
+                            "athlete": {"type": "boolean", "description": "Athletic training status"},
+                            "conditions": {"type": "array", "items": {"type": "string"}, "description": "Health conditions"}
+                        },
+                        "required": ["age", "gender"]
+                    }
+                },
+                {
+                    "name": "create_health_protocol",
+                    "description": "Create personalized health protocol based on condition and user profile",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "condition": {"type": "string", "description": "Health condition"},
+                            "user_profile": {"type": "object", "description": "User profile data"}
+                        },
+                        "required": ["condition"]
+                    }
+                },
+                {
+                    "name": "analyze_supplement_stack",
+                    "description": "Analyze supplement combinations and provide recommendations",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "supplements": {"type": "array", "items": {"type": "string"}, "description": "List of supplements"},
+                            "health_goals": {"type": "array", "items": {"type": "string"}, "description": "Health goals"}
+                        },
+                        "required": ["supplements"]
+                    }
+                },
+                {
+                    "name": "get_dr_strunz_biography",
+                    "description": "Get comprehensive Dr. Strunz biography and achievements",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
             ]
-            
-            for name in tool_names:
-                tools.append({
-                    "name": name,
-                    "description": f"Tool: {name}",
-                    "inputSchema": {"type": "object"}
-                })
             
             return {
                 "jsonrpc": "2.0",
                 "result": {"tools": tools},
-                "id": request.get("id", 1)
+                "id": request_data.get("id", 1)
             }
         
         elif method == "tools/call":
             # Handle tool calls
-            tool_name = request.get("params", {}).get("name", "")
-            args = request.get("params", {}).get("arguments", {})
+            tool_name = request_data.get("params", {}).get("name", "")
+            args = request_data.get("params", {}).get("arguments", {})
             
             # Route to appropriate tool
             if tool_name in mcp_server.tool_registry:
@@ -2395,7 +2473,7 @@ def create_fastapi_app():
             return {
                 "jsonrpc": "2.0",
                 "result": result,
-                "id": request.get("id", 1)
+                "id": request_data.get("id", 1)
             }
         
         else:
@@ -2405,7 +2483,7 @@ def create_fastapi_app():
                     "code": -32601,
                     "message": "Method not found"
                 },
-                "id": request.get("id", 1)
+                "id": request_data.get("id", 1)
             }
     
     return fastapi_app
