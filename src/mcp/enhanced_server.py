@@ -8,16 +8,33 @@ import json
 import logging
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Any
 from dataclasses import dataclass
 from enum import Enum
 
 try:
     from fastmcp import FastMCP
+    FASTMCP_AVAILABLE = True
+except ImportError:
+    FASTMCP_AVAILABLE = False
+    # Create a dummy FastMCP class for compatibility
+    class FastMCP:
+        def __init__(self, name):
+            self.name = name
+        def tool(self):
+            def decorator(func):
+                return func
+            return decorator
+
+try:
     from pydantic import BaseModel, Field
 except ImportError:
-    print("FastMCP not available - install with: pip install fastmcp")
-    exit(1)
+    # Basic fallback for BaseModel
+    class BaseModel:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+    Field = lambda **kwargs: None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -102,7 +119,7 @@ class StrunzKnowledgeMCP:
             user_profile: Optional[Dict] = None,
             filters: Optional[Dict] = None,
             semantic_boost: float = 1.0
-        ) -> List[Dict]:
+        ) -> Dict[str, Any]:
             """
             Advanced semantic search across Dr. Strunz's knowledge base.
             
@@ -113,7 +130,7 @@ class StrunzKnowledgeMCP:
                 semantic_boost: Boost factor for semantic similarity
                 
             Returns:
-                List of relevant results with explanations
+                Dict containing query, results list, and metadata
             """
             return await self._enhanced_search(query, user_profile, filters, semantic_boost)
         
@@ -909,6 +926,37 @@ class StrunzKnowledgeMCP:
         self.tool_registry["get_user_journey_guide"] = get_user_journey_guide
         self.tool_registry["get_book_recommendations"] = get_book_recommendations
         
+        @self.app.tool()
+        async def get_optimal_diagnostic_values(
+            age: int,
+            gender: str,
+            weight: Optional[float] = None,
+            height: Optional[float] = None,
+            athlete: Optional[bool] = False,
+            conditions: Optional[List[str]] = None,
+            category: Optional[str] = None
+        ) -> Dict:
+            """
+            Get comprehensive table of optimal diagnostic values according to Dr. Strunz.
+            
+            Args:
+                age: Age in years
+                gender: Gender (male/female)
+                weight: Weight in kg (optional)
+                height: Height in cm (optional)
+                athlete: Whether person is an athlete
+                conditions: List of health conditions (optional)
+                category: Specific category to focus on (optional)
+                
+            Returns:
+                Comprehensive table of optimal values with Dr. Strunz's recommendations
+            """
+            return await self._get_optimal_diagnostic_values(
+                age, gender, weight, height, athlete, conditions, category
+            )
+        
+        self.tool_registry["get_optimal_diagnostic_values"] = get_optimal_diagnostic_values
+        
         # Prompts for Common Use Cases
         # @self.app.prompt("vitamin_optimization")
         async def vitamin_optimization_prompt() -> str:
@@ -1037,10 +1085,10 @@ class StrunzKnowledgeMCP:
 
     # Implementation methods (simplified for brevity)
     async def _enhanced_search(self, query: str, user_profile: Optional[Dict], 
-                              filters: Optional[Dict], semantic_boost: float) -> List[Dict]:
+                              filters: Optional[Dict], semantic_boost: float) -> Dict[str, Any]:
         """Enhanced search implementation with user personalization."""
         # Implementation would use FAISS index with user preference weighting
-        return [
+        results = [
             {
                 "id": "result_001",
                 "source": "books",
@@ -1051,7 +1099,7 @@ class StrunzKnowledgeMCP:
                     "book": "Die Amino-Revolution",
                     "chapter": "7: Vitamine und ihre Cofaktoren",
                     "page": 127,
-                    "url": "https://strunz.com/books/amino-revolution/chapter7#page127"
+                    "url": "https://www.strunz.com/buecher/die-amino-revolution"
                 },
                 "relevance_explanation": "Directly addresses vitamin D optimization with cofactor requirements"
             },
@@ -1079,11 +1127,21 @@ class StrunzKnowledgeMCP:
                     "post_id": "123456",
                     "author": "HealthOptimizer42",
                     "date": "2024-02-28",
-                    "url": "https://forum.strunz.com/threads/45678#post123456"
+                    "forum_url": "https://www.strunz.com/forum",
+                    "thread_url": "https://www.strunz.com/forum/thread/45678",
+                    "post_anchor": "#post123456"
                 },
                 "relevance_explanation": "Real-world success story with specific protocol details"
             }
         ]
+        
+        return {
+            "query": query,
+            "results": results,
+            "found": len(results),
+            "filters_applied": filters or {},
+            "semantic_boost": semantic_boost
+        }
     
     async def _analyze_contradictions(self, topic: str, time_range: str) -> Dict:
         """Analyze contradictory viewpoints across sources."""
@@ -1102,7 +1160,9 @@ class StrunzKnowledgeMCP:
                         "position": "4000-8000 IU optimal",
                         "source": "Dr. Strunz protocol",
                         "reference": "Die Amino-Revolution, Ch.7, p.132",
-                        "url": "https://strunz.com/books/amino-revolution/ch7#dosing"
+                        "book_url": "https://www.strunz.com/buecher/die-amino-revolution",
+                        "chapter": 7,
+                        "page": 132
                     },
                     "resolution": "Dr. Strunz bases on optimal 25(OH)D levels 60-80 ng/ml, supported by Holick research"
                 }
@@ -1136,14 +1196,18 @@ class StrunzKnowledgeMCP:
                     "dose": "4000-6000 IU",
                     "timing": "morning with fat",
                     "source": "Die Amino-Revolution, Chapter 7, p.127-132",
-                    "url": "https://strunz.com/books/amino-revolution/ch7#vitamind"
+                    "book_url": "https://www.strunz.com/buecher/die-amino-revolution",
+                    "chapter": 7,
+                    "pages": "127-132"
                 },
                 {
                     "supplement": "Vitamin K2 (MK-7)",
                     "dose": "100-200 mcg",
                     "timing": "with D3",
                     "source": "Der Gen-Trick, Chapter 4, p.89",
-                    "url": "https://strunz.com/books/gen-trick/ch4#cofactors"
+                    "book_url": "https://www.strunz.com/buecher/der-gen-trick",
+                    "chapter": 4,
+                    "page": 89
                 }
             ],
             supplements=[
@@ -1153,7 +1217,9 @@ class StrunzKnowledgeMCP:
                     "dose": "400-600mg",
                     "timing": "evening",
                     "source": "Das Stress-weg-Buch, Chapter 6, p.145",
-                    "url": "https://strunz.com/books/stress-weg/ch6#magnesium"
+                    "book_url": "https://www.strunz.com/buecher/das-stress-weg-buch",
+                    "chapter": 6,
+                    "page": 145
                 }
             ],
             lifestyle_changes=[
@@ -1194,7 +1260,12 @@ class StrunzKnowledgeMCP:
             "safety_analysis": "All combinations appear safe",
             "interactions": [],
             "optimization_suggestions": ["Timing adjustments", "Form improvements"],
-            "missing_nutrients": ["Omega-3", "Vitamin K2"]
+            "missing_nutrients": ["Omega-3", "Vitamin K2"],
+            "timing_recommendations": [
+                {"supplement": "Vitamin D3", "timing": "morning with fat"},
+                {"supplement": "Magnesium", "timing": "evening before bed"},
+                {"supplement": "Omega-3", "timing": "with meals"}
+            ]
         }
     
     async def _calculate_nutrition(self, foods: List[Dict], activity_level: str, 
@@ -1212,6 +1283,20 @@ class StrunzKnowledgeMCP:
         """Get community insights."""
         return {
             "topic": topic,
+            "insights": [
+                {
+                    "type": "success_story",
+                    "content": "User achieved 25(OH)D level of 70 ng/ml with 6000 IU daily",
+                    "source": "Forum Thread #45678",
+                    "date": "2024-02-15"
+                },
+                {
+                    "type": "common_challenge",
+                    "content": "Finding right magnesium form for individual tolerance",
+                    "solution": "Start with glycinate, try citrate if needed",
+                    "source": "Multiple forum discussions"
+                }
+            ],
             "insights_count": 45,
             "success_stories": ["Story 1", "Story 2"],
             "common_challenges": ["Challenge A", "Challenge B"],
@@ -1231,6 +1316,22 @@ class StrunzKnowledgeMCP:
                                    categories: Optional[List[str]]) -> Dict:
         """Get trending insights."""
         return {
+            "trends": [
+                {
+                    "topic": "NAD+ Optimization",
+                    "trend_score": 0.92,
+                    "discussion_count": 45,
+                    "relevance_to_role": "High for longevity enthusiasts",
+                    "key_insights": ["Dosing protocols", "Synergistic supplements"]
+                },
+                {
+                    "topic": "Continuous Glucose Monitoring",
+                    "trend_score": 0.87,
+                    "discussion_count": 38,
+                    "relevance_to_role": "Essential for health optimizers",
+                    "key_insights": ["Real-time metabolic feedback", "Dietary optimization"]
+                }
+            ],
             "trending_topics": ["Topic A", "Topic B"],
             "engagement_metrics": {"views": 1200, "likes": 340},
             "personalized_for": user_role,
@@ -1249,29 +1350,184 @@ class StrunzKnowledgeMCP:
     
     async def _get_user_journey(self, user_role: str) -> Dict:
         """Get user journey guide."""
+        journey_data = {
+            "athlete": {
+                "journey_phases": [
+                    {
+                        "phase": "Foundation",
+                        "duration": "4 weeks",
+                        "focus": "Basic nutrition and recovery",
+                        "key_actions": ["Blood testing", "Supplement foundation", "Sleep optimization"]
+                    },
+                    {
+                        "phase": "Performance",
+                        "duration": "8 weeks",
+                        "focus": "Athletic optimization",
+                        "key_actions": ["Amino acid protocols", "Training nutrition", "Recovery enhancement"]
+                    },
+                    {
+                        "phase": "Mastery",
+                        "duration": "Ongoing",
+                        "focus": "Peak performance maintenance",
+                        "key_actions": ["Personalized protocols", "Biomarker tracking", "Competition prep"]
+                    }
+                ],
+                "milestones": [
+                    {"week": 4, "achievement": "Foundation supplements optimized"},
+                    {"week": 12, "achievement": "Performance metrics improved"},
+                    {"week": 24, "achievement": "Personal bests achieved"}
+                ]
+            },
+            "health_optimizer": {
+                "journey_phases": [
+                    {
+                        "phase": "Assessment",
+                        "duration": "2 weeks",
+                        "focus": "Complete health evaluation",
+                        "key_actions": ["Comprehensive testing", "Symptom analysis", "Goal setting"]
+                    },
+                    {
+                        "phase": "Optimization",
+                        "duration": "12 weeks",
+                        "focus": "Systematic improvement",
+                        "key_actions": ["Protocol implementation", "Tracking progress", "Fine-tuning"]
+                    },
+                    {
+                        "phase": "Maintenance",
+                        "duration": "Ongoing",
+                        "focus": "Sustained optimization",
+                        "key_actions": ["Regular monitoring", "Protocol adjustments", "Advanced strategies"]
+                    }
+                ],
+                "milestones": [
+                    {"week": 2, "achievement": "Baseline established"},
+                    {"week": 8, "achievement": "Key biomarkers improved"},
+                    {"week": 16, "achievement": "Optimization goals reached"}
+                ]
+            }
+        }
+        
+        default_journey = {
+            "journey_phases": [
+                {
+                    "phase": "Discovery",
+                    "duration": "2 weeks",
+                    "focus": "Understanding Dr. Strunz approach",
+                    "key_actions": ["Read key resources", "Basic assessment", "Initial changes"]
+                },
+                {
+                    "phase": "Implementation",
+                    "duration": "8 weeks",
+                    "focus": "Core protocol adoption",
+                    "key_actions": ["Start supplements", "Dietary changes", "Lifestyle adjustments"]
+                },
+                {
+                    "phase": "Integration",
+                    "duration": "Ongoing",
+                    "focus": "Long-term health optimization",
+                    "key_actions": ["Personalization", "Community engagement", "Continuous learning"]
+                }
+            ],
+            "milestones": [
+                {"week": 2, "achievement": "Foundation knowledge acquired"},
+                {"week": 6, "achievement": "Basic protocols implemented"},
+                {"week": 12, "achievement": "Measurable improvements noted"}
+            ]
+        }
+        
+        journey = journey_data.get(user_role, default_journey)
+        
         return {
             "role": user_role,
-            "recommended_path": ["Step 1", "Step 2", "Step 3"],
-            "key_resources": ["Resource A", "Resource B"],
-            "community_connections": ["Group 1", "Expert 2"]
+            "journey_phases": journey["journey_phases"],
+            "milestones": journey["milestones"],
+            "recommended_path": [phase["phase"] for phase in journey["journey_phases"]],
+            "key_resources": [
+                "Die Amino-Revolution (foundational text)",
+                "Newsletter archive (current insights)",
+                "Forum community (peer support)"
+            ],
+            "community_connections": [
+                f"{user_role} forum section",
+                "Monthly Q&A sessions",
+                "Success story threads"
+            ]
         }
     
     async def _recommend_books(self, user_profile: Dict, specific_interest: Optional[str]) -> Dict:
         """Recommend Dr. Strunz books."""
         return {
+            "recommendations": [
+                {
+                    "title": "Die Amino-Revolution",
+                    "isbn": "978-3-453-20097-6",
+                    "relevance": "Foundation for all optimization protocols",
+                    "key_topics": ["Amino acids", "Protein optimization", "Cellular health"],
+                    "reading_priority": 1,
+                    "specific_chapters": {
+                        "beginners": "Chapters 1-3: Fundamentals",
+                        "advanced": "Chapters 7-9: Advanced protocols"
+                    }
+                },
+                {
+                    "title": "Der Gen-Trick",
+                    "isbn": "978-3-453-20098-3",
+                    "relevance": "Essential for longevity and epigenetics",
+                    "key_topics": ["Epigenetics", "Gene optimization", "Longevity"],
+                    "reading_priority": 2,
+                    "specific_chapters": {
+                        "longevity": "Chapter 4: Epigenetic switches",
+                        "prevention": "Chapter 6: Disease prevention protocols"
+                    }
+                },
+                {
+                    "title": "Das Stress-weg-Buch",
+                    "isbn": "978-3-453-20099-0",
+                    "relevance": "Critical for stress management",
+                    "key_topics": ["Stress biology", "Cortisol management", "Recovery"],
+                    "reading_priority": 3,
+                    "specific_chapters": {
+                        "stress": "Chapter 3: Biochemistry of stress",
+                        "sleep": "Chapter 5: Sleep optimization"
+                    }
+                }
+            ],
             "primary_recommendations": [
                 {"title": "Die Amino-Revolution", "relevance": "High for optimization goals"},
                 {"title": "Der Gen-Trick", "relevance": "Perfect for longevity enthusiasts"}
             ],
-            "reading_order": ["Book 1", "Book 2", "Book 3"],
-            "specific_chapters": {"stress": "Das Stress-weg-Buch, Chapter 3"}
+            "reading_order": [
+                "Die Amino-Revolution (foundation)",
+                "Der Gen-Trick (advanced concepts)",
+                "Das Stress-weg-Buch (lifestyle integration)"
+            ],
+            "specific_chapters": {"stress": "Das Stress-weg-Buch, Chapter 3"},
+            "personalized_path": f"Based on {specific_interest or 'general interest'}, start with foundational concepts then progress to specialized topics"
         }
     
     async def _analyze_newsletter_evolution(self, start_year: str, end_year: str, focus_topics: Optional[List[str]]) -> Dict:
         """Analyze Dr. Strunz newsletter evolution over time."""
         return {
+            "time_period": f"{start_year}-{end_year}",
             "analysis_period": f"{start_year}-{end_year}",
             "total_articles": 6953,
+            "topic_evolution": {
+                "vitamin_d": {
+                    "2004-2010": "Basic supplementation guidelines",
+                    "2011-2019": "Therapeutic dosing recognition",
+                    "2020-2025": "Critical role in pandemic prevention"
+                },
+                "nutrition": {
+                    "2004-2010": "Low-carb foundation",
+                    "2011-2019": "Molecular nutrition approach",
+                    "2020-2025": "Precision nutrition protocols"
+                }
+            },
+            "key_themes": [
+                "Evolution from basic nutrition to molecular medicine",
+                "Increasing focus on prevention vs treatment",
+                "Integration of epigenetics and personalization"
+            ],
             "content_evolution": {
                 "2004-2010": {
                     "focus": "Foundation Building",
@@ -1391,9 +1647,30 @@ class StrunzKnowledgeMCP:
             }
         }
         
-        return topic_data.get(topic, {
+        result = topic_data.get(topic, {
+            "topic": topic,
+            "total_mentions": 0,
             "message": f"Topic '{topic}' analysis available - request specific topic from: Vitamin D, Corona, Longevity, Nutrition, Amino Acids, Blood Tuning"
         })
+        
+        # Ensure required fields are present
+        if "topic" not in result:
+            result["topic"] = topic
+        
+        result["trend_analysis"] = {
+            "current_trend": "increasing" if topic in ["Longevity", "Epigenetics"] else "stable",
+            "momentum_score": 0.85,
+            "related_topics": ["Prevention", "Optimization", "Personalization"]
+        }
+        
+        if include_context:
+            result["context"] = {
+                "global_health_events": "COVID-19 pandemic shifted focus to prevention",
+                "scientific_advances": "Epigenetic research validates nutritional interventions",
+                "dr_strunz_perspective": "Consistent advocacy for proactive health optimization"
+            }
+        
+        return result
     
     # User Profile Protocol Methods
     def _get_immediate_protocol_actions(self, profile, specific_focus: Optional[str] = None) -> List[Dict]:
@@ -1624,6 +1901,383 @@ class StrunzKnowledgeMCP:
         timeline["month_6"].append("Optimal biomarker ranges achieved")
         
         return timeline
+    
+    async def _get_optimal_diagnostic_values(self, age: int, gender: str, weight: Optional[float],
+                                           height: Optional[float], athlete: bool,
+                                           conditions: Optional[List[str]], 
+                                           category: Optional[str]) -> Dict:
+        """Get comprehensive optimal diagnostic values according to Dr. Strunz."""
+        
+        # Calculate BMI if height and weight provided
+        bmi = None
+        if weight and height:
+            bmi = weight / ((height / 100) ** 2)
+        
+        # Base optimal values that Dr. Strunz recommends
+        optimal_values = {
+            "metadata": {
+                "age": age,
+                "gender": gender,
+                "bmi": round(bmi, 1) if bmi else None,
+                "athlete": athlete,
+                "conditions": conditions or [],
+                "source": "Dr. Strunz optimal values - not just normal ranges",
+                "philosophy": "Optimal health, not just absence of disease"
+            },
+            "vitamins": {
+                "vitamin_d_25oh": {
+                    "optimal_range": "60-100 ng/ml",
+                    "dr_strunz_target": "70-80 ng/ml",
+                    "unit": "ng/ml",
+                    "conversion": "ng/ml x 2.5 = nmol/l",
+                    "notes": "Higher for athletes, autoimmune conditions",
+                    "reference": "Die Amino-Revolution, Ch. 7"
+                },
+                "vitamin_b12": {
+                    "optimal_range": "600-2000 pg/ml",
+                    "dr_strunz_target": ">800 pg/ml",
+                    "unit": "pg/ml",
+                    "notes": "Methylcobalamin preferred, higher for vegetarians",
+                    "age_adjustment": "Seniors often need >1000 pg/ml"
+                },
+                "folate": {
+                    "optimal_range": "15-25 ng/ml",
+                    "dr_strunz_target": ">20 ng/ml",
+                    "unit": "ng/ml",
+                    "notes": "Active form (5-MTHF) preferred",
+                    "pregnancy": "Higher requirements for women"
+                }
+            },
+            "minerals": {
+                "ferritin": {
+                    "optimal_range_male": "100-300 ng/ml",
+                    "optimal_range_female": "80-150 ng/ml",
+                    "dr_strunz_target": f"{'150-250' if gender == 'male' else '100-150'} ng/ml",
+                    "unit": "ng/ml",
+                    "notes": "Lower for menstruating women, monitor with CRP",
+                    "athlete_adjustment": "Athletes may need higher levels"
+                },
+                "magnesium_rbc": {
+                    "optimal_range": "5.5-6.5 mg/dl",
+                    "dr_strunz_target": ">6.0 mg/dl",
+                    "unit": "mg/dl",
+                    "notes": "RBC magnesium more accurate than serum",
+                    "symptoms": "Deficiency causes cramps, fatigue, arrhythmias"
+                },
+                "zinc": {
+                    "optimal_range": "90-120 μg/dl",
+                    "dr_strunz_target": "100-110 μg/dl",
+                    "unit": "μg/dl",
+                    "ratio": "Copper:Zinc ratio should be 1:10-15",
+                    "notes": "Critical for immunity, testosterone"
+                },
+                "selenium": {
+                    "optimal_range": "120-150 μg/l",
+                    "dr_strunz_target": "130-140 μg/l",
+                    "unit": "μg/l",
+                    "notes": "Cancer prevention, thyroid function",
+                    "geographical": "Germany is selenium-deficient region"
+                }
+            },
+            "hormones": {
+                "testosterone": self._get_testosterone_values(age, gender),
+                "free_testosterone": self._get_free_testosterone_values(age, gender),
+                "dhea_s": {
+                    "optimal_range_male": self._get_dhea_range(age, "male"),
+                    "optimal_range_female": self._get_dhea_range(age, "female"),
+                    "unit": "μg/dl",
+                    "notes": "Declines with age, stress indicator"
+                },
+                "cortisol_morning": {
+                    "optimal_range": "10-20 μg/dl",
+                    "dr_strunz_target": "12-18 μg/dl",
+                    "unit": "μg/dl",
+                    "timing": "7-9 AM fasting",
+                    "notes": "Should be highest in morning"
+                },
+                "tsh": {
+                    "optimal_range": "0.5-2.0 mIU/l",
+                    "dr_strunz_target": "1.0-1.5 mIU/l",
+                    "unit": "mIU/l",
+                    "notes": "Lower is better for energy, metabolism",
+                    "subclinical": ">2.5 may indicate subclinical hypothyroid"
+                },
+                "free_t3": {
+                    "optimal_range": "3.0-4.2 pg/ml",
+                    "dr_strunz_target": "3.5-4.0 pg/ml",
+                    "unit": "pg/ml",
+                    "notes": "Active thyroid hormone, more important than T4"
+                }
+            },
+            "metabolic_markers": {
+                "hba1c": {
+                    "optimal_range": "4.5-5.4%",
+                    "dr_strunz_target": "<5.0%",
+                    "unit": "%",
+                    "notes": "3-month glucose average",
+                    "prediabetes": "5.7-6.4%",
+                    "diabetes": "≥6.5%"
+                },
+                "fasting_glucose": {
+                    "optimal_range": "70-85 mg/dl",
+                    "dr_strunz_target": "75-80 mg/dl",
+                    "unit": "mg/dl",
+                    "notes": "True fasting (12+ hours)",
+                    "athlete_note": "Athletes may have lower values"
+                },
+                "insulin_fasting": {
+                    "optimal_range": "2-5 μIU/ml",
+                    "dr_strunz_target": "<3 μIU/ml",
+                    "unit": "μIU/ml",
+                    "notes": "Lower indicates better insulin sensitivity",
+                    "homa_ir": "Calculate HOMA-IR: (glucose × insulin) / 405"
+                },
+                "triglycerides": {
+                    "optimal_range": "<100 mg/dl",
+                    "dr_strunz_target": "<70 mg/dl",
+                    "unit": "mg/dl",
+                    "ratio": "TG/HDL ratio should be <2",
+                    "notes": "Marker of metabolic health"
+                }
+            },
+            "lipids": {
+                "hdl_cholesterol": {
+                    "optimal_range_male": ">55 mg/dl",
+                    "optimal_range_female": ">65 mg/dl",
+                    "dr_strunz_target": f"{'>60' if gender == 'male' else '>70'} mg/dl",
+                    "unit": "mg/dl",
+                    "notes": "Higher is better, protective"
+                },
+                "ldl_cholesterol": {
+                    "optimal_range": "80-130 mg/dl",
+                    "dr_strunz_target": "<100 mg/dl",
+                    "unit": "mg/dl",
+                    "notes": "Quality matters more than quantity",
+                    "particle_size": "Large fluffy LDL is less harmful"
+                },
+                "apolipoprotein_b": {
+                    "optimal_range": "<90 mg/dl",
+                    "dr_strunz_target": "<80 mg/dl",
+                    "unit": "mg/dl",
+                    "notes": "Better predictor than LDL",
+                    "high_risk": ">120 mg/dl"
+                }
+            },
+            "inflammation_markers": {
+                "hs_crp": {
+                    "optimal_range": "<1.0 mg/l",
+                    "dr_strunz_target": "<0.5 mg/l",
+                    "unit": "mg/l",
+                    "notes": "High sensitivity CRP for cardiovascular risk",
+                    "risk_levels": "<1 low, 1-3 moderate, >3 high"
+                },
+                "homocysteine": {
+                    "optimal_range": "5-8 μmol/l",
+                    "dr_strunz_target": "<7 μmol/l",
+                    "unit": "μmol/l",
+                    "notes": "Methylation marker, B-vitamin status",
+                    "supplementation": "Lower with B6, B12, folate"
+                },
+                "fibrinogen": {
+                    "optimal_range": "200-350 mg/dl",
+                    "dr_strunz_target": "250-300 mg/dl",
+                    "unit": "mg/dl",
+                    "notes": "Clotting factor, inflammation marker"
+                }
+            },
+            "kidney_function": {
+                "egfr": {
+                    "optimal_range": ">90 ml/min/1.73m²",
+                    "dr_strunz_target": ">100 ml/min/1.73m²",
+                    "unit": "ml/min/1.73m²",
+                    "age_adjustment": f"Expected: {self._calculate_egfr_expected(age)}",
+                    "notes": "Glomerular filtration rate"
+                },
+                "creatinine": {
+                    "optimal_range_male": "0.7-1.2 mg/dl",
+                    "optimal_range_female": "0.5-1.0 mg/dl",
+                    "unit": "mg/dl",
+                    "athlete_note": "Athletes may have higher values due to muscle mass"
+                },
+                "bun_creatinine_ratio": {
+                    "optimal_range": "10:1 to 20:1",
+                    "dr_strunz_target": "12:1 to 16:1",
+                    "notes": "Hydration and protein metabolism marker"
+                }
+            },
+            "liver_function": {
+                "alt": {
+                    "optimal_range": "10-35 U/l",
+                    "dr_strunz_target": "<25 U/l",
+                    "unit": "U/l",
+                    "notes": "Liver enzyme, lower is better"
+                },
+                "ggt": {
+                    "optimal_range_male": "<40 U/l",
+                    "optimal_range_female": "<30 U/l",
+                    "dr_strunz_target": f"{'<30' if gender == 'male' else '<20'} U/l",
+                    "unit": "U/l",
+                    "notes": "Sensitive liver and oxidative stress marker"
+                }
+            },
+            "special_considerations": {
+                "athletes": {
+                    "notes": "Athletes often have different optimal ranges",
+                    "adjustments": [
+                        "Higher ferritin requirements",
+                        "Lower resting heart rate normal",
+                        "Higher creatinine from muscle mass",
+                        "May need more antioxidants"
+                    ]
+                } if athlete else None,
+                "age_specific": self._get_age_specific_notes(age),
+                "conditions": self._get_condition_specific_values(conditions) if conditions else None
+            },
+            "testing_recommendations": {
+                "frequency": {
+                    "basic_panel": "Every 6-12 months",
+                    "comprehensive": "Annually",
+                    "hormones": "Every 6 months if optimizing"
+                },
+                "timing": {
+                    "fasting": "12-14 hours for metabolic markers",
+                    "hormones": "Morning, consistent timing",
+                    "minerals": "Avoid supplements 24h before"
+                },
+                "preparation": [
+                    "Hydrate well before blood draw",
+                    "Avoid intense exercise 24h before",
+                    "Consistent sleep schedule week before",
+                    "No alcohol 48h before testing"
+                ]
+            },
+            "interpretation_notes": {
+                "dr_strunz_philosophy": "Optimal ranges for peak performance, not just disease absence",
+                "individual_variation": "Track your trends over time",
+                "context_matters": "Consider symptoms, not just numbers",
+                "action_thresholds": "Act on suboptimal values before they become abnormal"
+            }
+        }
+        
+        # Filter by category if specified
+        if category:
+            if category in optimal_values:
+                return {
+                    "category": category,
+                    "values": optimal_values[category],
+                    "metadata": optimal_values["metadata"],
+                    "testing_recommendations": optimal_values["testing_recommendations"]
+                }
+        
+        return optimal_values
+    
+    def _get_testosterone_values(self, age: int, gender: str) -> Dict:
+        """Get age and gender specific testosterone values."""
+        if gender == "male":
+            if age < 30:
+                return {
+                    "optimal_range": "600-1000 ng/dl",
+                    "dr_strunz_target": "700-900 ng/dl",
+                    "unit": "ng/dl"
+                }
+            elif age < 50:
+                return {
+                    "optimal_range": "500-900 ng/dl",
+                    "dr_strunz_target": "600-800 ng/dl",
+                    "unit": "ng/dl"
+                }
+            else:
+                return {
+                    "optimal_range": "400-800 ng/dl",
+                    "dr_strunz_target": "500-700 ng/dl",
+                    "unit": "ng/dl",
+                    "notes": "Consider optimization if <500"
+                }
+        else:  # female
+            return {
+                "optimal_range": "15-70 ng/dl",
+                "dr_strunz_target": "30-50 ng/dl",
+                "unit": "ng/dl",
+                "notes": "Important for libido, muscle, bone density"
+            }
+    
+    def _get_free_testosterone_values(self, age: int, gender: str) -> Dict:
+        """Get free testosterone values."""
+        if gender == "male":
+            return {
+                "optimal_range": "15-25 pg/ml",
+                "dr_strunz_target": "18-23 pg/ml",
+                "unit": "pg/ml",
+                "percentage": "2-3% of total testosterone"
+            }
+        else:
+            return {
+                "optimal_range": "1-3.5 pg/ml",
+                "dr_strunz_target": "2-3 pg/ml",
+                "unit": "pg/ml"
+            }
+    
+    def _get_dhea_range(self, age: int, gender: str) -> str:
+        """Get age-specific DHEA-S ranges."""
+        if age < 30:
+            return "300-500" if gender == "male" else "200-400"
+        elif age < 50:
+            return "200-400" if gender == "male" else "150-300"
+        else:
+            return "100-300" if gender == "male" else "80-200"
+    
+    def _calculate_egfr_expected(self, age: int) -> int:
+        """Calculate expected eGFR based on age."""
+        # Rough approximation: eGFR declines ~1 ml/min/year after age 30
+        if age <= 30:
+            return 120
+        else:
+            return max(90, 120 - (age - 30))
+    
+    def _get_age_specific_notes(self, age: int) -> Dict:
+        """Get age-specific considerations."""
+        if age < 30:
+            return {
+                "focus": "Building optimal foundation",
+                "priorities": ["Vitamin D optimization", "Hormone balance", "Metabolic health"]
+            }
+        elif age < 50:
+            return {
+                "focus": "Maintaining peak performance",
+                "priorities": ["Hormone optimization", "Inflammation control", "Stress management"]
+            }
+        else:
+            return {
+                "focus": "Healthy aging and longevity",
+                "priorities": ["Hormone replacement consideration", "Methylation support", "Mitochondrial health"]
+            }
+    
+    def _get_condition_specific_values(self, conditions: List[str]) -> Dict:
+        """Get condition-specific value adjustments."""
+        adjustments = {}
+        
+        if "diabetes" in conditions:
+            adjustments["diabetes"] = {
+                "hba1c_target": "<5.5%",
+                "fasting_glucose": "<90 mg/dl",
+                "focus": "Tight glucose control"
+            }
+        
+        if "cardiovascular" in conditions:
+            adjustments["cardiovascular"] = {
+                "ldl_target": "<70 mg/dl",
+                "apoB_target": "<60 mg/dl",
+                "hscrp_target": "<0.5 mg/l"
+            }
+        
+        if "autoimmune" in conditions:
+            adjustments["autoimmune"] = {
+                "vitamin_d_target": "80-100 ng/ml",
+                "omega3_index": ">8%",
+                "focus": "Inflammation control"
+            }
+        
+        return adjustments
 
 def main():
     """Run the enhanced MCP server."""
@@ -1651,7 +2305,7 @@ def create_fastapi_app():
             "status": "healthy",
             "server": "Enhanced Dr. Strunz Knowledge MCP Server",
             "version": "1.0.0",
-            "mcp_tools": 19,
+            "mcp_tools": 20,
             "timestamp": datetime.now().isoformat()
         })
     

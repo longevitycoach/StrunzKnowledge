@@ -81,6 +81,8 @@ Dr. Strunz's books represent decades of clinical experience and scientific resea
 ### 🔧 For Developers & Integrators
 - [Technical Architecture](#technical-architecture)
 - [Enhanced MCP Server](#enhanced-mcp-server)
+- [New: Optimal Diagnostic Values Tool](#optimal-diagnostic-values-tool)
+- [Claude Desktop MCP Configuration](#claude-desktop-mcp-configuration)
 - [Development Setup](#development-setup)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Deployment Guide](#deployment-guide)
@@ -856,7 +858,31 @@ sequenceDiagram
 - `get_community_insights()` - Learn from other athletes' experiences
 - `trace_topic_evolution()` - See how sports nutrition recommendations evolved
 
-#### Use Case 3: Longevity Protocol Development
+#### Use Case 3: Optimal Lab Value Interpretation 🆕
+
+**User Query:** "I'm a 35-year-old male athlete. My vitamin D is 45 ng/ml and ferritin is 80 ng/ml. Are these optimal?"
+
+**MCP Tools Used:**
+- `get_optimal_diagnostic_values(age=35, gender="male", athlete=True)`
+
+**Enhanced Response:**
+```
+Based on Dr. Strunz's optimal values for a 35-year-old male athlete:
+
+📊 Your Current vs Optimal Values:
+- Vitamin D (25-OH): 45 ng/ml → Target: 70-80 ng/ml (Higher for athletes)
+- Ferritin: 80 ng/ml → Target: 150-250 ng/ml (Athletes need higher iron stores)
+
+Recommendations:
+1. Vitamin D: Increase to 6000-8000 IU daily with K2 cofactor
+2. Ferritin: Consider iron supplementation with vitamin C
+3. Retest in 8-12 weeks
+
+Note: These are Dr. Strunz's OPTIMAL ranges for peak performance, 
+not just "normal" ranges that prevent disease.
+```
+
+#### Use Case 4: Longevity Protocol Development
 
 **User Query:** "I'm 45 and want to create a comprehensive longevity protocol. What does Dr. Strunz recommend?"
 
@@ -1608,6 +1634,45 @@ pip install -r requirements-dev.txt  # For development
      min_score: 0.5
    ```
 
+## Optimal Diagnostic Values Tool
+
+### 🔬 Dr. Strunz's Comprehensive Lab Value Reference
+
+The new `get_optimal_diagnostic_values` tool provides personalized optimal ranges based on Dr. Strunz's clinical experience - not just "normal" ranges that prevent disease, but optimal values for peak performance.
+
+#### Key Features:
+- **Personalized by Demographics**: Age and gender-specific optimal ranges
+- **Athlete Adjustments**: Special considerations for athletes (higher ferritin, different creatinine)
+- **Condition-Specific Targets**: Adjusted ranges for diabetes, cardiovascular, autoimmune conditions
+- **Comprehensive Categories**: Vitamins, minerals, hormones, metabolic markers, lipids, inflammation
+- **Dr. Strunz Philosophy**: "Optimal health, not just absence of disease"
+
+#### Example Usage:
+```python
+# Get all optimal values for a 40-year-old male athlete
+values = await get_optimal_diagnostic_values(
+    age=40,
+    gender="male",
+    athlete=True,
+    weight=80,
+    height=180
+)
+
+# Get specific category (e.g., hormones only)
+hormones = await get_optimal_diagnostic_values(
+    age=55,
+    gender="female",
+    category="hormones"
+)
+```
+
+#### Sample Optimal Ranges:
+- **Vitamin D (25-OH)**: 70-80 ng/ml (not just >30)
+- **Ferritin (male)**: 150-250 ng/ml (not just >30)
+- **TSH**: 1.0-1.5 mIU/l (not just <4.5)
+- **HbA1c**: <5.0% (not just <5.7%)
+- **hs-CRP**: <0.5 mg/l (not just <3.0)
+
 ## MCP Tools & Capabilities
 
 ### 🚀 Enhanced MCP Server Implementation
@@ -1650,46 +1715,89 @@ Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health
 - **Features**: Activity-based calculations, deficiency identification, food recommendations
 - **Best for**: Athletes, health optimizers, and anyone following Dr. Strunz nutrition principles
 
+**7. `get_optimal_diagnostic_values`** 🆕 - Comprehensive optimal lab value reference
+- **Purpose**: Get Dr. Strunz's optimal diagnostic values personalized by age, gender, and conditions
+- **Features**: 
+  - Age and gender-specific optimal ranges (not just "normal")
+  - Athlete adjustments for relevant biomarkers
+  - Condition-specific targets (diabetes, cardiovascular, autoimmune)
+  - Categories: vitamins, minerals, hormones, metabolic markers, lipids, inflammation
+  - Testing recommendations and preparation guidelines
+- **Parameters**: age, gender, weight (optional), height (optional), athlete status, conditions, specific category
+- **Best for**: All users tracking biomarkers, practitioners setting optimization targets
+
 #### 💡 Community & Insight Tools
 
-**7. `get_community_insights`** - Community experience mining
+**8. `get_community_insights`** - Community experience mining
 - **Purpose**: Extract real-world experiences and success stories
 - **Features**: Role-based filtering, engagement metrics, trend identification
 - **Best for**: All users seeking practical implementation guidance
 
-**8. `compare_approaches`** - Multi-source approach comparison
+**9. `compare_approaches`** - Multi-source approach comparison
 - **Purpose**: Compare different perspectives on health topics
 - **Features**: Evidence weighing, pros/cons analysis, synthesis recommendations
 - **Best for**: Practitioners and researchers evaluating treatment options
 
 #### 📊 Resources & Knowledge Management
 
-**9. `knowledge_statistics`** - Comprehensive knowledge base metrics
+**10. `knowledge_statistics`** - Comprehensive knowledge base metrics
 - **Purpose**: Monitor knowledge base health and coverage
 - **Features**: Content statistics, update tracking, quality metrics
 - **Best for**: Administrators and power users understanding the system
 
-**10. `strunz_book_recommendations`** - Personalized reading guidance
+**11. `strunz_book_recommendations`** - Personalized reading guidance
 - **Purpose**: Recommend specific Dr. Strunz books based on user interests
 - **Features**: Profile-based suggestions, reading order, chapter highlights
 - **Best for**: Dr. Strunz fans and newcomers navigating his extensive works
 
 #### 📰 Newsletter Analysis Tools
 
-**11. `analyze_strunz_newsletter_evolution`** - Newsletter content evolution analysis
+**12. `analyze_strunz_newsletter_evolution`** - Newsletter content evolution analysis
 - **Purpose**: Track how Dr. Strunz's newsletter topics and approach evolved over 20+ years
 - **Features**: Era analysis, topic frequency tracking, content style evolution
 - **Best for**: Community researchers and Dr. Strunz fans studying his intellectual journey
 
-**12. `get_guest_authors_analysis`** - Editorial approach and authorship analysis
+**13. `get_guest_authors_analysis`** - Editorial approach and authorship analysis
 - **Purpose**: Understand Dr. Strunz's unique single-author editorial strategy
 - **Features**: Content source analysis, editorial philosophy insights, consistency tracking
 - **Best for**: Media researchers and those interested in health communication
 
-**13. `track_health_topic_trends`** - Specific topic evolution in newsletter
+**14. `track_health_topic_trends`** - Specific topic evolution in newsletter
 - **Purpose**: Follow how specific health topics (Vitamin D, Corona, Longevity) evolved
 - **Features**: Timeline analysis, context events, peak period identification
 - **Best for**: All users researching specific health topics and their development
+
+#### 🎯 User Journey & Assessment Tools
+
+**15. `get_health_assessment_questions`** - Comprehensive health assessment questionnaire
+- **Purpose**: Generate personalized health assessment questions
+- **Features**: Section-based questions (basic info, symptoms, lifestyle, goals)
+- **Best for**: New users starting their health optimization journey
+
+**16. `assess_user_health_profile`** - Profile analysis and role assignment
+- **Purpose**: Analyze assessment responses and assign appropriate user role
+- **Features**: Role assignment, journey planning, personalized recommendations
+- **Best for**: Creating personalized user experiences
+
+**17. `create_personalized_protocol`** - Generate user-specific protocols
+- **Purpose**: Create comprehensive, personalized health protocols
+- **Features**: Immediate actions, supplement protocols, monitoring schedules
+- **Best for**: Users ready to implement personalized health plans
+
+**18. `get_user_journey_guide`** - Role-specific journey guidance
+- **Purpose**: Provide step-by-step journey based on user role
+- **Features**: Journey phases, milestones, recommended resources
+- **Best for**: Users seeking structured guidance
+
+**19. `get_book_recommendations`** - Personalized book recommendations
+- **Purpose**: Recommend specific Dr. Strunz books based on interests
+- **Features**: Reading order, chapter highlights, relevance scoring
+- **Best for**: Users exploring Dr. Strunz's written works
+
+**20. `get_trending_insights`** - Trending health topics by role
+- **Purpose**: Discover what's currently trending for your user role
+- **Features**: Personalized trends, engagement metrics, categories
+- **Best for**: Staying updated with community interests
 
 #### 🎯 Smart Prompts for LLM Integration
 
@@ -1705,24 +1813,85 @@ Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health
 - **Context**: Symptoms, lab values, medical history
 - **Output**: Functional medicine assessment with intervention strategies
 
-## MCP Integration Guide
+## Claude Desktop MCP Configuration
 
-### For Claude Desktop Users
+### 🚀 Production MCP Server with SSE Monitoring
+
+The Dr. Strunz Knowledge Base MCP server is deployed on Railway with a public SSE endpoint for real-time monitoring.
+
+**Production Endpoints:**
+- **MCP Server**: `https://strunz.up.railway.app/`
+- **SSE Monitoring**: `https://strunz.up.railway.app/sse`
+- **Health Check**: `https://strunz.up.railway.app/`
+
+### Claude Desktop Configuration
+
+To use the Dr. Strunz Knowledge Base with Claude Desktop, add this configuration to your Claude Desktop settings:
 
 ```json
-// Add to Claude Desktop config
 {
   "mcpServers": {
     "strunz-knowledge": {
-      "command": "npx",
-      "args": ["@strunz/mcp-server"],
+      "command": "node",
+      "args": [
+        "/path/to/StrunzKnowledge/src/scripts/deployment/claude_desktop_client.js"
+      ],
       "env": {
-        "STRUNZ_API_KEY": "your-api-key"
+        "MCP_SERVER_URL": "https://strunz.up.railway.app",
+        "SSE_ENDPOINT": "https://strunz.up.railway.app/sse"
       }
     }
   }
 }
 ```
+
+#### Alternative: Direct Server Connection (if supported)
+
+```json
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "url": "https://strunz.up.railway.app/mcp",
+      "transport": "http",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}
+```
+
+### 📊 SSE Monitoring Features
+
+The SSE endpoint provides real-time server status and performance metrics:
+
+```javascript
+// Example SSE client for monitoring
+const eventSource = new EventSource('https://strunz.up.railway.app/sse');
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Server Status:', data);
+  // {
+  //   "status": "alive",
+  //   "timestamp": "2025-01-14T10:30:00Z",
+  //   "active_connections": 5,
+  //   "tools_available": 20
+  // }
+};
+```
+
+### 🛠️ Available MCP Tools
+
+The server provides 20 specialized tools for health optimization:
+
+1. **Search & Discovery**: knowledge_search, find_contradictions, trace_topic_evolution
+2. **Health Protocols**: create_health_protocol, analyze_supplement_stack, nutrition_calculator
+3. **Diagnostic Values** 🆕: get_optimal_diagnostic_values (personalized lab ranges)
+4. **Community Insights**: get_community_insights, get_trending_insights, summarize_posts
+5. **Newsletter Analysis**: analyze_strunz_newsletter_evolution, track_health_topic_trends
+6. **User Journey**: assess_user_health_profile, create_personalized_protocol, get_user_journey_guide
+7. **Resources**: get_book_recommendations, get_dr_strunz_biography, get_mcp_server_purpose
 
 ### For Developers
 
@@ -1747,20 +1916,34 @@ latest = await client.call_tool(
 )
 ```
 
-## Testing
+## Testing & Quality Assurance
 
-### Test Suite Overview
+### 🧪 Comprehensive Test Suite
 
-The project includes comprehensive testing to ensure data integrity and system reliability.
+The project includes extensive testing with **57+ automated tests** ensuring data integrity, MCP functionality, and system reliability.
 
-#### Test Categories
+#### Test Reports
+- 📊 [Latest MCP Test Report](docs/test-reports/DETAILED_MCP_TEST_REPORT_2025-07-14_13-07-55.md)
+- 🚀 [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT_2025-07-14_10-33-21.md)
 
-| Category | Tests | Coverage |
-|----------|-------|----------|
-| Data Structure | 4 | Directory structure, books, processed data, FAISS indices |
-| Data Integrity | 3 | JSON structure, content quality, categorization |
-| File System | 1 | Storage usage and metrics |
-| Configuration | 2 | Required files, Python modules |
+#### Test Categories & Coverage
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Information Tools** | 3 | Biography, server purpose, vector DB analysis |
+| **Diagnostic Values** 🆕 | 4 | Age/gender-specific optimal ranges, athlete adjustments |
+| **Search Functionality** | 8 | Multi-source search with filters and semantic boost |
+| **Analysis Tools** | 6 | Contradictions, evolution tracking, approach comparison |
+| **Health Protocols** | 6 | Personalized protocols for various conditions |
+| **Supplement Analysis** | 4 | Stack safety, interactions, optimization |
+| **Nutrition Calculation** | 3 | Low-carb, ketogenic, vegetarian calculations |
+| **Community Insights** | 5 | Trending topics, forum analysis, post summaries |
+| **Newsletter Analysis** | 5 | Evolution tracking, author analysis, topic trends |
+| **User Assessment** | 6 | Profile assessment, journey mapping, personalization |
+| **Advanced Tools** | 7 | Book recommendations, statistics, journey guides |
+| **Data Integrity** | 10+ | JSON structure, content quality, categorization |
+
+**Total Tests**: 57+ comprehensive test cases with 100% pass rate
 
 #### Running Tests
 

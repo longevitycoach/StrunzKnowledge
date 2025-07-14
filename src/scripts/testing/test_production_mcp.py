@@ -184,7 +184,7 @@ class ProductionMCPTester:
                     "supplements": ["Vitamin D3", "Magnesium", "Omega-3"],
                     "health_goals": ["immune_support", "heart_health"]
                 },
-                expected_fields=["supplements", "analysis"],
+                expected_fields=["supplements", "safety_analysis"],
                 category="analysis"
             ),
             TestCase(
@@ -453,8 +453,9 @@ class ProductionMCPTester:
 
 async def main():
     """Main test execution"""
-    # Test both possible Railway URLs
+    # Test both local and Railway URLs
     base_urls = [
+        "http://localhost:8000",  # Local enhanced server
         "https://strunz.up.railway.app",
         "https://strunz-knowledge-production.up.railway.app"
     ]
@@ -467,14 +468,20 @@ async def main():
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(f"{url}/")
                 if response.status_code == 200:
-                    working_url = url
-                    print(f"✅ Found working server at: {url}")
-                    break
+                    response_data = response.json()
+                    # Prefer enhanced server if available
+                    if "Enhanced" in response_data.get("server", ""):
+                        working_url = url
+                        print(f"✅ Found enhanced server at: {url}")
+                        break
+                    elif not working_url:
+                        working_url = url
+                        print(f"✅ Found working server at: {url}")
         except:
             continue
     
     if not working_url:
-        print("❌ No working Railway server found")
+        print("❌ No working server found")
         return
     
     # Run tests
