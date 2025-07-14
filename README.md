@@ -1813,20 +1813,37 @@ Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health
 - **Context**: Symptoms, lab values, medical history
 - **Output**: Functional medicine assessment with intervention strategies
 
-## Claude Desktop MCP Configuration
+## Claude Integration Configuration
 
-### 🚀 Production MCP Server with SSE Monitoring
+### 🚀 Production MCP Server with Claude Web Support
 
-The Dr. Strunz Knowledge Base MCP server is deployed on Railway with a public SSE endpoint for real-time monitoring.
+The Dr. Strunz Knowledge Base MCP server is deployed on Railway with full Claude Web integration support.
 
 **Production Endpoints:**
-- **MCP Server**: `https://strunz.up.railway.app/`
+- **MCP Server**: `https://strunz.up.railway.app/mcp`
+- **Authentication**: `https://strunz.up.railway.app/auth/token`
 - **SSE Monitoring**: `https://strunz.up.railway.app/sse`
 - **Health Check**: `https://strunz.up.railway.app/`
 
+### Claude Web (claude.ai) Configuration ✅
+
+**For Claude Web users**, simply add this MCP server:
+
+```
+Server URL: https://strunz.up.railway.app/mcp
+Authentication: Bearer token (automatic)
+```
+
+**Available Tools:**
+- `knowledge_search` - Search Dr. Strunz knowledge base
+- `get_optimal_diagnostic_values` - Get personalized optimal lab ranges  
+- `create_health_protocol` - Create health optimization protocols
+- `analyze_supplement_stack` - Analyze supplement combinations
+- `get_dr_strunz_biography` - Get Dr. Strunz background
+
 ### Claude Desktop Configuration
 
-To use the Dr. Strunz Knowledge Base with Claude Desktop, add this configuration to your Claude Desktop settings:
+For Claude Desktop users, add this configuration to your settings:
 
 ```json
 {
@@ -1839,22 +1856,6 @@ To use the Dr. Strunz Knowledge Base with Claude Desktop, add this configuration
       "env": {
         "MCP_SERVER_URL": "https://strunz.up.railway.app",
         "SSE_ENDPOINT": "https://strunz.up.railway.app/sse"
-      }
-    }
-  }
-}
-```
-
-#### Alternative: Direct Server Connection (if supported)
-
-```json
-{
-  "mcpServers": {
-    "strunz-knowledge": {
-      "url": "https://strunz.up.railway.app/mcp",
-      "transport": "http",
-      "headers": {
-        "Content-Type": "application/json"
       }
     }
   }
