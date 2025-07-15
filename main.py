@@ -49,7 +49,7 @@ def main():
     
     # Run the appropriate server
     if is_railway and is_production:
-        # Direct function call for production (no asyncio.run)
+        # Direct function call for production - FastMCP SSE will handle its own event loop
         run_server()
     else:
         # Use asyncio for other servers
