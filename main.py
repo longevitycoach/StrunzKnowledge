@@ -33,9 +33,9 @@ def main():
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
     
     if is_railway:
-        # Railway deployment - use SSE server
-        print("Starting Railway deployment with SSE server...")
-        from src.scripts.deployment.railway_mcp_sse_server import main as run_server
+        # Railway deployment - use Claude-compatible server
+        print("Starting Railway deployment with Claude-compatible MCP server...")
+        from src.mcp.claude_compatible_server import main as run_server
         import asyncio
         asyncio.run(run_server())
     else:
