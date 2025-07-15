@@ -795,7 +795,7 @@ class StrunzKnowledgeMCP:
         """Get MCP server information"""
         return {
             "server_name": "Dr. Strunz Knowledge Base MCP Server",
-            "version": "2.0.0",
+            "version": "0.3.0",
             "purpose": "Comprehensive access to Dr. Strunz's medical knowledge and community insights",
             "capabilities": {
                 "search": "Semantic search across books, newsletters, and forum",

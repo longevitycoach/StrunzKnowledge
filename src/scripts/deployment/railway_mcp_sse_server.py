@@ -68,7 +68,7 @@ async def health_check():
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "timestamp": datetime.now().isoformat(),
         "domain": public_domain,
         "endpoints": {
@@ -89,7 +89,7 @@ async def sse_endpoint(token_payload: dict = Depends(verify_oauth_token)):
             "data": json.dumps({
                 "message": "Connected to Dr. Strunz Knowledge MCP Server SSE",
                 "timestamp": datetime.now().isoformat(),
-                "server_version": "0.2.0",
+                "server_version": "0.3.0",
                 "user": token_payload.get("sub", "unknown"),
                 "scope": token_payload.get("scope", "read")
             })
@@ -237,7 +237,7 @@ async def main():
     try:
         from src.mcp.enhanced_server import main as run_enhanced_server
         
-        logger.info("Starting Enhanced Dr. Strunz Knowledge MCP Server v0.2.0")
+        logger.info("Starting Enhanced Dr. Strunz Knowledge MCP Server v0.3.0")
         logger.info("Enhanced MCP server with 20 tools available")
         logger.info("Running FastMCP with SSE transport on Railway")
         logger.info("SSE endpoint available at /sse for monitoring")
