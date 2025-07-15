@@ -12,8 +12,8 @@ import logging
 from datetime import datetime
 from typing import Dict, Optional, AsyncGenerator
 
-from fastapi import FastAPI, Request, HTTPException, Header, Depends
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, HTTPException, Header, Depends, Query, Form
+from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sse_starlette.sse import EventSourceResponse
@@ -63,8 +63,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 
 @app.get("/")
+@app.head("/")
+@app.post("/")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint - supports GET, HEAD, and POST"""
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
@@ -299,6 +301,148 @@ async def handle_tool_call(params: Dict) -> Dict:
         }
 
 
+# OAuth Endpoints
+@app.get("/.well-known/oauth-authorization-server")
+async def oauth_metadata():
+    """OAuth 2.1 Authorization Server Metadata (RFC 8414)"""
+    base_url = os.environ.get('BASE_URL', 'https://strunz.up.railway.app')
+    return {
+        "issuer": base_url,
+        "authorization_endpoint": f"{base_url}/oauth/authorize",
+        "token_endpoint": f"{base_url}/oauth/token",
+        "registration_endpoint": f"{base_url}/oauth/register",
+        "userinfo_endpoint": f"{base_url}/oauth/userinfo",
+        "jwks_uri": f"{base_url}/.well-known/jwks.json",
+        "scopes_supported": ["read", "write"],
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "code_challenge_methods_supported": ["S256"],
+        "token_endpoint_auth_methods_supported": ["client_secret_post", "none"]
+    }
+
+@app.get("/.well-known/oauth-protected-resource")
+async def oauth_protected_resource():
+    """OAuth 2.0 Protected Resource Metadata (RFC 8705)"""
+    base_url = os.environ.get('BASE_URL', 'https://strunz.up.railway.app')
+    return {
+        "resource": base_url,
+        "authorization_servers": [base_url],
+        "scopes_supported": ["read", "write"],
+        "bearer_methods_supported": ["header", "query"]
+    }
+
+@app.post("/oauth/register")
+async def register_client(request: Request):
+    """Dynamic Client Registration (RFC 7591)"""
+    try:
+        data = await request.json()
+        client_id = f"client_{uuid.uuid4().hex[:16]}"
+        
+        # For Claude.ai, we accept minimal registration
+        return JSONResponse({
+            "client_id": client_id,
+            "client_secret": None,  # Public client
+            "client_name": data.get("client_name", "Claude.ai"),
+            "redirect_uris": data.get("redirect_uris", ["claude://claude.ai/callback"]),
+            "grant_types": ["authorization_code"],
+            "response_types": ["code"],
+            "scope": "read",
+            "token_endpoint_auth_method": "none"
+        })
+    except Exception as e:
+        logger.error(f"Client registration error: {e}")
+        return JSONResponse({"error": "invalid_request"}, status_code=400)
+
+@app.get("/oauth/authorize")
+async def authorize(
+    client_id: str = Query(...),
+    redirect_uri: str = Query(...),
+    scope: str = Query(default="read"),
+    response_type: str = Query(default="code"),
+    state: Optional[str] = Query(default=None),
+    code_challenge: Optional[str] = Query(default=None),
+    code_challenge_method: Optional[str] = Query(default=None)
+):
+    """OAuth Authorization Endpoint"""
+    # For simplicity, auto-approve for known clients
+    if "claude" in client_id.lower() or "claude.ai" in redirect_uri:
+        # Generate authorization code
+        auth_code = f"auth_{uuid.uuid4().hex[:16]}"
+        
+        # Build redirect URL
+        redirect_url = f"{redirect_uri}?code={auth_code}"
+        if state:
+            redirect_url += f"&state={state}"
+        
+        return RedirectResponse(url=redirect_url)
+    
+    # For other clients, show consent screen
+    return HTMLResponse(f"""
+    <html><body>
+    <h2>Authorize Access</h2>
+    <p>Do you want to grant access to this application?</p>
+    <form method="post" action="/oauth/authorize">
+        <input type="hidden" name="client_id" value="{client_id}">
+        <input type="hidden" name="redirect_uri" value="{redirect_uri}">
+        <input type="hidden" name="scope" value="{scope}">
+        <input type="hidden" name="state" value="{state or ''}">
+        <button type="submit" name="action" value="allow">Allow</button>
+        <button type="submit" name="action" value="deny">Deny</button>
+    </form>
+    </body></html>
+    """)
+
+@app.post("/oauth/authorize")
+async def authorize_post(
+    request: Request,
+    client_id: str = Form(...),
+    redirect_uri: str = Form(...),
+    scope: str = Form(default="read"),
+    state: Optional[str] = Form(default=None),
+    action: str = Form(...)
+):
+    """Handle authorization consent"""
+    if action == "allow":
+        auth_code = f"auth_{uuid.uuid4().hex[:16]}"
+        redirect_url = f"{redirect_uri}?code={auth_code}"
+        if state:
+            redirect_url += f"&state={state}"
+        return RedirectResponse(url=redirect_url)
+    else:
+        return RedirectResponse(url=f"{redirect_uri}?error=access_denied")
+
+@app.post("/oauth/token")
+async def token_endpoint(
+    request: Request,
+    grant_type: str = Form(...),
+    code: Optional[str] = Form(default=None),
+    client_id: Optional[str] = Form(default=None),
+    redirect_uri: Optional[str] = Form(default=None)
+):
+    """OAuth Token Endpoint"""
+    try:
+        if grant_type == "authorization_code":
+            # Generate access token
+            access_token = f"access_{uuid.uuid4().hex}"
+            
+            return JSONResponse({
+                "access_token": access_token,
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "scope": "read"
+            })
+        else:
+            return JSONResponse({"error": "unsupported_grant_type"}, status_code=400)
+    except Exception as e:
+        logger.error(f"Token endpoint error: {e}")
+        return JSONResponse({"error": "invalid_request"}, status_code=400)
+
+@app.get("/oauth/userinfo")
+async def userinfo(user=Depends(get_current_user)):
+    """User Info Endpoint"""
+    return {"sub": "user", "name": "Dr. Strunz Knowledge User"}
+
+# MCP Resource Discovery
 @app.get("/.well-known/mcp/resource")
 async def mcp_resource_metadata():
     """MCP resource metadata for discovery"""
