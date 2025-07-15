@@ -23,13 +23,43 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # For Railway health checks and SSE
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 import uvicorn
 
+# Import OAuth provider
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from src.mcp.oauth_provider import oauth_provider, oauth_app
+
 # Create FastAPI app for health check and SSE ONLY
-app = FastAPI(title="MCP Server with SSE")
+app = FastAPI(title="MCP Server with SSE and OAuth")
+
+# Add CORS middleware for Claude.ai
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://claude.ai", "https://*.claude.ai"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Security
+security = HTTPBearer()
+
+async def verify_oauth_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify OAuth token"""
+    token = credentials.credentials
+    payload = oauth_provider.verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload
+
+# Mount OAuth endpoints
+app.mount("/oauth", oauth_app)
+app.mount("/.well-known", oauth_app)
 
 @app.get("/")
 async def health_check():
@@ -49,17 +79,19 @@ async def health_check():
     })
 
 @app.get("/sse")
-async def sse_endpoint():
+async def sse_endpoint(token_payload: dict = Depends(verify_oauth_token)):
     """Server-Sent Events endpoint for testing and monitoring."""
     async def event_generator() -> AsyncGenerator[dict, None]:
         """Generate SSE events."""
-        # Send initial connection event
+        # Send initial connection event with user info
         yield {
             "event": "connected",
             "data": json.dumps({
                 "message": "Connected to Dr. Strunz Knowledge MCP Server SSE",
                 "timestamp": datetime.now().isoformat(),
-                "server_version": "0.2.0"
+                "server_version": "0.2.0",
+                "user": token_payload.get("sub", "unknown"),
+                "scope": token_payload.get("scope", "read")
             })
         }
         
@@ -103,7 +135,7 @@ except Exception as e:
     logger.error(f"Failed to initialize enhanced MCP server: {e}")
 
 @app.post("/mcp")
-async def mcp_endpoint(request: dict):
+async def mcp_endpoint(request: dict, token_payload: dict = Depends(verify_oauth_token)):
     """MCP JSON-RPC endpoint for testing with enhanced server."""
     if not enhanced_mcp_server:
         return JSONResponse({
@@ -114,6 +146,9 @@ async def mcp_endpoint(request: dict):
             },
             "id": request.get("id", 1)
         })
+    
+    # Log authenticated request
+    logger.info(f"MCP request from user: {token_payload.get('sub')} with scope: {token_payload.get('scope')}")
     
     # Handle MCP protocol requests
     method = request.get("method", "")

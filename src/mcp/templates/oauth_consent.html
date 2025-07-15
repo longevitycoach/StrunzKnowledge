@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorize Access - Dr. Strunz Knowledge MCP</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        .consent-box {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .client-name {
+            font-weight: bold;
+            color: #3498db;
+        }
+        .permissions {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .permission-item {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .permission-item:before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            margin-left: -20px;
+            margin-right: 10px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-authorize {
+            background: #3498db;
+            color: white;
+        }
+        .btn-authorize:hover {
+            background: #2980b9;
+        }
+        .btn-deny {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-deny:hover {
+            background: #c0392b;
+        }
+        .info {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="consent-box">
+        <h1>Authorize Access</h1>
+        <p><span class="client-name">{{ client_name }}</span> wants to access your Dr. Strunz Knowledge MCP Server</p>
+        
+        <div class="permissions">
+            <strong>This application will be able to:</strong>
+            <div class="permission-item">Search Dr. Strunz's knowledge base</div>
+            <div class="permission-item">Create health protocols and recommendations</div>
+            <div class="permission-item">Analyze supplements and nutrition</div>
+            <div class="permission-item">Access diagnostic value recommendations</div>
+        </div>
+        
+        <div class="buttons">
+            <form method="post" style="flex: 1;">
+                <input type="hidden" name="authorize" value="yes">
+                <button type="submit" class="btn-authorize">Authorize</button>
+            </form>
+            <form method="post" style="flex: 1;">
+                <input type="hidden" name="authorize" value="no">
+                <button type="submit" class="btn-deny">Deny</button>
+            </form>
+        </div>
+        
+        <div class="info">
+            By authorizing, you agree to share access to the Dr. Strunz Knowledge Base with the requesting application.
+            You can revoke access at any time.
+        </div>
+    </div>
+</body>
+</html>
