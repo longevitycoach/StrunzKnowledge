@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 # Protocol version that Claude.ai supports
 PROTOCOL_VERSION = "2025-03-26"
 
+# Debug: Log when server starts
+logger.info("=== CLAUDE COMPATIBLE SERVER v0.4.1 WITH OAUTH ENDPOINTS ===")
+logger.info("This version includes OAuth endpoints for Claude.ai")
+
 # Create FastAPI app
 app = FastAPI(title="Dr. Strunz Knowledge MCP Server")
 
@@ -67,6 +71,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 @app.post("/")
 async def health_check():
     """Health check endpoint - supports GET, HEAD, and POST"""
+    # Debug: Check if OAuth endpoints are registered
+    routes = [route.path for route in app.routes]
+    oauth_routes = [r for r in routes if 'oauth' in r or 'well-known' in r]
+    
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
@@ -77,6 +85,10 @@ async def health_check():
         "endpoints": {
             "sse": "/sse",
             "messages": "/messages"
+        },
+        "debug": {
+            "oauth_endpoints_registered": len(oauth_routes),
+            "oauth_routes": oauth_routes[:5]  # Show first 5 OAuth routes
         }
     })
 
