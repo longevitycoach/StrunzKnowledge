@@ -1923,6 +1923,44 @@ latest = await client.call_tool(
 
 The project includes extensive testing with **57+ automated tests** ensuring data integrity, MCP functionality, and system reliability.
 
+### MCP Protocol Testing
+
+#### Using MCP Inspector
+```bash
+# Install MCP Inspector
+npm install -g @modelcontextprotocol/inspector
+
+# Test with stdio transport
+mcp-inspector --config test-configs/stdio-config.json --server test-stdio
+
+# Test with SSE transport (Railway deployment)
+mcp-inspector --config test-configs/sse-config.json --server strunz-sse
+```
+
+#### Using Fast Agent (Recommended)
+Fast Agent provides a robust MCP client for comprehensive testing:
+
+```bash
+# Install Fast Agent
+pip install fast-agent-mcp
+
+# Test local server
+python test_fast_agent_stdio.py
+
+# Test remote SSE server
+python test_fast_agent_sse.py
+```
+
+See [Testing with Fast Agent](docs/TESTING_WITH_FAST_AGENT.md) for detailed instructions.
+
+### Transport Testing
+The server supports multiple transports:
+- **stdio**: Default for local development
+- **SSE**: For remote connections (Claude Desktop, Fast Agent)
+- **HTTP**: For API-style interactions
+
+Test configurations are available in `test-configs/` directory.
+
 #### Test Reports
 - 📊 [Latest MCP Test Report](docs/test-reports/DETAILED_MCP_TEST_REPORT_2025-07-14_13-07-55.md)
 - 🚀 [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT_2025-07-14_10-33-21.md)

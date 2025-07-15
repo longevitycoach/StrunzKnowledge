@@ -35,8 +35,8 @@ def main():
     if is_railway and is_production:
         # Production Railway deployment with FastMCP SSE server
         print("Starting production Railway deployment with FastMCP SSE server...")
-        from src.mcp.enhanced_server import main as run_server
-        run_server()  # This will use SSE transport on Railway
+        from src.mcp.fastmcp_server import main
+        main()  # This will use SSE transport on Railway
         return
     elif is_railway:
         # Non-production Railway deployment
