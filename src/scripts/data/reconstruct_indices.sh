@@ -17,5 +17,10 @@ if [ -f "combined_metadata.json.metadata.json" ]; then
     python reconstruct_combined_metadata.json.py
 fi
 
+# Create combined directory and copy files with correct names
+mkdir -p ../combined
+cp ../combined_index.faiss ../combined/index.faiss 2>/dev/null || true
+cp ../combined_metadata.json ../combined/metadata.json 2>/dev/null || true
+
 echo "Reconstruction complete!"
-ls -lh ../combined_*
+ls -lh ../combined/
