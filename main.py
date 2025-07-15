@@ -32,29 +32,17 @@ def main():
     is_railway = os.environ.get('RAILWAY_ENVIRONMENT') is not None
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
     
-    if is_railway and is_production:
-        # Production Railway deployment with FastMCP SSE server
-        print("Starting production Railway deployment with FastMCP SSE server...")
-        from src.mcp.fastmcp_server import main
-        main()  # This will use SSE transport on Railway
-        return
-    elif is_railway:
-        # Non-production Railway deployment
-        print("Starting Railway deployment...")
-        from src.scripts.deployment.railway_mcp_server import main as run_server
-    else:
-        # Local development
-        print("Starting local development server...")
-        from src.mcp.enhanced_server import main as run_server
-    
-    # Run the appropriate server
-    if is_railway and is_production:
-        # Direct function call for production - FastMCP SSE will handle its own event loop
-        run_server()
-    else:
-        # Use asyncio for other servers
+    if is_railway:
+        # Railway deployment - use SSE server
+        print("Starting Railway deployment with SSE server...")
+        from src.scripts.deployment.railway_mcp_sse_server import main as run_server
         import asyncio
         asyncio.run(run_server())
+    else:
+        # Local development - use enhanced server
+        print("Starting local development server...")
+        from src.mcp.enhanced_server import main as run_server
+        run_server()
 
 if __name__ == "__main__":
     main()

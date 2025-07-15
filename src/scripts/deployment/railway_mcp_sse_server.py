@@ -198,14 +198,22 @@ async def main():
     # Start HTTP server for health check and SSE
     run_fastapi_server()
     
-    # Import and run the enhanced MCP server
+    # Import and run the enhanced MCP server with FastMCP
     try:
-        from src.mcp.enhanced_server import create_fastapi_app
+        from src.mcp.enhanced_server import main as run_enhanced_server
         
         logger.info("Starting Enhanced Dr. Strunz Knowledge MCP Server v0.2.0")
-        logger.info("Enhanced MCP server with 19 tools available")
-        logger.info("Full tool registry and FastAPI endpoints active")
-        logger.info("SSE endpoint available at /sse")
+        logger.info("Enhanced MCP server with 20 tools available")
+        logger.info("Running FastMCP with SSE transport on Railway")
+        logger.info("SSE endpoint available at /sse for monitoring")
+        
+        # Run the enhanced server in a separate thread
+        import threading
+        def run_mcp():
+            run_enhanced_server()
+        
+        mcp_thread = threading.Thread(target=run_mcp, daemon=True)
+        mcp_thread.start()
         
         # Keep server running for health checks and SSE
         logger.info("Running in production mode with enhanced MCP capabilities")
