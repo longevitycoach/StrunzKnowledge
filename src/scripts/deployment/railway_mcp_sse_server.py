@@ -207,16 +207,18 @@ async def main():
         logger.info("Running FastMCP with SSE transport on Railway")
         logger.info("SSE endpoint available at /sse for monitoring")
         
-        # Run the enhanced server in a separate thread
-        import threading
-        def run_mcp():
-            run_enhanced_server()
-        
-        mcp_thread = threading.Thread(target=run_mcp, daemon=True)
-        mcp_thread.start()
-        
-        # Keep server running for health checks and SSE
+        # Run the enhanced server directly with fixed SSE transport
         logger.info("Running in production mode with enhanced MCP capabilities")
+        
+        # Import and create the enhanced server
+        from src.mcp.enhanced_server import StrunzKnowledgeMCP
+        server = StrunzKnowledgeMCP()
+        
+        # Use SSE transport correctly for Railway
+        logger.info("Starting FastMCP with SSE transport")
+        server.app.run(transport="sse")
+        
+        # This line won't be reached but kept for completeness
         while True:
             await asyncio.sleep(60)
         
