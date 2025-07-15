@@ -57,11 +57,31 @@ async def verify_oauth_token(credentials: HTTPAuthorizationCredentials = Depends
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return payload
 
-# Mount OAuth endpoints
+# Add OAuth routes directly to the main app
+@app.get("/.well-known/oauth-authorization-server")
+async def oauth_metadata():
+    """OAuth 2.1 Authorization Server Metadata (RFC 8414)"""
+    return {
+        "issuer": os.environ.get('OAUTH_ISSUER_URL', 'https://strunz.up.railway.app'),
+        "authorization_endpoint": "https://strunz.up.railway.app/oauth/authorize",
+        "token_endpoint": "https://strunz.up.railway.app/oauth/token",
+        "registration_endpoint": "https://strunz.up.railway.app/oauth/register",
+        "scopes_supported": ["read", "write", "admin"],
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "code_challenge_methods_supported": ["S256", "plain"],
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
+        "service_documentation": "https://strunz.up.railway.app/docs",
+        "ui_locales_supported": ["en"],
+        "op_policy_uri": "https://strunz.up.railway.app/policy",
+        "op_tos_uri": "https://strunz.up.railway.app/tos"
+    }
+
+# Mount OAuth app under /oauth prefix
 app.mount("/oauth", oauth_app)
-app.mount("/.well-known", oauth_app)
 
 @app.get("/")
+@app.head("/")
 async def health_check():
     """Health check for Railway."""
     public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'strunz.up.railway.app')
@@ -74,7 +94,11 @@ async def health_check():
         "endpoints": {
             "health": "/",
             "sse": "/sse",
-            "mcp": "via stdio protocol only"
+            "mcp": "/mcp",
+            "oauth_discovery": "/.well-known/oauth-authorization-server",
+            "oauth_register": "/oauth/register",
+            "oauth_authorize": "/oauth/authorize",
+            "oauth_token": "/oauth/token"
         }
     })
 
