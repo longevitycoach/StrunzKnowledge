@@ -877,21 +877,9 @@ def main():
     if os.environ.get('RAILWAY_ENVIRONMENT'):
         port = int(os.environ.get('PORT', 8000))
         print(f"Starting FastMCP SSE server on port {port}")
-        # FastMCP SSE transport configuration
-        transport_kwargs = {
-            "transport": "sse",
-            "port": port
-        }
-        # Only add host if supported by the FastMCP version
-        try:
-            server.app.run(**transport_kwargs, host="0.0.0.0")
-        except TypeError as e:
-            if "host" in str(e):
-                # Fallback without host parameter
-                print("FastMCP version doesn't support host parameter, using default")
-                server.app.run(**transport_kwargs)
-            else:
-                raise
+        # FastMCP SSE transport - note: port binding is handled by Railway/Docker
+        # The SSE transport doesn't support host/port parameters in run()
+        server.app.run(transport="sse")
     else:
         # Local development uses stdio
         print("Starting FastMCP stdio server")

@@ -29,9 +29,10 @@ def main():
         port = int(os.environ.get('PORT', 8000))
         logger.info(f"Running on Railway with SSE transport on port {port}")
         
-        # Use SSE transport for Railway without host parameter
-        # FastMCP will bind to 0.0.0.0 by default for SSE
-        server.app.run(transport="sse", port=port)
+        # Use SSE transport for Railway
+        # Note: FastMCP SSE doesn't support host/port parameters
+        # Port binding is handled by the container/platform
+        server.app.run(transport="sse")
     else:
         # Local development uses stdio
         logger.info("Running locally with stdio transport")
