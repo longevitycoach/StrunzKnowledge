@@ -2287,11 +2287,16 @@ def main():
     import os
     if os.environ.get('RAILWAY_ENVIRONMENT'):
         port = int(os.environ.get('PORT', 8000))
+        print(f"Starting FastMCP SSE server on port {port}")
         server.app.run(transport="sse", host="0.0.0.0", port=port)
     else:
         # Local development uses stdio
+        print("Starting FastMCP stdio server")
         server.app.run()
-    
+
+def get_fastmcp_app():
+    """Get the FastMCP app instance for compatibility."""
+    server = StrunzKnowledgeMCP()
     return server.app
 
 def create_fastapi_app():
