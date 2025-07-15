@@ -70,7 +70,7 @@ async def health_check():
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.4.0",
+        "version": "0.4.1",
         "protocol_version": PROTOCOL_VERSION,
         "transport": "sse",
         "tools": len(tool_registry),
