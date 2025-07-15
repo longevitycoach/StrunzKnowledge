@@ -68,7 +68,7 @@ async def health_check():
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.3.0",
+        "version": "0.4.0",
         "protocol_version": PROTOCOL_VERSION,
         "transport": "sse",
         "tools": len(tool_registry),
@@ -212,7 +212,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.3.0"
+                "version": "0.4.0"
             }
         }
     }
