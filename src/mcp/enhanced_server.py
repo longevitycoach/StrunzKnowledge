@@ -2282,6 +2282,16 @@ class StrunzKnowledgeMCP:
 def main():
     """Run the enhanced MCP server."""
     server = StrunzKnowledgeMCP()
+    
+    # For production/Railway, use SSE transport for Claude Desktop compatibility
+    import os
+    if os.environ.get('RAILWAY_ENVIRONMENT'):
+        port = int(os.environ.get('PORT', 8000))
+        server.app.run(transport="sse", host="0.0.0.0", port=port)
+    else:
+        # Local development uses stdio
+        server.app.run()
+    
     return server.app
 
 def create_fastapi_app():

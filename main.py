@@ -33,9 +33,11 @@ def main():
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
     
     if is_railway and is_production:
-        # Production Railway deployment with enhanced server
-        print("Starting production Railway deployment with enhanced server...")
-        from src.scripts.deployment.railway_production_server import main as run_server
+        # Production Railway deployment with FastMCP SSE server
+        print("Starting production Railway deployment with FastMCP SSE server...")
+        from src.mcp.enhanced_server import main as run_server
+        run_server()  # This will use SSE transport on Railway
+        return
     elif is_railway:
         # Non-production Railway deployment
         print("Starting Railway deployment...")
