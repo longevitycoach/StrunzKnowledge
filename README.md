@@ -19,12 +19,13 @@
 - [Forum Analysis & Insights](#forum-analysis)
 - [Getting Started](#getting-started)
 - [Search Guide](#search-guide)
+- [Claude Web (claude.ai) Configuration](#claude-web-claudeai-configuration-)
+- [Claude Desktop Configuration](#claude-desktop-configuration)
 
 ### 🔧 For Developers & Integrators
 - [Technical Architecture](#technical-architecture)
 - [Enhanced MCP Server](#enhanced-mcp-server)
 - [New: Optimal Diagnostic Values Tool](#optimal-diagnostic-values-tool)
-- [Claude Desktop MCP Configuration](#claude-desktop-mcp-configuration)
 - [Development Setup](#development-setup)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Deployment Guide](#deployment-guide)
@@ -1306,6 +1307,65 @@ The comprehensive visualization above shows:
 - Combine topics: "Vitamin D + Corona"
 - Be specific: "Aminosäuren Sport" vs just "Sport"
 
+## Claude Web (claude.ai) Configuration ✅
+
+**For Claude Web users**, simply add this MCP server:
+
+```
+Server URL: https://strunz.up.railway.app/mcp
+Authentication: Bearer token (automatic)
+```
+
+**Available Tools:**
+- `knowledge_search` - Search Dr. Strunz knowledge base
+- `get_optimal_diagnostic_values` - Get personalized optimal lab ranges  
+- `create_health_protocol` - Create health optimization protocols
+- `analyze_supplement_stack` - Analyze supplement combinations
+- `get_dr_strunz_biography` - Get Dr. Strunz background
+
+Claude.ai will automatically:
+- Detect OAuth support
+- Handle authentication flow
+- Connect via SSE transport
+- Provide access to all 20 tools immediately!
+
+## Claude Desktop Configuration
+
+For Claude Desktop users, add this configuration to your settings:
+
+**Option 1: Remote Server (via Railway)**
+```json
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-sse",
+        "https://strunz.up.railway.app/sse"
+      ]
+    }
+  }
+}
+```
+
+**Option 2: Local Proxy (Advanced)**
+```bash
+# Install and configure
+python setup_claude_desktop.py
+
+# Or manually add to claude_desktop_config.json:
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "python",
+      "args": [
+        "/path/to/StrunzKnowledge/claude_desktop_local_proxy.py"
+      ]
+    }
+  }
+}
+```
+
 ---
 
 # Developer Documentation
@@ -1824,107 +1884,69 @@ Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health
 - **Context**: Symptoms, lab values, medical history
 - **Output**: Functional medicine assessment with intervention strategies
 
-## Claude Integration Configuration
+## 🛠️ Available MCP Tools
 
-### 🚀 Production MCP Server with Claude Web Support
+The Dr. Strunz Knowledge MCP server provides 20 specialized tools for health optimization:
 
-The Dr. Strunz Knowledge Base MCP server is deployed on Railway with full Claude Web integration support.
+### 1. Search & Discovery Tools
+- **`knowledge_search`** - Advanced semantic search across all sources (books, news, forum)
+- **`find_contradictions`** - Identify conflicting information and debates in health topics
+- **`trace_topic_evolution`** - Track how health concepts evolved over 20+ years
 
-**Production Endpoints:**
-- **MCP Server**: `https://strunz.up.railway.app/mcp`
-- **Authentication**: `https://strunz.up.railway.app/auth/token`
-- **SSE Monitoring**: `https://strunz.up.railway.app/sse`
+### 2. Health Protocol Tools
+- **`create_health_protocol`** - Generate personalized treatment plans based on Dr. Strunz principles
+- **`analyze_supplement_stack`** - Evaluate safety and efficacy of supplement combinations
+- **`nutrition_calculator`** - Calculate nutritional needs following functional medicine principles
+
+### 3. Diagnostic Values Tool 🆕
+- **`get_optimal_diagnostic_values`** - Get Dr. Strunz's optimal lab ranges personalized by age, gender, and conditions
+
+### 4. Community Insights Tools
+- **`get_community_insights`** - Extract real-world experiences and success stories from forum
+- **`get_trending_insights`** - Discover trending health topics by user role
+- **`summarize_posts`** - Get AI-powered summaries of forum discussions
+
+### 5. Newsletter Analysis Tools
+- **`analyze_strunz_newsletter_evolution`** - Track 20+ years of newsletter content evolution
+- **`get_guest_authors_analysis`** - Understand Dr. Strunz's unique editorial approach
+- **`track_health_topic_trends`** - Follow specific health topic development over time
+
+### 6. User Journey Tools
+- **`get_health_assessment_questions`** - Generate personalized health questionnaire
+- **`assess_user_health_profile`** - Create user profile and assign appropriate role
+- **`create_personalized_protocol`** - Generate user-specific health protocols
+- **`get_user_journey_guide`** - Provide step-by-step journey based on user role
+
+### 7. Information Tools
+- **`get_dr_strunz_biography`** - Comprehensive biography and achievements
+- **`get_mcp_server_purpose`** - Server capabilities and usage guide
+- **`get_vector_db_analysis`** - Database statistics and content metrics
+- **`get_book_recommendations`** - Personalized Dr. Strunz book recommendations
+- **`compare_approaches`** - Compare different health approaches from multiple sources
+
+### Production Endpoints
+
 - **Health Check**: `https://strunz.up.railway.app/`
-
-### Claude Web (claude.ai) Configuration ✅
-
-**For Claude Web users**, simply add this MCP server:
-
-```
-Server URL: https://strunz.up.railway.app/mcp
-Authentication: Bearer token (automatic)
-```
-
-**Available Tools:**
-- `knowledge_search` - Search Dr. Strunz knowledge base
-- `get_optimal_diagnostic_values` - Get personalized optimal lab ranges  
-- `create_health_protocol` - Create health optimization protocols
-- `analyze_supplement_stack` - Analyze supplement combinations
-- `get_dr_strunz_biography` - Get Dr. Strunz background
-
-### Claude Desktop Configuration
-
-For Claude Desktop users, add this configuration to your settings:
-
-```json
-{
-  "mcpServers": {
-    "strunz-knowledge": {
-      "command": "node",
-      "args": [
-        "/path/to/StrunzKnowledge/src/scripts/deployment/claude_desktop_client.js"
-      ],
-      "env": {
-        "MCP_SERVER_URL": "https://strunz.up.railway.app",
-        "SSE_ENDPOINT": "https://strunz.up.railway.app/sse"
-      }
-    }
-  }
-}
-```
-
-### 📊 SSE Monitoring Features
-
-The SSE endpoint provides real-time server status and performance metrics:
-
-```javascript
-// Example SSE client for monitoring
-const eventSource = new EventSource('https://strunz.up.railway.app/sse');
-
-eventSource.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log('Server Status:', data);
-  // {
-  //   "status": "alive",
-  //   "timestamp": "2025-01-14T10:30:00Z",
-  //   "active_connections": 5,
-  //   "tools_available": 20
-  // }
-};
-```
-
-### 🛠️ Available MCP Tools
-
-The server provides 20 specialized tools for health optimization:
-
-1. **Search & Discovery**: knowledge_search, find_contradictions, trace_topic_evolution
-2. **Health Protocols**: create_health_protocol, analyze_supplement_stack, nutrition_calculator
-3. **Diagnostic Values** 🆕: get_optimal_diagnostic_values (personalized lab ranges)
-4. **Community Insights**: get_community_insights, get_trending_insights, summarize_posts
-5. **Newsletter Analysis**: analyze_strunz_newsletter_evolution, track_health_topic_trends
-6. **User Journey**: assess_user_health_profile, create_personalized_protocol, get_user_journey_guide
-7. **Resources**: get_book_recommendations, get_dr_strunz_biography, get_mcp_server_purpose
+- **SSE Monitoring**: `https://strunz.up.railway.app/sse`
+- **OAuth Discovery**: `https://strunz.up.railway.app/.well-known/oauth-authorization-server`
 
 ### For Developers
 
 ```python
-# Using the MCP client
-from mcp import Client
-
-client = Client("https://strunz.up.railway.app")
-
-# Search for information
-results = await client.call_tool(
+# Example: Using the knowledge_search tool
+results = await mcp_client.call_tool(
     "knowledge_search",
     query="Vitamin D Corona",
-    category="Gesundheit"
+    sources=["news", "forum"],
+    limit=10
 )
 
-# Get latest insights
-latest = await client.call_tool(
-    "get_latest_insights",
-    category="Ernährung",
-    limit=5
+# Example: Getting optimal diagnostic values
+values = await mcp_client.call_tool(
+    "get_optimal_diagnostic_values",
+    age=45,
+    gender="male",
+    athlete=True
 )
 ```
 
