@@ -7,7 +7,7 @@ dockerfilePath = "Dockerfile"
 startCommand = "python main.py"
 restartPolicyType = "always"
 healthcheckPath = "/"
-healthcheckTimeout = 10
+healthcheckTimeout = 100
 
 # Environment variables (will be overridden by Railway dashboard)
 [[envs]]

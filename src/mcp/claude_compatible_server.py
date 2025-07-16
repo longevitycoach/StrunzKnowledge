@@ -5,8 +5,10 @@ Uses protocol version 2025-03-26 with SSE transport (2024-11-05 style)
 """
 
 import os
+import sys
 import json
 import uuid
+import time
 import asyncio
 import logging
 from datetime import datetime
@@ -28,6 +30,9 @@ PROTOCOL_VERSION = "2025-03-26"
 logger.info("=== CLAUDE COMPATIBLE SERVER v0.5.1 WITH OAUTH ENDPOINTS ===")
 logger.info("This version includes OAuth endpoints for Claude.ai and vector store fix")
 logger.info(f"Build timestamp: {datetime.now().isoformat()}")
+
+# Track server start time for uptime calculation
+start_time = time.time()
 
 # Create FastAPI app
 app = FastAPI(title="Dr. Strunz Knowledge MCP Server")
@@ -67,37 +72,334 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     return None
 
 
+async def perform_health_checks():
+    """Perform comprehensive system health checks"""
+    import psutil
+    import traceback
+    
+    health_status = {
+        "overall": "healthy",
+        "checks": {},
+        "warnings": [],
+        "errors": []
+    }
+    
+    # 1. Memory Check
+    try:
+        memory = psutil.virtual_memory()
+        memory_check = {
+            "status": "healthy",
+            "total_gb": round(memory.total / 1024**3, 2),
+            "available_gb": round(memory.available / 1024**3, 2),
+            "used_percent": memory.percent
+        }
+        
+        if memory.percent > 90:
+            memory_check["status"] = "critical"
+            health_status["errors"].append("Memory usage critical (>90%)")
+        elif memory.percent > 75:
+            memory_check["status"] = "warning"
+            health_status["warnings"].append("Memory usage high (>75%)")
+            
+        health_status["checks"]["memory"] = memory_check
+    except Exception as e:
+        health_status["checks"]["memory"] = {"status": "error", "error": str(e)}
+        health_status["errors"].append(f"Memory check failed: {str(e)}")
+    
+    # 2. FAISS Vector Store Check
+    try:
+        vector_store_status = {"status": "unknown", "indices": {}}
+        
+        # Check if FAISS indices exist
+        from pathlib import Path
+        faiss_dir = Path("data/faiss_indices")
+        
+        if faiss_dir.exists():
+            combined_index = faiss_dir / "combined_index.faiss"
+            combined_metadata = faiss_dir / "combined_metadata.json"
+            
+            vector_store_status["indices"] = {
+                "combined_index": combined_index.exists(),
+                "combined_metadata": combined_metadata.exists()
+            }
+            
+            if combined_index.exists() and combined_metadata.exists():
+                vector_store_status["status"] = "healthy"
+                # Try to load the vector store
+                try:
+                    from src.rag.vector_store import VectorStore
+                    vs = VectorStore()
+                    vs.load_index()
+                    vector_store_status["documents"] = len(vs.documents) if hasattr(vs, 'documents') else 0
+                    vector_store_status["status"] = "operational"
+                except Exception as e:
+                    vector_store_status["status"] = "error"
+                    vector_store_status["load_error"] = str(e)
+                    health_status["errors"].append(f"Vector store load failed: {str(e)}")
+            else:
+                vector_store_status["status"] = "missing"
+                health_status["warnings"].append("FAISS indices not found")
+        else:
+            vector_store_status["status"] = "missing"
+            health_status["warnings"].append("FAISS directory not found")
+            
+        health_status["checks"]["vector_store"] = vector_store_status
+    except Exception as e:
+        health_status["checks"]["vector_store"] = {"status": "error", "error": str(e)}
+        health_status["errors"].append(f"Vector store check failed: {str(e)}")
+    
+    # 3. Tool Registry Check
+    try:
+        tool_check = {
+            "status": "healthy",
+            "total_tools": len(tool_registry),
+            "tools_available": list(tool_registry.keys())[:10]  # Show first 10 tools
+        }
+        
+        if len(tool_registry) == 0:
+            tool_check["status"] = "error"
+            health_status["errors"].append("No tools registered")
+        elif len(tool_registry) < 15:
+            tool_check["status"] = "warning"
+            health_status["warnings"].append(f"Only {len(tool_registry)} tools registered (expected 19+)")
+            
+        health_status["checks"]["tools"] = tool_check
+    except Exception as e:
+        health_status["checks"]["tools"] = {"status": "error", "error": str(e)}
+        health_status["errors"].append(f"Tool registry check failed: {str(e)}")
+    
+    # 4. OAuth Endpoints Check
+    try:
+        routes = [route.path for route in app.routes]
+        oauth_routes = [r for r in routes if 'oauth' in r or 'well-known' in r]
+        
+        oauth_check = {
+            "status": "healthy",
+            "endpoints_registered": len(oauth_routes),
+            "oauth_routes": oauth_routes
+        }
+        
+        expected_oauth_endpoints = [
+            "/.well-known/oauth-authorization-server",
+            "/oauth/register",
+            "/oauth/authorize", 
+            "/oauth/token"
+        ]
+        
+        missing_endpoints = [ep for ep in expected_oauth_endpoints if ep not in oauth_routes]
+        
+        if missing_endpoints:
+            oauth_check["status"] = "error"
+            oauth_check["missing_endpoints"] = missing_endpoints
+            health_status["errors"].append(f"Missing OAuth endpoints: {missing_endpoints}")
+        
+        health_status["checks"]["oauth"] = oauth_check
+    except Exception as e:
+        health_status["checks"]["oauth"] = {"status": "error", "error": str(e)}
+        health_status["errors"].append(f"OAuth check failed: {str(e)}")
+    
+    # 5. Environment Check
+    try:
+        env_check = {
+            "status": "healthy",
+            "railway_environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
+            "public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown'),
+            "port": os.environ.get('PORT', '8000'),
+            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+            "working_directory": os.getcwd()
+        }
+        
+        # Check critical environment variables
+        critical_vars = ['RAILWAY_ENVIRONMENT', 'RAILWAY_PUBLIC_DOMAIN']
+        missing_vars = [var for var in critical_vars if not os.environ.get(var)]
+        
+        if missing_vars:
+            env_check["status"] = "warning"
+            env_check["missing_vars"] = missing_vars
+            health_status["warnings"].append(f"Missing environment variables: {missing_vars}")
+        
+        health_status["checks"]["environment"] = env_check
+    except Exception as e:
+        health_status["checks"]["environment"] = {"status": "error", "error": str(e)}
+        health_status["errors"].append(f"Environment check failed: {str(e)}")
+    
+    # Determine overall health
+    if health_status["errors"]:
+        health_status["overall"] = "unhealthy"
+    elif health_status["warnings"]:
+        health_status["overall"] = "degraded"
+    
+    return health_status
+
 @app.get("/")
 @app.head("/")
 @app.post("/")
 async def health_check():
-    """Health check endpoint - supports GET, HEAD, and POST"""
-    # Debug: Check if OAuth endpoints are registered
-    routes = [route.path for route in app.routes]
-    oauth_routes = [r for r in routes if 'oauth' in r or 'well-known' in r]
-    
-    return JSONResponse({
-        "status": "healthy",
-        "server": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.5.1",
-        "protocol_version": PROTOCOL_VERSION,
-        "transport": "sse",
-        "tools": len(tool_registry),
-        "endpoints": {
-            "sse": "/sse",
-            "messages": "/messages",
-            "oauth_discovery": "/.well-known/oauth-authorization-server",
-            "oauth_register": "/oauth/register",
-            "oauth_authorize": "/oauth/authorize",
-            "oauth_token": "/oauth/token"
-        },
-        "debug": {
-            "oauth_endpoints_registered": len(oauth_routes),
-            "oauth_routes": oauth_routes[:5],  # Show first 5 OAuth routes
-            "deployment_timestamp": datetime.now().isoformat(),
-            "railway_environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown')
+    """
+    Comprehensive health check endpoint for Railway deployment
+    Supports GET, HEAD, and POST methods for maximum compatibility
+    """
+    try:
+        # Perform comprehensive health checks
+        health_status = await perform_health_checks()
+        
+        # Base response for all methods
+        response_data = {
+            "status": health_status["overall"],
+            "server": "Dr. Strunz Knowledge MCP Server",
+            "version": "0.5.1",
+            "protocol_version": PROTOCOL_VERSION,
+            "transport": "sse",
+            "timestamp": datetime.now().isoformat(),
+            "uptime_seconds": round(time.time() - start_time, 2),
+            "health": health_status,
+            "endpoints": {
+                "sse": "/sse",
+                "messages": "/messages",
+                "oauth_discovery": "/.well-known/oauth-authorization-server",
+                "oauth_register": "/oauth/register",
+                "oauth_authorize": "/oauth/authorize",
+                "oauth_token": "/oauth/token",
+                "health_detailed": "/health",
+                "railway_status": "/railway/status"
+            },
+            "railway": {
+                "environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
+                "public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown'),
+                "deployment_id": os.environ.get('RAILWAY_DEPLOYMENT_ID', 'unknown'),
+                "service_id": os.environ.get('RAILWAY_SERVICE_ID', 'unknown')
+            }
         }
-    })
+        
+        # Return appropriate status code based on health
+        if health_status["overall"] == "unhealthy":
+            return JSONResponse(response_data, status_code=503)
+        elif health_status["overall"] == "degraded":
+            return JSONResponse(response_data, status_code=200)  # Still operational
+        else:
+            return JSONResponse(response_data, status_code=200)
+            
+    except Exception as e:
+        # Fallback minimal health check
+        logger.error(f"Health check failed: {e}")
+        return JSONResponse({
+            "status": "error",
+            "server": "Dr. Strunz Knowledge MCP Server",
+            "version": "0.5.1",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e),
+            "railway": {
+                "environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
+                "public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown')
+            }
+        }, status_code=500)
+
+
+@app.get("/health")
+async def detailed_health_check():
+    """
+    Detailed health check endpoint with full diagnostics
+    This provides more verbose information than the main health endpoint
+    """
+    try:
+        health_status = await perform_health_checks()
+        
+        # Add additional diagnostic information
+        diagnostics = {
+            "server_info": {
+                "name": "Dr. Strunz Knowledge MCP Server",
+                "version": "0.5.1",
+                "protocol_version": PROTOCOL_VERSION,
+                "transport": "sse",
+                "start_time": datetime.fromtimestamp(start_time).isoformat(),
+                "uptime_seconds": round(time.time() - start_time, 2),
+                "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+                "working_directory": os.getcwd()
+            },
+            "health_checks": health_status,
+            "environment": {
+                "railway_environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
+                "railway_public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown'),
+                "railway_private_domain": os.environ.get('RAILWAY_PRIVATE_DOMAIN', 'unknown'),
+                "railway_deployment_id": os.environ.get('RAILWAY_DEPLOYMENT_ID', 'unknown'),
+                "railway_service_id": os.environ.get('RAILWAY_SERVICE_ID', 'unknown'),
+                "port": os.environ.get('PORT', '8000'),
+                "log_level": os.environ.get('LOG_LEVEL', 'INFO')
+            },
+            "routes": {
+                "total_routes": len(app.routes),
+                "all_routes": [{"path": route.path, "methods": list(route.methods)} for route in app.routes]
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Add tool registry details if available
+        if tool_registry:
+            diagnostics["tools"] = {
+                "total_tools": len(tool_registry),
+                "available_tools": list(tool_registry.keys())
+            }
+        
+        return JSONResponse(diagnostics, status_code=200)
+        
+    except Exception as e:
+        logger.error(f"Detailed health check failed: {e}")
+        return JSONResponse({
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }, status_code=500)
+
+
+@app.get("/railway/status")
+async def railway_status():
+    """
+    Railway-specific status endpoint for monitoring and debugging
+    Provides Railway-specific diagnostics and deployment information
+    """
+    try:
+        # Get basic health
+        health_status = await perform_health_checks()
+        
+        # Railway-specific information
+        railway_info = {
+            "deployment": {
+                "environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
+                "public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown'),
+                "private_domain": os.environ.get('RAILWAY_PRIVATE_DOMAIN', 'unknown'),
+                "deployment_id": os.environ.get('RAILWAY_DEPLOYMENT_ID', 'unknown'),
+                "service_id": os.environ.get('RAILWAY_SERVICE_ID', 'unknown'),
+                "project_id": os.environ.get('RAILWAY_PROJECT_ID', 'unknown'),
+                "region": os.environ.get('RAILWAY_REGION', 'unknown')
+            },
+            "health_status": health_status["overall"],
+            "deployment_timestamp": datetime.now().isoformat(),
+            "uptime_seconds": round(time.time() - start_time, 2),
+            "version": "0.5.1",
+            "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
+            "critical_services": {
+                "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
+                "oauth_endpoints": health_status["checks"].get("oauth", {}).get("status", "unknown"),
+                "tool_registry": health_status["checks"].get("tools", {}).get("status", "unknown")
+            }
+        }
+        
+        # Add warnings and errors
+        if health_status["warnings"]:
+            railway_info["warnings"] = health_status["warnings"]
+        if health_status["errors"]:
+            railway_info["errors"] = health_status["errors"]
+        
+        return JSONResponse(railway_info, status_code=200)
+        
+    except Exception as e:
+        logger.error(f"Railway status check failed: {e}")
+        return JSONResponse({
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+            "railway_environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown')
+        }, status_code=500)
 
 
 @app.get("/sse")

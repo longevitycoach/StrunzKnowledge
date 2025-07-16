@@ -67,9 +67,12 @@ USER appuser
 # Expose the MCP server port
 EXPOSE 8000
 
-# Add health check using curl (lighter than Python with requests)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+# Enhanced health check with better diagnostics
+HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=5 \
+    CMD curl -f -H "Accept: application/json" http://localhost:8000/ || \
+        (echo "Health check failed - checking detailed health:" && \
+         curl -s http://localhost:8000/health | head -20 && \
+         exit 1)
 
 # Default command to run the MCP server
 CMD ["python", "-u", "main.py"]

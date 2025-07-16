@@ -14,6 +14,9 @@ python-dateutil~=2.8.0
 faiss-cpu~=1.7.0
 numpy~=1.26.0
 
+# System Monitoring
+psutil~=5.9.0
+
 # MCP Server (let pip resolve exact versions)
 fastmcp>=0.1.0
 fastapi>=0.109.0
