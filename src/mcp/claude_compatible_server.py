@@ -434,19 +434,36 @@ async def railway_status():
 
 
 @app.get("/sse")
+@app.post("/sse")
 async def sse_endpoint(request: Request, user=Depends(get_current_user)):
     """
     SSE endpoint for Claude.ai MCP communication.
     Uses the older SSE transport that Claude.ai expects.
     """
-    logger.info("SSE connection established")
+    # Check if this is a Claude Desktop request
+    user_agent = request.headers.get("user-agent", "")
+    is_claude_desktop = "Supabase-Edge-Function" in user_agent or "claude" in user_agent.lower()
+    
+    logger.info(f"SSE connection established - User-Agent: {user_agent}")
+    logger.info(f"Claude Desktop: {is_claude_desktop}, Method: {request.method}")
+    
+    # For POST requests from Claude Desktop, handle initialization data
+    init_data = None
+    if request.method == "POST":
+        try:
+            init_data = await request.json()
+            logger.info(f"SSE POST initialization data: {init_data}")
+        except Exception as e:
+            logger.debug(f"No JSON body in POST request: {e}")
     
     # Create session
     session_id = str(uuid.uuid4())
     sessions[session_id] = {
         "created": datetime.utcnow().isoformat(),
         "user": user,
-        "initialized": False
+        "initialized": False,
+        "claude_desktop": is_claude_desktop,
+        "init_data": init_data
     }
     
     async def event_generator():
