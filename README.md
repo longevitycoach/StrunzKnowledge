@@ -25,7 +25,6 @@
 ### 🔧 For Developers & Integrators
 - [Technical Architecture](#technical-architecture)
 - [Enhanced MCP Server](#enhanced-mcp-server)
-- [New: Optimal Diagnostic Values Tool](#optimal-diagnostic-values-tool)
 - [Development Setup](#development-setup)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Deployment Guide](#deployment-guide)
@@ -1734,44 +1733,7 @@ pip install -r requirements-dev.txt  # For development
      min_score: 0.5
    ```
 
-## Optimal Diagnostic Values Tool
 
-### 🔬 Dr. Strunz's Comprehensive Lab Value Reference
-
-The new `get_optimal_diagnostic_values` tool provides personalized optimal ranges based on Dr. Strunz's clinical experience - not just "normal" ranges that prevent disease, but optimal values for peak performance.
-
-#### Key Features:
-- **Personalized by Demographics**: Age and gender-specific optimal ranges
-- **Athlete Adjustments**: Special considerations for athletes (higher ferritin, different creatinine)
-- **Condition-Specific Targets**: Adjusted ranges for diabetes, cardiovascular, autoimmune conditions
-- **Comprehensive Categories**: Vitamins, minerals, hormones, metabolic markers, lipids, inflammation
-- **Dr. Strunz Philosophy**: "Optimal health, not just absence of disease"
-
-#### Example Usage:
-```python
-# Get all optimal values for a 40-year-old male athlete
-values = await get_optimal_diagnostic_values(
-    age=40,
-    gender="male",
-    athlete=True,
-    weight=80,
-    height=180
-)
-
-# Get specific category (e.g., hormones only)
-hormones = await get_optimal_diagnostic_values(
-    age=55,
-    gender="female",
-    category="hormones"
-)
-```
-
-#### Sample Optimal Ranges:
-- **Vitamin D (25-OH)**: 70-80 ng/ml (not just >30)
-- **Ferritin (male)**: 150-250 ng/ml (not just >30)
-- **TSH**: 1.0-1.5 mIU/l (not just <4.5)
-- **HbA1c**: <5.0% (not just <5.7%)
-- **hs-CRP**: <0.5 mg/l (not just <3.0)
 
 ## MCP Tools & Capabilities
 
