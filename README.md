@@ -1,5 +1,42 @@
 # Dr. Ulrich Strunz Knowledge Base
-## 🏆 Honoring a Pioneer of Modern Preventive Medicine
+
+## Table of Contents
+
+- [Project Description & Purpose](#-project-description--purpose)
+
+### 🌟 For Health Enthusiasts & Practitioners
+- [User Journey & Roles](#user-journey--roles)
+  - [Functional Medicine Expert](#-functional-medicine-expert)
+  - [Community Researcher](#-community-researcher)
+  - [Longevity Enthusiast](#-longevity-enthusiast)
+  - [Dr. Strunz Fan](#-dr-strunz-fan)
+  - [Health Optimizer](#-health-optimizer)
+- [Use Cases & LLM Integration](#use-cases--llm-integration)
+- [Personalized Health Assessment](#-personalized-health-assessment--journey-mapping)
+- [Dr. Strunz Newsletter Analysis](#-dr-strunz-newsletter-analysis-2004-2025)
+- [Knowledge Activation Principle](#knowledge-activation-principle)
+- [Content Sources & Statistics](#content-sources)
+- [Forum Analysis & Insights](#forum-analysis)
+- [Getting Started](#getting-started)
+- [Search Guide](#search-guide)
+
+### 🔧 For Developers & Integrators
+- [Technical Architecture](#technical-architecture)
+- [Enhanced MCP Server](#enhanced-mcp-server)
+- [New: Optimal Diagnostic Values Tool](#optimal-diagnostic-values-tool)
+- [Claude Desktop MCP Configuration](#claude-desktop-mcp-configuration)
+- [Development Setup](#development-setup)
+- [Testing & Quality Assurance](#testing--quality-assurance)
+- [Deployment Guide](#deployment-guide)
+- [SDLC Process](#sdlc-process)
+- [MCP Integration & Specifications](#-mcp-integration--specifications)
+- [Railway Endpoint & Integration](#-railway-endpoint--integration)
+
+---
+
+## 🎯 Project Description & Purpose
+
+### 🏆 Honoring a Pioneer of Modern Preventive Medicine
 
 > *"The medicine of the future is molecular medicine. We will no longer treat diseases, but prevent them by optimizing our biochemistry at the cellular level."*  
 > — Dr. med. Ulrich Strunz
@@ -60,190 +97,7 @@ Dr. Strunz's books represent decades of clinical experience and scientific resea
 
 ---
 
-## 🚀 Latest Releases
 
-### [v0.5.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.5.0) - OAuth Complete (July 16, 2025)
-- ✅ **100% Working OAuth 2.1** - All endpoints tested and verified
-- ✅ **Claude.ai Integration Fixed** - No more connection errors
-- ✅ **Comprehensive Test Suite** - 100% test pass rate
-- ✅ **Railway Deployment Ready** - Clean build with all features
-
-### [v0.4.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.4.0) - Claude.ai Compatibility (July 15, 2025)
-- MCP Protocol 2025-03-26 implementation
-- Legacy SSE transport for Claude.ai
-- Dual-endpoint architecture
-
-### [v0.3.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.3.0) - OAuth Authentication (July 15, 2025)
-- OAuth 2.1 provider implementation
-- Claude Desktop integration
-- Enhanced testing infrastructure
-
-[See all releases →](https://github.com/longevitycoach/StrunzKnowledge/releases)
-
----
-
-## 🔗 MCP Integration & Specifications
-
-### Model Context Protocol (MCP)
-
-This project implements the **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** specification to enable seamless integration with AI assistants like Claude.
-
-**MCP Versions Supported:**
-- **[2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26/)** - Primary version for Claude.ai compatibility
-- **[2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/)** - Future-ready implementation available
-
-**Why MCP?**
-- 🤖 **AI-Native**: Designed specifically for LLM integration
-- 🔧 **Tool Support**: Enables complex operations through standardized tools
-- 🔒 **Secure**: Built-in authentication and authorization
-- 🌐 **Transport Agnostic**: Supports multiple transport mechanisms
-
-### SDKs & Frameworks Used
-
-#### 1. **[FastMCP](https://github.com/jlowin/fastmcp)** (v2.10.5+)
-**Why:** FastMCP provides a robust, production-ready MCP server implementation with:
-- Built-in SSE transport support
-- Easy tool registration
-- Async/await support
-- Excellent error handling
-
-#### 2. **[Sentence-Transformers](https://www.sbert.net/)** (v2.2.0+)
-**Why:** Powers our semantic search with multilingual support:
-- Model: `paraphrase-multilingual-MiniLM-L12-v2`
-- Supports German/English cross-language search
-- 384-dimensional embeddings for accuracy
-- Fast inference on CPU
-
-#### 3. **[FAISS](https://github.com/facebookresearch/faiss)** (v1.7.4)
-**Why:** Facebook's vector similarity search library enables:
-- Lightning-fast similarity search
-- Scales to millions of documents
-- Memory-efficient indexing
-- Production-proven reliability
-
-#### 4. **[FastAPI](https://fastapi.tiangolo.com/)** (v0.109.0+)
-**Why:** Modern Python web framework for our OAuth and HTTP endpoints:
-- Automatic OpenAPI documentation
-- Built-in validation
-- Async support
-- High performance
-
----
-
-## 🌐 Railway Endpoint & Integration
-
-### Production Endpoint
-
-🔗 **https://strunz.up.railway.app**
-
-This is the production MCP server hosted on Railway with:
-- ✅ OAuth 2.1 authentication
-- ✅ All 20 MCP tools available
-- ✅ SSE transport for real-time communication
-- ✅ 28,938 indexed documents
-- ✅ 99.9% uptime SLA
-
-### 🤖 Claude.ai Integration
-
-#### Direct Integration (Recommended)
-1. Go to **Claude.ai** → Settings → Integrations
-2. Click "Add MCP Server"
-3. Enter server URL: `https://strunz.up.railway.app`
-4. Claude.ai will automatically:
-   - Detect OAuth support
-   - Handle authentication flow
-   - Connect via SSE transport
-5. All 20 tools available immediately!
-
-**No manual configuration needed** - Claude.ai handles everything automatically.
-
-### 💻 Claude Desktop Integration
-
-#### Option 1: Remote Server (via Railway)
-```json
-{
-  "mcpServers": {
-    "strunz-knowledge": {
-      "command": "npx",
-      "args": [
-        "@modelcontextprotocol/server-sse",
-        "https://strunz.up.railway.app/sse"
-      ]
-    }
-  }
-}
-```
-
-#### Option 2: Local Proxy (Advanced)
-```bash
-# Install and configure
-python setup_claude_desktop.py
-
-# Or manually add to claude_desktop_config.json:
-{
-  "mcpServers": {
-    "strunz-knowledge": {
-      "command": "python",
-      "args": [
-        "/path/to/StrunzKnowledge/claude_desktop_local_proxy.py"
-      ]
-    }
-  }
-}
-```
-
-### 🔧 SSE Transport Details
-
-The server uses **Server-Sent Events (SSE)** transport for real-time communication:
-
-**Endpoints:**
-- `/sse` - Event stream for MCP protocol messages
-- `/messages` - JSON-RPC endpoint for requests
-- `/.well-known/oauth-authorization-server` - OAuth discovery
-- `/.well-known/mcp/resource` - MCP resource metadata
-
-**Why SSE?**
-- ✅ **Real-time**: Instant updates without polling
-- ✅ **Firewall-friendly**: Uses standard HTTP
-- ✅ **Claude.ai native**: Preferred transport for Claude
-- ✅ **Bidirectional**: Supports full MCP protocol
-
-### 🔐 Authentication Flow
-
-1. **Client Registration**: Automatic via OAuth 2.1 Dynamic Registration
-2. **Authorization**: Auto-approved for Claude.ai clients
-3. **Token Exchange**: Bearer tokens for API access
-4. **Session Management**: Persistent SSE connections
-
----
-
-## Table of Contents
-
-### 🌟 For Health Enthusiasts & Practitioners
-- [User Journey & Roles](#user-journey--roles)
-  - [Functional Medicine Expert](#-functional-medicine-expert)
-  - [Community Researcher](#-community-researcher)
-  - [Longevity Enthusiast](#-longevity-enthusiast)
-  - [Dr. Strunz Fan](#-dr-strunz-fan)
-  - [Health Optimizer](#-health-optimizer)
-- [Use Cases & LLM Integration](#use-cases--llm-integration)
-- [Personalized Health Assessment](#-personalized-health-assessment--journey-mapping)
-- [Dr. Strunz Newsletter Analysis](#-dr-strunz-newsletter-analysis-2004-2025)
-- [Knowledge Activation Principle](#knowledge-activation-principle)
-- [Content Sources & Statistics](#content-sources)
-- [Forum Analysis & Insights](#forum-analysis)
-- [Getting Started](#getting-started)
-- [Search Guide](#search-guide)
-
-### 🔧 For Developers & Integrators
-- [Technical Architecture](#technical-architecture)
-- [Enhanced MCP Server](#enhanced-mcp-server)
-- [New: Optimal Diagnostic Values Tool](#optimal-diagnostic-values-tool)
-- [Claude Desktop MCP Configuration](#claude-desktop-mcp-configuration)
-- [Development Setup](#development-setup)
-- [Testing & Quality Assurance](#testing--quality-assurance)
-- [Deployment Guide](#deployment-guide)
-- [SDLC Process](#sdlc-process)
 
 ## User Journey & Roles
 
@@ -2495,6 +2349,165 @@ This knowledge base is for research and personal use. All content belongs to Dr.
 - Uses secure HTTPS connections in production
 - Follows GDPR compliance guidelines
 
+---
+
+## 🚀 Latest Releases
+
+### [v0.5.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.5.0) - OAuth Complete (July 16, 2025)
+- ✅ **100% Working OAuth 2.1** - All endpoints tested and verified
+- ✅ **Claude.ai Integration Fixed** - No more connection errors
+- ✅ **Comprehensive Test Suite** - 100% test pass rate
+- ✅ **Railway Deployment Ready** - Clean build with all features
+
+### [v0.4.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.4.0) - Claude.ai Compatibility (July 15, 2025)
+- MCP Protocol 2025-03-26 implementation
+- Legacy SSE transport for Claude.ai
+- Dual-endpoint architecture
+
+### [v0.3.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.3.0) - OAuth Authentication (July 15, 2025)
+- OAuth 2.1 provider implementation
+- Claude Desktop integration
+- Enhanced testing infrastructure
+
+[See all releases →](https://github.com/longevitycoach/StrunzKnowledge/releases)
+
+---
+
+## 🔗 MCP Integration & Specifications
+
+### Model Context Protocol (MCP)
+
+This project implements the **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** specification to enable seamless integration with AI assistants like Claude.
+
+**MCP Versions Supported:**
+- **[2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26/)** - Primary version for Claude.ai compatibility
+- **[2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/)** - Future-ready implementation available
+
+**Why MCP?**
+- 🤖 **AI-Native**: Designed specifically for LLM integration
+- 🔧 **Tool Support**: Enables complex operations through standardized tools
+- 🔒 **Secure**: Built-in authentication and authorization
+- 🌐 **Transport Agnostic**: Supports multiple transport mechanisms
+
+### SDKs & Frameworks Used
+
+#### 1. **[FastMCP](https://github.com/jlowin/fastmcp)** (v2.10.5+)
+**Why:** FastMCP provides a robust, production-ready MCP server implementation with:
+- Built-in SSE transport support
+- Easy tool registration
+- Async/await support
+- Excellent error handling
+
+#### 2. **[Sentence-Transformers](https://www.sbert.net/)** (v2.2.0+)
+**Why:** Powers our semantic search with multilingual support:
+- Model: `paraphrase-multilingual-MiniLM-L12-v2`
+- Supports German/English cross-language search
+- 384-dimensional embeddings for accuracy
+- Fast inference on CPU
+
+#### 3. **[FAISS](https://github.com/facebookresearch/faiss)** (v1.7.4)
+**Why:** Facebook's vector similarity search library enables:
+- Lightning-fast similarity search
+- Scales to millions of documents
+- Memory-efficient indexing
+- Production-proven reliability
+
+#### 4. **[FastAPI](https://fastapi.tiangolo.com/)** (v0.109.0+)
+**Why:** Modern Python web framework for our OAuth and HTTP endpoints:
+- Automatic OpenAPI documentation
+- Built-in validation
+- Async support
+- High performance
+
+---
+
+## 🌐 Railway Endpoint & Integration
+
+### Production Endpoint
+
+🔗 **https://strunz.up.railway.app**
+
+This is the production MCP server hosted on Railway with:
+- ✅ OAuth 2.1 authentication
+- ✅ All 20 MCP tools available
+- ✅ SSE transport for real-time communication
+- ✅ 28,938 indexed documents
+- ✅ 99.9% uptime SLA
+
+### 🤖 Claude.ai Integration
+
+#### Direct Integration (Recommended)
+1. Go to **Claude.ai** → Settings → Integrations
+2. Click "Add MCP Server"
+3. Enter server URL: `https://strunz.up.railway.app`
+4. Claude.ai will automatically:
+   - Detect OAuth support
+   - Handle authentication flow
+   - Connect via SSE transport
+5. All 20 tools available immediately!
+
+**No manual configuration needed** - Claude.ai handles everything automatically.
+
+### 💻 Claude Desktop Integration
+
+#### Option 1: Remote Server (via Railway)
+```json
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-sse",
+        "https://strunz.up.railway.app/sse"
+      ]
+    }
+  }
+}
+```
+
+#### Option 2: Local Proxy (Advanced)
+```bash
+# Install and configure
+python setup_claude_desktop.py
+
+# Or manually add to claude_desktop_config.json:
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "python",
+      "args": [
+        "/path/to/StrunzKnowledge/claude_desktop_local_proxy.py"
+      ]
+    }
+  }
+}
+```
+
+### 🔧 SSE Transport Details
+
+The server uses **Server-Sent Events (SSE)** transport for real-time communication:
+
+**Endpoints:**
+- `/sse` - Event stream for MCP protocol messages
+- `/messages` - JSON-RPC endpoint for requests
+- `/.well-known/oauth-authorization-server` - OAuth discovery
+- `/.well-known/mcp/resource` - MCP resource metadata
+
+**Why SSE?**
+- ✅ **Real-time**: Instant updates without polling
+- ✅ **Firewall-friendly**: Uses standard HTTP
+- ✅ **Claude.ai native**: Preferred transport for Claude
+- ✅ **Bidirectional**: Supports full MCP protocol
+
+### 🔐 Authentication Flow
+
+1. **Client Registration**: Automatic via OAuth 2.1 Dynamic Registration
+2. **Authorization**: Auto-approved for Claude.ai clients
+3. **Token Exchange**: Bearer tokens for API access
+4. **Session Management**: Persistent SSE connections
+
+---
+
 ## 📚 Documentation
 
 ### Core Documentation
@@ -2510,21 +2523,21 @@ This knowledge base is for research and personal use. All content belongs to Dr.
 
 ### Test Reports
 - [MCP Full Server Test Report](docs/test-reports/MCP_FULL_SERVER_TEST_REPORT.md) - Comprehensive test results
-- [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md) - Production environment tests
-- [All Test Reports](docs/test-reports/) - Historical test documentation
-
-### Analysis & Research
-- [Forum Analysis Report](docs/analysis/forum_analysis_report.md) - Forum content analysis
-- [Archive](docs/archive/) - Deprecated documentation
+- [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md) - Production deployment validation
+- [Test Summary](docs/test-reports/TEST_SUMMARY.md) - Quick test overview
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is for educational and research purposes. All content from Dr. Ulrich Strunz's works is used under fair use principles for educational analysis and research. Please respect copyright and only use this for personal research and educational purposes.
 
-## Acknowledgments
+---
 
-- Dr. Ulrich Strunz for the invaluable health content
-- The open-source community for the amazing tools
+*Built with ❤️ for the health optimization community*
+
+[![Dr. Strunz](https://img.shields.io/badge/Dr.-Strunz-blue)](https://www.strunz.com)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)
+[![Railway](https://img.shields.io/badge/Deployed-Railway-purple)](https://railway.app)
+[![Tests](https://img.shields.io/badge/Tests-57%20Passing-brightgreen)](docs/test-reports/)
 - Railway for the seamless deployment platform
 - Contributors and maintainers of this project
 

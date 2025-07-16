@@ -1,6 +1,3 @@
-"""
-Fixed vector store that handles the actual metadata structure
-"""
 import faiss
 import numpy as np
 import json
@@ -10,8 +7,6 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import logging
-import os
-
 try:
     from sentence_transformers import SentenceTransformer
 except ImportError:
@@ -73,6 +68,60 @@ class FAISSVectorStore:
         
         logger.info(f"Created FAISS {index_type} index with dimension {self.dimension}")
     
+    def add_documents(self, documents: List[Dict]) -> int:
+        """Add documents to the vector store."""
+        if self.index is None:
+            self.create_index()
+        
+        new_docs = []
+        embeddings = []
+        
+        for doc_data in documents:
+            # Create document
+            doc_id = doc_data.get('id', f"doc_{len(self.documents) + len(new_docs)}")
+            doc = Document(
+                id=doc_id,
+                content=doc_data['content'],
+                metadata=doc_data.get('metadata', {})
+            )
+            
+            # Generate embedding
+            embedding = self._embed_text(doc.content)
+            doc.embedding = embedding
+            
+            new_docs.append(doc)
+            embeddings.append(embedding)
+        
+        if new_docs:
+            # Add to FAISS index
+            embeddings_array = np.array(embeddings).astype('float32')
+            
+            # Normalize for inner product
+            faiss.normalize_L2(embeddings_array)
+            
+            # Get starting index
+            start_idx = len(self.documents)
+            
+            # Add to index
+            if hasattr(self.index, 'train') and not self.index.is_trained:
+                # Train IVF index if needed
+                self.index.train(embeddings_array)
+            
+            self.index.add(embeddings_array)
+            
+            # Update document storage
+            for i, doc in enumerate(new_docs):
+                idx = start_idx + i
+                self.documents.append(doc)
+                self.id_to_idx[doc.id] = idx
+            
+            logger.info(f"Added {len(new_docs)} documents to the vector store")
+            
+            # Save index
+            self.save_index()
+        
+        return len(new_docs)
+    
     def search(self, 
                query: str, 
                k: int = 5, 
@@ -93,7 +142,7 @@ class FAISSVectorStore:
         # Filter and collect results
         results = []
         for idx, score in zip(indices[0], scores[0]):
-            if idx < 0 or idx >= len(self.documents):  # FAISS returns -1 for empty slots
+            if idx < 0:  # FAISS returns -1 for empty slots
                 continue
                 
             doc = self.documents[idx]
@@ -124,78 +173,87 @@ class FAISSVectorStore:
         embedding = self.embedder.encode(text, convert_to_numpy=True)
         return embedding
     
-    def load_index(self) -> bool:
-        """Load index and metadata from disk - handles both old and new formats."""
-        # Try different possible locations and filenames
-        possible_paths = [
-            (self.index_path / "index.faiss", self.index_path / "metadata.json"),
-            (self.index_path.parent / "combined_index.faiss", self.index_path.parent / "combined_metadata.json"),
-            (Path("data/faiss_indices") / "combined_index.faiss", Path("data/faiss_indices") / "combined_metadata.json"),
-        ]
+    def save_index(self):
+        """Save index and metadata to disk."""
+        if self.index is None:
+            return
         
-        for index_file, metadata_file in possible_paths:
-            if index_file.exists() and metadata_file.exists():
-                logger.info(f"Found index files at: {index_file}")
-                break
-        else:
-            logger.info("No existing index found in any expected location")
+        # Save FAISS index
+        index_file = self.index_path / "index.faiss"
+        faiss.write_index(self.index, str(index_file))
+        
+        # Save documents and metadata
+        metadata = {
+            'documents': [doc.to_dict() for doc in self.documents],
+            'id_to_idx': self.id_to_idx,
+            'dimension': self.dimension,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        metadata_file = self.index_path / "metadata.json"
+        with open(metadata_file, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=2)
+        
+        logger.info(f"Saved vector store to {self.index_path}")
+    
+    def load_index(self) -> bool:
+        """Load index and metadata from disk."""
+        index_file = self.index_path / "index.faiss"
+        metadata_file = self.index_path / "metadata.json"
+        
+        if not index_file.exists() or not metadata_file.exists():
+            logger.info("No existing index found")
             return False
         
         try:
             # Load FAISS index
             self.index = faiss.read_index(str(index_file))
-            logger.info(f"Loaded FAISS index with {self.index.ntotal} vectors")
             
             # Load metadata
             with open(metadata_file, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
             
-            # Handle different metadata formats
-            if 'documents' in metadata and isinstance(metadata['documents'], list):
-                # New format or converted format
-                self.documents = []
-                for i, doc_data in enumerate(metadata['documents']):
-                    # Handle different document formats
-                    if 'id' in doc_data:
-                        # Standard format
-                        doc = Document(
-                            id=doc_data['id'],
-                            content=doc_data.get('content', doc_data.get('text', '')),
-                            metadata=doc_data.get('metadata', {})
-                        )
-                    else:
-                        # Old format - create ID from index
-                        doc = Document(
-                            id=f"doc_{i}",
-                            content=doc_data.get('text', doc_data.get('content', '')),
-                            metadata=doc_data.get('metadata', {})
-                        )
-                        # Add title to metadata if present
-                        if 'title' in doc_data:
-                            doc.metadata['title'] = doc_data['title']
-                    
-                    self.documents.append(doc)
-                    self.id_to_idx[doc.id] = i
-                
-                # Get dimension from metadata or index
-                if 'dimension' in metadata:
-                    self.dimension = metadata['dimension']
-                elif 'embedding_dim' in metadata:
-                    self.dimension = metadata['embedding_dim']
-                else:
-                    self.dimension = self.index.d
-                
-                logger.info(f"Loaded {len(self.documents)} documents from metadata")
-                return True
-            else:
-                logger.error("Unexpected metadata format")
-                return False
-                
+            # Restore documents
+            self.documents = []
+            for doc_data in metadata['documents']:
+                doc = Document(
+                    id=doc_data['id'],
+                    content=doc_data['content'],
+                    metadata=doc_data['metadata']
+                )
+                self.documents.append(doc)
+            
+            self.id_to_idx = metadata['id_to_idx']
+            self.dimension = metadata['dimension']
+            
+            logger.info(f"Loaded vector store with {len(self.documents)} documents")
+            return True
+            
         except Exception as e:
             logger.error(f"Error loading index: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
             return False
+    
+    def delete_document(self, doc_id: str) -> bool:
+        """Mark a document as deleted (FAISS doesn't support true deletion)."""
+        if doc_id in self.id_to_idx:
+            idx = self.id_to_idx[doc_id]
+            # Mark as deleted in metadata
+            self.documents[idx].metadata['deleted'] = True
+            self.save_index()
+            return True
+        return False
+    
+    def clear(self):
+        """Clear all documents from the store."""
+        self.index = None
+        self.documents = []
+        self.id_to_idx = {}
+        
+        # Remove saved files
+        for file in self.index_path.glob("*"):
+            file.unlink()
+        
+        logger.info("Cleared vector store")
     
     def get_stats(self) -> Dict:
         """Get statistics about the vector store."""
