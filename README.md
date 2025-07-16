@@ -1331,40 +1331,9 @@ Claude.ai will automatically:
 
 ## Claude Desktop Configuration
 
-For Claude Desktop users, add this configuration to your settings:
+Download Claude Desktop on the [Website](https://claude.ai/download).Add this configuration to your setting/connectors:
 
-**Option 1: Remote Server (via Railway)**
-```json
-{
-  "mcpServers": {
-    "strunz-knowledge": {
-      "command": "npx",
-      "args": [
-        "@modelcontextprotocol/server-sse",
-        "https://strunz.up.railway.app/sse"
-      ]
-    }
-  }
-}
-```
-
-**Option 2: Local Proxy (Advanced)**
-```bash
-# Install and configure
-python setup_claude_desktop.py
-
-# Or manually add to claude_desktop_config.json:
-{
-  "mcpServers": {
-    "strunz-knowledge": {
-      "command": "python",
-      "args": [
-        "/path/to/StrunzKnowledge/claude_desktop_local_proxy.py"
-      ]
-    }
-  }
-}
-```
+![alt text](docs/images/ClaudeDesktop.png)
 
 ---
 
