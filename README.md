@@ -1995,8 +1995,9 @@ The server supports multiple transports:
 Test configurations are available in `test-configs/` directory.
 
 #### Test Reports
-- 📊 [Latest MCP Test Report](docs/test-reports/DETAILED_MCP_TEST_REPORT_2025-07-14_13-07-55.md)
-- 🚀 [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT_2025-07-14_10-33-21.md)
+- 📊 [Latest Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Vector store fix validation
+- 🚀 [OAuth Test Report v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) - OAuth implementation tests
+- 📋 [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md) - Live deployment validation
 
 #### Test Categories & Coverage
 
@@ -2037,7 +2038,14 @@ python -m pytest src/tests/ -v -s
 💾 **Storage**: 2.0 GB across 11,228 files  
 🎯 **Quality**: 100% metadata coverage, 0% empty content  
 
-**📋 [View Enhanced Test Report](docs/test-reports/ENHANCED_TEST_REPORT.md)** | [Original Test Report](docs/test-reports/TEST_REPORT.md) | [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md)
+### Latest Test Results
+
+- **Latest Version Tested**: v0.5.1
+- **Test Coverage**: 100% (20/20 MCP tools)
+- **Test Environment**: Docker + Railway Production
+- **Status**: ✅ All tests passing
+
+📋 **View Test Reports**: [v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) | [v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) | [Test Organization](docs/test-reports/TEST_ORGANIZATION_SUMMARY.md)
 
 ## Deployment
 
@@ -2375,6 +2383,12 @@ This knowledge base is for research and personal use. All content belongs to Dr.
 
 ## 🚀 Latest Releases
 
+### [v0.5.1](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.5.1) - Vector Store Fix (July 16, 2025)
+- ✅ **Fixed Vector Store Loading** - Resolved 'id' KeyError issue
+- ✅ **Backward Compatibility** - Supports old metadata format
+- ✅ **Search Restored** - Full search functionality working
+- ✅ **100% Test Pass Rate** - All features verified
+
 ### [v0.5.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.5.0) - OAuth Complete (July 16, 2025)
 - ✅ **100% Working OAuth 2.1** - All endpoints tested and verified
 - ✅ **Claude.ai Integration Fixed** - No more connection errors
@@ -2383,7 +2397,7 @@ This knowledge base is for research and personal use. All content belongs to Dr.
 
 ### [v0.4.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.4.0) - Claude.ai Compatibility (July 15, 2025)
 - MCP Protocol 2025-03-26 implementation
-- Legacy SSE transport for Claude.ai
+- SSE transport implementation for Claude.ai
 - Dual-endpoint architecture
 
 ### [v0.3.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.3.0) - OAuth Authentication (July 15, 2025)
@@ -2539,14 +2553,15 @@ The server uses **Server-Sent Events (SSE)** transport for real-time communicati
 - [Project Structure](docs/PROJECT_STRUCTURE.md) - Directory organization
 
 ### Release Information
-- [Release Notes v0.2.0](docs/RELEASE_NOTES_v0.2.0.md) - Latest release details
+- [Release Notes v0.5.1](docs/RELEASE_NOTES_v0.5.1.md) - Latest release details
+- [Release Notes v0.5.0](docs/RELEASE_NOTES_v0.5.0.md) - OAuth implementation
 - [Enhancement Summary](docs/ENHANCEMENT_SUMMARY.md) - Feature improvements
 - [Deployment Status](docs/DEPLOYMENT_STATUS.md) - Current deployment info
 
 ### Test Reports
-- [MCP Full Server Test Report](docs/test-reports/MCP_FULL_SERVER_TEST_REPORT.md) - Comprehensive test results
-- [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md) - Production deployment validation
-- [Test Summary](docs/test-reports/TEST_SUMMARY.md) - Quick test overview
+- [Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Latest test results with vector store fix
+- [Test Report v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) - OAuth implementation validation
+- [Test Organization](docs/test-reports/TEST_ORGANIZATION_SUMMARY.md) - Test structure and guidelines
 
 ## License
 
@@ -2565,6 +2580,6 @@ This project is for educational and research purposes. All content from Dr. Ulri
 
 ---
 
-*Last Updated: July 12, 2025*
-*Version: 1.0.0*
-*Status: Production Ready on Railway*
+*Last Updated: July 16, 2025*
+*Version: 0.5.1*
+*Status: Production Ready on Railway with Full OAuth Support*
