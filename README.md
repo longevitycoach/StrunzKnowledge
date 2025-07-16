@@ -2440,11 +2440,12 @@ This project implements the **[Model Context Protocol (MCP)](https://modelcontex
 - Production-proven reliability
 
 #### 4. **[FastAPI](https://fastapi.tiangolo.com/)** (v0.109.0+)
-**Why:** Modern Python web framework for our OAuth and HTTP endpoints:
-- Automatic OpenAPI documentation
-- Built-in validation
-- Async support
-- High performance
+**Why:** Powers our OAuth 2.1 implementation and SSE transport:
+- OAuth endpoints (`/oauth/authorize`, `/oauth/token`, `/oauth/register`)
+- SSE endpoint for real-time MCP communication (`/sse`)
+- Health check and monitoring endpoints
+- CORS middleware for Claude.ai integration
+- Async request handling for better performance
 
 ---
 
