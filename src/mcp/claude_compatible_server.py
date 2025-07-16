@@ -37,15 +37,10 @@ start_time = time.time()
 # Create FastAPI app
 app = FastAPI(title="Dr. Strunz Knowledge MCP Server")
 
-# Add CORS for Claude.ai and Railway healthcheck
+# Add CORS for Claude.ai
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://claude.ai", 
-        "https://*.claude.ai",
-        "https://healthcheck.railway.app",
-        "https://*.railway.app"
-    ],
+    allow_origins=["https://claude.ai", "https://*.claude.ai"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -239,58 +234,43 @@ async def perform_health_checks():
 @app.get("/")
 @app.head("/")
 @app.post("/")
-async def health_check(request: Request):
+async def health_check():
     """
     Comprehensive health check endpoint for Railway deployment
     Supports GET, HEAD, and POST methods for maximum compatibility
-    Handles Railway's healthcheck.railway.app hostname
+    Railway's healthcheck.railway.app service calls this endpoint
     """
     try:
-        # Check if this is a Railway healthcheck request
-        host = request.headers.get("host", "")
-        is_railway_healthcheck = "healthcheck.railway.app" in host
-        
         # Perform comprehensive health checks
         health_status = await perform_health_checks()
         
-        # For Railway healthcheck, return minimal response
-        if is_railway_healthcheck:
-            response_data = {
-                "status": health_status["overall"],
-                "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.5.1",
-                "timestamp": datetime.now().isoformat(),
-                "railway_healthcheck": True,
-                "ready": health_status["overall"] in ["healthy", "degraded"]
+        # Base response for all methods
+        response_data = {
+            "status": health_status["overall"],
+            "server": "Dr. Strunz Knowledge MCP Server",
+            "version": "0.5.1",
+            "protocol_version": PROTOCOL_VERSION,
+            "transport": "sse",
+            "timestamp": datetime.now().isoformat(),
+            "uptime_seconds": round(time.time() - start_time, 2),
+            "health": health_status,
+            "endpoints": {
+                "sse": "/sse",
+                "messages": "/messages",
+                "oauth_discovery": "/.well-known/oauth-authorization-server",
+                "oauth_register": "/oauth/register",
+                "oauth_authorize": "/oauth/authorize",
+                "oauth_token": "/oauth/token",
+                "health_detailed": "/health",
+                "railway_status": "/railway/status"
+            },
+            "railway": {
+                "environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
+                "public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown'),
+                "deployment_id": os.environ.get('RAILWAY_DEPLOYMENT_ID', 'unknown'),
+                "service_id": os.environ.get('RAILWAY_SERVICE_ID', 'unknown')
             }
-        else:
-            # Full response for regular requests
-            response_data = {
-                "status": health_status["overall"],
-                "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.5.1",
-                "protocol_version": PROTOCOL_VERSION,
-                "transport": "sse",
-                "timestamp": datetime.now().isoformat(),
-                "uptime_seconds": round(time.time() - start_time, 2),
-                "health": health_status,
-                "endpoints": {
-                    "sse": "/sse",
-                    "messages": "/messages",
-                    "oauth_discovery": "/.well-known/oauth-authorization-server",
-                    "oauth_register": "/oauth/register",
-                    "oauth_authorize": "/oauth/authorize",
-                    "oauth_token": "/oauth/token",
-                    "health_detailed": "/health",
-                    "railway_status": "/railway/status"
-                },
-                "railway": {
-                    "environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown'),
-                    "public_domain": os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'unknown'),
-                    "deployment_id": os.environ.get('RAILWAY_DEPLOYMENT_ID', 'unknown'),
-                    "service_id": os.environ.get('RAILWAY_SERVICE_ID', 'unknown')
-                }
-            }
+        }
         
         # Return appropriate status code based on health
         if health_status["overall"] == "unhealthy":
