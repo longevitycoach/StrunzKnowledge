@@ -1246,7 +1246,7 @@ Year    Posts   Visualization
 
 ### Topic Evolution Visualizations
 
-![Forum Analysis Complete](forum_analysis_complete.png)
+![Forum Analysis Complete](docs/images/forum_analysis_complete.png)
 
 The comprehensive visualization above shows:
 1. **Forum Activity Timeline** - Clear correlation with major events
