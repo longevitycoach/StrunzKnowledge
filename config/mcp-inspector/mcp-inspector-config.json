@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "strunz-local": {
+      "command": "python",
+      "args": ["-m", "src.mcp.enhanced_server"],
+      "env": {}
+    }
+  }
+}

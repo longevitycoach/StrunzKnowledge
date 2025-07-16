@@ -1635,25 +1635,85 @@ The StrunzKnowledge project uses GitHub Actions for continuous integration, auto
 
 ## Scripts & Tools
 
-All scripts are organized under `src/scripts/` for better maintainability:
+All scripts are organized under `src/scripts/` for better maintainability. The project includes 40+ scripts for deployment, testing, data management, and analysis.
 
-### 📁 Script Categories
-- **deployment/** - Server deployment scripts
-- **testing/** - Test suites and validation tools  
-- **analysis/** - Content analysis utilities
-- **data/** - Data processing scripts
+### 📁 Script Organization
 
-### 🚀 Key Scripts
+```
+src/scripts/
+├── deployment/      # Production deployment scripts
+├── testing/         # Comprehensive test suites
+├── data/           # Data processing utilities
+├── analysis/       # Content analysis tools
+└── setup/          # Setup and configuration
+```
 
+### 🚀 Essential Scripts
+
+#### Deployment Scripts (`src/scripts/deployment/`)
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `main.py` | Main entry point | `python main.py` |
-| `test_sse_endpoint.sh` | Test SSE endpoint | `./src/scripts/testing/test_sse_endpoint.sh` |
-| `test_mcp_jsonrpc.sh` | Test MCP tools | `./src/scripts/testing/test_mcp_jsonrpc.sh` |
-| `reconstruct_indices.sh` | Rebuild FAISS indices | Used in Docker build |
-| `split_faiss_index.py` | Split large indices | `python src/scripts/data/split_faiss_index.py` |
+| `railway_mcp_sse_server.py` | Production MCP server with SSE | Auto-deployed to Railway |
+| `create_release.sh` | Create releases and Docker images | `./create_release.sh v0.5.1` |
+| `claude_desktop_client.js` | Claude Desktop integration | Used in Claude config |
 
-For detailed documentation, see [SCRIPTS.md](docs/SCRIPTS.md).
+#### Testing Scripts (`src/scripts/testing/`)
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `test_mcp_jsonrpc.sh` | Test all 20 MCP tools | `./test_mcp_jsonrpc.sh` |
+| `test_production_mcp.py` | Validate production deployment | `python test_production_mcp.py` |
+| `test_sse_endpoint.sh` | Test SSE functionality | `./test_sse_endpoint.sh URL` |
+| `test_oauth_endpoints.py` | Test OAuth 2.1 implementation | `python test_oauth_endpoints.py` |
+| `simple_test.py` | Quick smoke tests | `python simple_test.py` |
+
+#### Data Management (`src/scripts/data/`)
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `split_faiss_index.py` | Split indices for GitHub (<40MB) | `python split_faiss_index.py` |
+| `reconstruct_indices.sh` | Rebuild indices in Docker | Auto-runs during build |
+
+#### Content Management (`src/scripts/`)
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `scraping_manager.py` | Coordinate content extraction | `python scraping_manager.py` |
+| `check_new_content.py` | Check for updates | `python check_new_content.py` |
+| `validate_indices.py` | Validate FAISS indices | `python validate_indices.py` |
+
+#### Setup Scripts (`src/scripts/setup/`)
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `setup_claude_desktop.py` | Configure Claude Desktop | `python setup_claude_desktop.py` |
+| `claude_desktop_local_proxy.py` | Local development proxy | `python claude_desktop_local_proxy.py` |
+
+### 📊 Testing Infrastructure
+
+The project includes 25+ test scripts covering:
+- **MCP Protocol**: Full JSON-RPC compliance testing
+- **OAuth Flow**: Complete OAuth 2.1 validation
+- **SSE Transport**: Real-time connection testing
+- **Production**: Live deployment verification
+- **Integration**: FastMCP and Claude compatibility
+
+### 🔧 Common Development Tasks
+
+```bash
+# Run comprehensive tests
+./src/scripts/testing/test_mcp_jsonrpc.sh
+
+# Test production deployment
+python src/scripts/testing/test_production_mcp.py
+
+# Validate FAISS indices
+python src/scripts/validate_indices.py
+
+# Check for new content
+python src/scripts/check_new_content.py
+
+# Create a new release
+./src/scripts/deployment/create_release.sh v0.6.0
+```
+
+For detailed script documentation, see [SCRIPTS.md](docs/SCRIPTS.md).
 
 ## Development Setup
 

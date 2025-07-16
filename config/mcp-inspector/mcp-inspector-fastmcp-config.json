@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "strunz-fastmcp-sse": {
+      "transport": "sse",
+      "url": "https://strunz.up.railway.app"
+    }
+  }
+}

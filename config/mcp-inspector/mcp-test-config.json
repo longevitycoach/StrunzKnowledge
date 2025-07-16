@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "strunz-remote": {
+      "transport": "sse",
+      "url": "https://strunz.up.railway.app/sse"
+    },
+    "strunz-local": {
+      "command": "python",
+      "args": ["-m", "src.mcp.enhanced_server"]
+    }
+  }
+}

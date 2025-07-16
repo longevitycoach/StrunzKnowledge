@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "strunz-sse": {
+      "transport": "sse",
+      "url": "https://strunz.up.railway.app/sse",
+      "headers": {
+        "Authorization": "Bearer demo"
+      }
+    }
+  }
+}
