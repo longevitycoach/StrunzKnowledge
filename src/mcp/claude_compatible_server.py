@@ -27,6 +27,7 @@ PROTOCOL_VERSION = "2025-03-26"
 # Debug: Log when server starts
 logger.info("=== CLAUDE COMPATIBLE SERVER v0.5.1 WITH OAUTH ENDPOINTS ===")
 logger.info("This version includes OAuth endpoints for Claude.ai and vector store fix")
+logger.info(f"Build timestamp: {datetime.now().isoformat()}")
 
 # Create FastAPI app
 app = FastAPI(title="Dr. Strunz Knowledge MCP Server")
@@ -84,11 +85,17 @@ async def health_check():
         "tools": len(tool_registry),
         "endpoints": {
             "sse": "/sse",
-            "messages": "/messages"
+            "messages": "/messages",
+            "oauth_discovery": "/.well-known/oauth-authorization-server",
+            "oauth_register": "/oauth/register",
+            "oauth_authorize": "/oauth/authorize",
+            "oauth_token": "/oauth/token"
         },
         "debug": {
             "oauth_endpoints_registered": len(oauth_routes),
-            "oauth_routes": oauth_routes[:5]  # Show first 5 OAuth routes
+            "oauth_routes": oauth_routes[:5],  # Show first 5 OAuth routes
+            "deployment_timestamp": datetime.now().isoformat(),
+            "railway_environment": os.environ.get('RAILWAY_ENVIRONMENT', 'unknown')
         }
     })
 
