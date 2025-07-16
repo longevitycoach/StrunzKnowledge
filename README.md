@@ -1330,9 +1330,316 @@ Claude.ai will automatically:
 
 ## Claude Desktop Configuration
 
-Download Claude Desktop on the [Website](https://claude.ai/download).Add this configuration to your setting/connectors:
+### Quick Setup
+
+Download Claude Desktop from the [official website](https://claude.ai/download) and add this configuration to your settings/connectors:
 
 ![alt text](docs/images/ClaudeDesktop.png)
+
+### Authentication & Security
+
+The Dr. Strunz Knowledge Base MCP Server uses **OAuth 2.1** with automatic approval for Claude Desktop connections. No manual authentication is required.
+
+**Connection Details:**
+- **Server URL**: `https://strunz.up.railway.app`
+- **Protocol**: MCP 2025-03-26 with SSE transport
+- **Authentication**: OAuth 2.1 with Dynamic Client Registration
+- **Security**: HTTPS only, CORS protected
+
+### MCP Client Authentication APIs
+
+#### OAuth 2.1 Endpoints
+
+The server provides complete OAuth 2.1 authentication with RFC 7591 Dynamic Client Registration:
+
+##### 1. Discovery Endpoint
+```http
+GET /.well-known/oauth-authorization-server
+```
+
+**Response:**
+```json
+{
+  "issuer": "https://strunz.up.railway.app",
+  "authorization_endpoint": "https://strunz.up.railway.app/oauth/authorize",
+  "token_endpoint": "https://strunz.up.railway.app/oauth/token",
+  "registration_endpoint": "https://strunz.up.railway.app/oauth/register",
+  "response_types_supported": ["code"],
+  "grant_types_supported": ["authorization_code", "client_credentials"],
+  "code_challenge_methods_supported": ["S256"],
+  "scopes_supported": ["mcp:tools", "mcp:search", "mcp:health"]
+}
+```
+
+##### 2. Dynamic Client Registration
+```http
+POST /oauth/register
+Content-Type: application/json
+
+{
+  "client_name": "Claude Desktop",
+  "client_uri": "https://claude.ai",
+  "redirect_uris": ["https://claude.ai/oauth/callback"],
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "scope": "mcp:tools mcp:search"
+}
+```
+
+**Response:**
+```json
+{
+  "client_id": "claude_desktop_12345",
+  "client_secret": "auto_generated_secret",
+  "client_name": "Claude Desktop",
+  "redirect_uris": ["https://claude.ai/oauth/callback"],
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "scope": "mcp:tools mcp:search",
+  "token_endpoint_auth_method": "client_secret_basic"
+}
+```
+
+##### 3. Authorization Flow (with PKCE)
+```http
+GET /oauth/authorize?response_type=code&client_id=claude_desktop_12345&redirect_uri=https://claude.ai/oauth/callback&scope=mcp:tools&state=random_state&code_challenge=BASE64URL_ENCODE(SHA256(code_verifier))&code_challenge_method=S256
+```
+
+**Auto-Approval for Claude.ai:**
+- Claude Desktop requests are automatically approved
+- No manual user consent required
+- Immediate redirect with authorization code
+
+##### 4. Token Exchange
+```http
+POST /oauth/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic BASE64(client_id:client_secret)
+
+grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://claude.ai/oauth/callback&code_verifier=CODE_VERIFIER
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "mcp:tools mcp:search",
+  "refresh_token": "optional_refresh_token"
+}
+```
+
+#### Authentication Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant C as Claude Desktop
+    participant S as MCP Server
+    participant A as Auth Server
+    
+    Note over C,A: OAuth 2.1 with PKCE Flow
+    
+    C->>S: GET /.well-known/oauth-authorization-server
+    S-->>C: OAuth endpoints & capabilities
+    
+    C->>S: POST /oauth/register (Dynamic Client Registration)
+    S-->>C: client_id, client_secret
+    
+    C->>C: Generate code_verifier & code_challenge
+    
+    C->>S: GET /oauth/authorize?code_challenge=...
+    Note over S: Auto-approval for Claude.ai
+    S-->>C: 302 Redirect with authorization code
+    
+    C->>S: POST /oauth/token (with code_verifier)
+    S-->>C: access_token, refresh_token
+    
+    Note over C,S: Authenticated MCP Communication
+    
+    C->>S: GET /sse (with Bearer token)
+    S-->>C: SSE stream established
+    
+    C->>S: MCP tool calls (authenticated)
+    S-->>C: Tool responses
+```
+
+### MCP Protocol Integration
+
+#### Connection Establishment
+```javascript
+// Claude Desktop connection process
+const mcpClient = new MCPClient({
+  serverUrl: 'https://strunz.up.railway.app',
+  transport: 'sse',
+  protocol: '2025-03-26'
+});
+
+// OAuth authentication handled automatically
+await mcpClient.connect();
+```
+
+#### Tool Access
+Once authenticated, Claude Desktop has access to all 20 MCP tools:
+
+```javascript
+// List available tools
+const tools = await mcpClient.listTools();
+
+// Call knowledge search tool
+const searchResult = await mcpClient.callTool('knowledge_search', {
+  query: 'Vitamin D deficiency symptoms',
+  max_results: 5
+});
+
+// Create health protocol
+const protocol = await mcpClient.callTool('create_health_protocol', {
+  condition: 'fatigue',
+  severity: 'moderate'
+});
+```
+
+### Security Features
+
+#### Token Security
+- **JWT tokens** with expiration (1 hour default)
+- **PKCE (Proof Key for Code Exchange)** prevents code interception
+- **Secure token storage** in Claude Desktop
+- **Automatic token refresh** when needed
+
+#### Transport Security
+- **HTTPS only** - all communication encrypted
+- **CORS protection** - limited to approved origins
+- **Bearer token authentication** for all API calls
+- **Request validation** and sanitization
+
+#### Privacy Protection
+- **No PII storage** - no personal health data stored
+- **Stateless authentication** - no session persistence
+- **Automatic token expiration** for security
+- **Secure client registration** with validation
+
+### Troubleshooting Authentication
+
+#### Common Issues
+
+1. **Connection Failed**
+   - Check internet connectivity
+   - Verify server URL: `https://strunz.up.railway.app`
+   - Ensure Claude Desktop is up to date
+
+2. **Authentication Errors**
+   - OAuth flow handled automatically
+   - Check server health: `curl https://strunz.up.railway.app/health`
+   - Verify Railway deployment status
+
+3. **Token Expiration**
+   - Tokens refresh automatically
+   - Manual reconnection if needed
+   - Check token validity period (1 hour)
+
+#### Debug Information
+```bash
+# Check server health
+curl https://strunz.up.railway.app/health
+
+# Test OAuth discovery
+curl https://strunz.up.railway.app/.well-known/oauth-authorization-server
+
+# Verify SSE endpoint
+curl https://strunz.up.railway.app/sse
+```
+
+### Performance Optimization
+
+#### Connection Performance
+- **Singleton pattern** for vector store (50-100x faster responses)
+- **Startup preloading** for immediate availability
+- **Health check optimization** (<100ms response times)
+- **Thread-safe operations** for concurrent access
+
+#### Tool Response Times
+- **Knowledge search**: 200-500ms average
+- **Health protocols**: 300-400ms average
+- **Information tools**: 150-250ms average
+- **Community insights**: 350-450ms average
+
+### Advanced Configuration
+
+#### Custom MCP Clients
+For developers building custom MCP clients:
+
+```python
+# Python example using FastMCP
+from fastmcp import Client
+
+async def connect_to_strunz():
+    client = Client('https://strunz.up.railway.app/sse')
+    
+    # OAuth handled automatically for Claude.ai domains
+    # Custom clients may need manual OAuth flow
+    
+    tools = await client.list_tools()
+    print(f"Available tools: {len(tools)}")
+    
+    # Search Dr. Strunz knowledge base
+    result = await client.call_tool('knowledge_search', {
+        'query': 'amino acid therapy',
+        'max_results': 10
+    })
+    
+    return result
+```
+
+#### API Rate Limits
+- **No rate limits** currently implemented
+- **Connection limits**: Reasonable use expected
+- **Tool call limits**: No restrictions
+- **Future**: May implement rate limiting for public API
+
+### Integration Examples
+
+#### Healthcare Applications
+```javascript
+// Integrate with healthcare app
+const strunzMCP = new StrunzMCPClient({
+  serverUrl: 'https://strunz.up.railway.app',
+  apiKey: 'your-oauth-token'
+});
+
+// Get personalized health recommendations
+const recommendations = await strunzMCP.callTool('create_personalized_protocol', {
+  health_profile: {
+    age: 45,
+    conditions: ['fatigue', 'stress'],
+    goals: ['energy_optimization', 'longevity']
+  }
+});
+```
+
+#### Research Applications
+```python
+# Academic research integration
+import asyncio
+from fastmcp import Client
+
+async def research_query():
+    async with Client('https://strunz.up.railway.app/sse') as client:
+        # Analyze health topic evolution
+        evolution = await client.call_tool('trace_topic_evolution', {
+            'topic': 'vitamin_d_research',
+            'start_year': 2004,
+            'end_year': 2025
+        })
+        
+        # Find contradictions in research
+        contradictions = await client.call_tool('find_contradictions', {
+            'topic': 'supplement_timing',
+            'include_reasoning': True
+        })
+        
+        return evolution, contradictions
+```
 
 ---
 
