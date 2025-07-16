@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 PROTOCOL_VERSION = "2025-03-26"
 
 # Debug: Log when server starts
-logger.info("=== CLAUDE COMPATIBLE SERVER v0.4.1 WITH OAUTH ENDPOINTS ===")
+logger.info("=== CLAUDE COMPATIBLE SERVER v0.5.0 WITH OAUTH ENDPOINTS ===")
 logger.info("This version includes OAuth endpoints for Claude.ai")
 
 # Create FastAPI app
@@ -78,7 +78,7 @@ async def health_check():
     return JSONResponse({
         "status": "healthy",
         "server": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.4.1",
+        "version": "0.5.0",
         "protocol_version": PROTOCOL_VERSION,
         "transport": "sse",
         "tools": len(tool_registry),

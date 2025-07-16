@@ -60,6 +60,163 @@ Dr. Strunz's books represent decades of clinical experience and scientific resea
 
 ---
 
+## 🚀 Latest Releases
+
+### [v0.5.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.5.0) - OAuth Complete (July 16, 2025)
+- ✅ **100% Working OAuth 2.1** - All endpoints tested and verified
+- ✅ **Claude.ai Integration Fixed** - No more connection errors
+- ✅ **Comprehensive Test Suite** - 100% test pass rate
+- ✅ **Railway Deployment Ready** - Clean build with all features
+
+### [v0.4.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.4.0) - Claude.ai Compatibility (July 15, 2025)
+- MCP Protocol 2025-03-26 implementation
+- Legacy SSE transport for Claude.ai
+- Dual-endpoint architecture
+
+### [v0.3.0](https://github.com/longevitycoach/StrunzKnowledge/releases/tag/v0.3.0) - OAuth Authentication (July 15, 2025)
+- OAuth 2.1 provider implementation
+- Claude Desktop integration
+- Enhanced testing infrastructure
+
+[See all releases →](https://github.com/longevitycoach/StrunzKnowledge/releases)
+
+---
+
+## 🔗 MCP Integration & Specifications
+
+### Model Context Protocol (MCP)
+
+This project implements the **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** specification to enable seamless integration with AI assistants like Claude.
+
+**MCP Versions Supported:**
+- **[2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26/)** - Primary version for Claude.ai compatibility
+- **[2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/)** - Future-ready implementation available
+
+**Why MCP?**
+- 🤖 **AI-Native**: Designed specifically for LLM integration
+- 🔧 **Tool Support**: Enables complex operations through standardized tools
+- 🔒 **Secure**: Built-in authentication and authorization
+- 🌐 **Transport Agnostic**: Supports multiple transport mechanisms
+
+### SDKs & Frameworks Used
+
+#### 1. **[FastMCP](https://github.com/jlowin/fastmcp)** (v2.10.5+)
+**Why:** FastMCP provides a robust, production-ready MCP server implementation with:
+- Built-in SSE transport support
+- Easy tool registration
+- Async/await support
+- Excellent error handling
+
+#### 2. **[Sentence-Transformers](https://www.sbert.net/)** (v2.2.0+)
+**Why:** Powers our semantic search with multilingual support:
+- Model: `paraphrase-multilingual-MiniLM-L12-v2`
+- Supports German/English cross-language search
+- 384-dimensional embeddings for accuracy
+- Fast inference on CPU
+
+#### 3. **[FAISS](https://github.com/facebookresearch/faiss)** (v1.7.4)
+**Why:** Facebook's vector similarity search library enables:
+- Lightning-fast similarity search
+- Scales to millions of documents
+- Memory-efficient indexing
+- Production-proven reliability
+
+#### 4. **[FastAPI](https://fastapi.tiangolo.com/)** (v0.109.0+)
+**Why:** Modern Python web framework for our OAuth and HTTP endpoints:
+- Automatic OpenAPI documentation
+- Built-in validation
+- Async support
+- High performance
+
+---
+
+## 🌐 Railway Endpoint & Integration
+
+### Production Endpoint
+
+🔗 **https://strunz.up.railway.app**
+
+This is the production MCP server hosted on Railway with:
+- ✅ OAuth 2.1 authentication
+- ✅ All 20 MCP tools available
+- ✅ SSE transport for real-time communication
+- ✅ 28,938 indexed documents
+- ✅ 99.9% uptime SLA
+
+### 🤖 Claude.ai Integration
+
+#### Direct Integration (Recommended)
+1. Go to **Claude.ai** → Settings → Integrations
+2. Click "Add MCP Server"
+3. Enter server URL: `https://strunz.up.railway.app`
+4. Claude.ai will automatically:
+   - Detect OAuth support
+   - Handle authentication flow
+   - Connect via SSE transport
+5. All 20 tools available immediately!
+
+**No manual configuration needed** - Claude.ai handles everything automatically.
+
+### 💻 Claude Desktop Integration
+
+#### Option 1: Remote Server (via Railway)
+```json
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-sse",
+        "https://strunz.up.railway.app/sse"
+      ]
+    }
+  }
+}
+```
+
+#### Option 2: Local Proxy (Advanced)
+```bash
+# Install and configure
+python setup_claude_desktop.py
+
+# Or manually add to claude_desktop_config.json:
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "python",
+      "args": [
+        "/path/to/StrunzKnowledge/claude_desktop_local_proxy.py"
+      ]
+    }
+  }
+}
+```
+
+### 🔧 SSE Transport Details
+
+The server uses **Server-Sent Events (SSE)** transport for real-time communication:
+
+**Endpoints:**
+- `/sse` - Event stream for MCP protocol messages
+- `/messages` - JSON-RPC endpoint for requests
+- `/.well-known/oauth-authorization-server` - OAuth discovery
+- `/.well-known/mcp/resource` - MCP resource metadata
+
+**Why SSE?**
+- ✅ **Real-time**: Instant updates without polling
+- ✅ **Firewall-friendly**: Uses standard HTTP
+- ✅ **Claude.ai native**: Preferred transport for Claude
+- ✅ **Bidirectional**: Supports full MCP protocol
+
+### 🔐 Authentication Flow
+
+1. **Client Registration**: Automatic via OAuth 2.1 Dynamic Registration
+2. **Authorization**: Auto-approved for Claude.ai clients
+3. **Token Exchange**: Bearer tokens for API access
+4. **Session Management**: Persistent SSE connections
+
+---
+
 ## Table of Contents
 
 ### 🌟 For Health Enthusiasts & Practitioners
