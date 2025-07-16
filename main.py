@@ -27,20 +27,33 @@ os.environ.setdefault('LOG_LEVEL', 'INFO')
 
 def main():
     """Main entry point - determines which server to run."""
+    import time
+    start_time = time.time()
     
     # Check environment
     is_railway = os.environ.get('RAILWAY_ENVIRONMENT') is not None
     is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
     
+    print(f"🚀 Starting Dr. Strunz Knowledge Base MCP Server...")
+    print(f"📍 Environment: {'Railway' if is_railway else 'Local'}")
+    print(f"🌍 Public Domain: {os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}")
+    print(f"🔧 Port: {os.environ.get('PORT', '8000')}")
+    print(f"⏰ Startup Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    
     if is_railway:
         # Railway deployment - use Claude-compatible server
-        print("Starting Railway deployment with Claude-compatible MCP server...")
+        print("📡 Loading Railway deployment with Claude-compatible MCP server...")
+        print("🔄 This may take 30-60 seconds while loading FAISS indices...")
+        
         from src.mcp.claude_compatible_server import main as run_server
         import asyncio
+        
+        print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
+        print("🎯 Starting FastAPI server...")
         asyncio.run(run_server())
     else:
         # Local development - use enhanced server
-        print("Starting local development server...")
+        print("🏠 Starting local development server...")
         from src.mcp.enhanced_server import main as run_server
         run_server()
 

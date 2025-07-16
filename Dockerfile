@@ -67,8 +67,8 @@ USER appuser
 # Expose the MCP server port
 EXPOSE 8000
 
-# Enhanced health check with better diagnostics
-HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=5 \
+# Enhanced health check with extended startup time for FAISS loading
+HEALTHCHECK --interval=30s --timeout=20s --start-period=120s --retries=10 \
     CMD curl -f -H "Accept: application/json" http://localhost:8000/ || \
         (echo "Health check failed - checking detailed health:" && \
          curl -s http://localhost:8000/health | head -20 && \
