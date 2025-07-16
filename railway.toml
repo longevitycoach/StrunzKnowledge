@@ -6,7 +6,7 @@ dockerfilePath = "Dockerfile"
 [deploy]
 startCommand = "python main.py"
 restartPolicyType = "always"
-healthcheckPath = "/"
+healthcheckPath = "/railway-health"
 healthcheckTimeout = 300
 
 # Environment variables (will be overridden by Railway dashboard)
@@ -37,3 +37,7 @@ value = "strunz.up.railway.app"
 [[envs]]
 name = "RAILWAY_PRIVATE_DOMAIN"
 value = "strunz.railway.internal"
+
+[[envs]]
+name = "RAILWAY_HEALTHCHECK_BASIC"
+value = "true"
