@@ -115,10 +115,11 @@ class StrunzKnowledgeMCP:
             from src.rag.search import KnowledgeSearcher
             self.searcher = KnowledgeSearcher()
             self.HAS_VECTOR_STORE = True
-        except:
+            logger.info("Enhanced server initialized with singleton vector store")
+        except Exception as e:
             self.searcher = None
             self.HAS_VECTOR_STORE = False
-            logger.warning("Vector store not available - search capabilities limited")
+            logger.warning(f"Vector store not available - search capabilities limited: {e}")
         
         # Initialize user profiling
         try:

@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 PROTOCOL_VERSION = "2025-03-26"
 
 # Debug: Log when server starts
-logger.info("=== CLAUDE COMPATIBLE SERVER v0.5.2 WITH CLAUDE DESKTOP SUPPORT ===")
-logger.info("This version includes OAuth endpoints, vector store fix, and Claude Desktop SSE support")
+logger.info("=== CLAUDE COMPATIBLE SERVER v0.5.2 WITH PERFORMANCE OPTIMIZATION ===")
+logger.info("This version includes OAuth endpoints, vector store singleton pattern, and Claude Desktop SSE support")
 logger.info(f"Build timestamp: {datetime.now().isoformat()}")
 
 # Track server start time for uptime calculation
@@ -51,6 +51,17 @@ security = HTTPBearer(auto_error=False)
 
 # Session storage
 sessions: Dict[str, Dict] = {}
+
+# Preload vector store singleton for performance
+try:
+    from src.scripts.startup.preload_vector_store import preload_vector_store
+    preload_success = preload_vector_store()
+    if preload_success:
+        logger.info("Vector store preloaded successfully - faster first requests")
+    else:
+        logger.warning("Vector store preload failed - first requests may be slower")
+except Exception as e:
+    logger.warning(f"Vector store preload error: {e}")
 
 # Import enhanced server tools
 enhanced_server = None
@@ -125,19 +136,19 @@ async def perform_health_checks():
             
             if combined_index.exists() and combined_metadata.exists():
                 vector_store_status["status"] = "healthy"
-                # Try to load the vector store (non-blocking)
+                # Check vector store without loading it (for performance)
                 try:
-                    from src.rag.vector_store import FAISSVectorStore
-                    # Create instance without auto-loading
-                    vs = FAISSVectorStore(index_path="data/faiss_indices")
+                    from src.rag.search import is_vector_store_loaded, get_vector_store_singleton
                     
-                    # Check if index is already loaded or try to load it
-                    if hasattr(vs, 'index') and vs.index is not None:
+                    # First check if already loaded without recreating it
+                    if is_vector_store_loaded():
+                        vs = get_vector_store_singleton(index_path="data/faiss_indices")
                         vector_store_status["status"] = "operational"
                         vector_store_status["documents"] = len(vs.documents) if hasattr(vs, 'documents') else 0
+                        vector_store_status["note"] = "Singleton instance active"
                     else:
                         vector_store_status["status"] = "available"
-                        vector_store_status["note"] = "Index files exist but not loaded"
+                        vector_store_status["note"] = "Index files exist but not loaded (will load on first search)"
                         
                 except Exception as e:
                     vector_store_status["status"] = "warning"
@@ -435,11 +446,16 @@ async def railway_status():
 
 @app.get("/sse")
 @app.post("/sse")
+@app.head("/sse")
 async def sse_endpoint(request: Request, user=Depends(get_current_user)):
     """
     SSE endpoint for Claude.ai MCP communication.
     Uses the older SSE transport that Claude.ai expects.
     """
+    # Handle HEAD requests for health checks
+    if request.method == "HEAD":
+        return JSONResponse({"status": "ok"}, status_code=200)
+    
     # Check if this is a Claude Desktop request
     user_agent = request.headers.get("user-agent", "")
     is_claude_desktop = "Supabase-Edge-Function" in user_agent or "claude" in user_agent.lower()

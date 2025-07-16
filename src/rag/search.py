@@ -9,6 +9,10 @@ from .vector_store import FAISSVectorStore
 
 logger = logging.getLogger(__name__)
 
+# Global singleton instance for vector store
+_vector_store_instance = None
+_vector_store_lock = None
+
 
 @dataclass
 class SearchResult:
@@ -20,18 +24,45 @@ class SearchResult:
     metadata: Dict
 
 
+def is_vector_store_loaded() -> bool:
+    """Check if vector store singleton is already loaded."""
+    global _vector_store_instance
+    return _vector_store_instance is not None and hasattr(_vector_store_instance, 'index') and _vector_store_instance.index is not None
+
+
+def get_vector_store_singleton(index_path: str = "data/faiss_indices/combined") -> FAISSVectorStore:
+    """Get or create the global vector store singleton."""
+    global _vector_store_instance, _vector_store_lock
+    
+    if _vector_store_instance is None:
+        import threading
+        
+        # Initialize lock if not exists
+        if _vector_store_lock is None:
+            _vector_store_lock = threading.Lock()
+        
+        # Double-check locking pattern
+        with _vector_store_lock:
+            if _vector_store_instance is None:
+                logger.info("Creating singleton vector store instance...")
+                _vector_store_instance = FAISSVectorStore(index_path=index_path)
+                
+                # Try to load existing index
+                if _vector_store_instance.load_index():
+                    logger.info(f"Singleton vector store loaded with {len(_vector_store_instance.documents)} documents")
+                else:
+                    logger.warning("No existing index found - search capabilities will be limited")
+    
+    return _vector_store_instance
+
+
 class KnowledgeSearcher:
     """Search interface for the knowledge base."""
     
     def __init__(self, index_path: str = "data/faiss_indices/combined"):
-        """Initialize the searcher with the vector store."""
-        self.vector_store = FAISSVectorStore(index_path=index_path)
-        
-        # Try to load existing index
-        if self.vector_store.load_index():
-            logger.info(f"Loaded index with {len(self.vector_store.documents)} documents")
-        else:
-            logger.warning("No existing index found - search capabilities will be limited")
+        """Initialize the searcher with the singleton vector store."""
+        self.vector_store = get_vector_store_singleton(index_path)
+        logger.info("KnowledgeSearcher initialized with singleton vector store")
     
     def search(self, query: str, k: int = 10, sources: Optional[List[str]] = None) -> List[SearchResult]:
         """
