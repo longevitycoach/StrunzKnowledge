@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+TEMPORARY TEST SCRIPT - DELETE AFTER USE
+Purpose: OAuth endpoint testing for v0.5.0
+Location: src/tests/test_oauth_endpoints.py
+
 Comprehensive OAuth Endpoint Tests for MCP Server
 Tests all OAuth 2.1 endpoints and workflows
 """

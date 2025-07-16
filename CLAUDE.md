@@ -103,4 +103,72 @@ mcp.run()  # Uses stdio by default
 
 **Rationale**: FastMCP provides simpler implementation with all required features for our use case.
 
+## Test Organization and Management
+
+### Test File Structure
+All test-related files must follow this organization:
+
+```
+src/
+├── scripts/              # All executable scripts
+│   └── testing/          # Test scripts
+│       ├── temporary/    # Temporary test scripts (marked for deletion)
+│       └── permanent/    # Permanent test utilities
+└── tests/                # Test files and configurations
+    ├── configs/          # Test configuration files (MCP Inspector, etc.)
+    └── reports/          # Test execution reports
+
+docs/
+└── test-reports/         # Comprehensive test reports for each release
+```
+
+### Test Script Rules
+
+1. **NEVER create test scripts in the root directory**
+   - All test scripts must go in `src/scripts/testing/`
+   - Configuration files go in `src/tests/configs/`
+   - Reports go in `docs/test-reports/`
+
+2. **Mark temporary test scripts**
+   ```python
+   #!/usr/bin/env python3
+   """
+   TEMPORARY TEST SCRIPT - DELETE AFTER USE
+   Purpose: [specific purpose]
+   Location: src/scripts/testing/[filename]
+   """
+   ```
+
+3. **Delete temporary test scripts after execution**
+   - Run the test
+   - Save results to `docs/test-reports/`
+   - Delete the temporary script
+   - Keep only permanent test utilities
+
+4. **Test Report Requirements**
+   - Create comprehensive test report for each release
+   - Name format: `TEST_REPORT_v[VERSION].md`
+   - Include: test results, metrics, issues, recommendations
+
+5. **Test Types and Locations**
+   - Unit tests: `src/tests/test_*.py`
+   - Integration tests: `src/scripts/testing/test_integration_*.py`
+   - Performance tests: `src/scripts/testing/test_performance_*.py`
+   - OAuth/Auth tests: `src/tests/test_oauth_*.py`
+
+### Example Test Workflow
+```bash
+# 1. Create temporary test script
+echo '# TEMPORARY TEST SCRIPT - DELETE AFTER USE' > src/scripts/testing/test_temp_feature.py
+
+# 2. Run the test
+python src/scripts/testing/test_temp_feature.py
+
+# 3. Save results
+cp test_results.log docs/test-reports/
+
+# 4. Delete temporary script
+rm src/scripts/testing/test_temp_feature.py
+```
+
 [Rest of the existing content remains unchanged...]
