@@ -41,21 +41,36 @@ def main():
     print(f"⏰ Startup Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     if is_railway:
-        # Railway deployment - use official MCP SDK server for proper prompts support
-        print("📡 Loading Railway deployment with official MCP SDK server...")
+        # Railway deployment - First try MCP SDK, fallback to compatible server
+        print("📡 Loading Railway deployment with clean MCP SDK server...")
         print("🔄 This may take 30-60 seconds while loading FAISS indices...")
         
-        # Use official SDK server for better Claude.ai compatibility
-        from src.mcp.mcp_sdk_server import main as run_server
-        
-        print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
-        print("🎯 Starting MCP server with SSE transport...")
-        run_server()
+        try:
+            # Try clean official SDK server for better Claude.ai compatibility
+            from src.mcp.mcp_sdk_clean import main as run_server
+            print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
+            print("🎯 Starting MCP server with official SDK...")
+            run_server()
+        except Exception as e:
+            print(f"⚠️ MCP SDK server failed: {e}")
+            print("🔄 Falling back to compatible server...")
+            from src.mcp.claude_compatible_server import main as run_server
+            import asyncio
+            print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
+            print("🎯 Starting FastAPI server...")
+            asyncio.run(run_server())
     else:
-        # Local development - use official SDK in stdio mode
-        print("🏠 Starting local development server with official MCP SDK...")
-        from src.mcp.mcp_sdk_server import main as run_server
-        run_server()
+        # Local development - try MCP SDK first
+        print("🏠 Starting local development server...")
+        try:
+            from src.mcp.mcp_sdk_clean import main as run_server
+            print("🎯 Using clean MCP SDK...")
+            run_server()
+        except Exception as e:
+            print(f"⚠️ MCP SDK not available: {e}")
+            print("🔄 Using enhanced server...")
+            from src.mcp.enhanced_server import main as run_server
+            run_server()
 
 if __name__ == "__main__":
     main()
