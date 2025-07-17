@@ -128,7 +128,775 @@ class StrunzKnowledgeMCP:
         except:
             self.profiling = None
             logger.warning("User profiling system not available")
+        
+        # Register prompts
+        self._register_prompts()
     
+    def _register_prompts(self):
+        """Register MCP prompts for health-related interactions"""
+        
+        @self.app.prompt()
+        async def health_assessment_prompt(
+            age: int,
+            gender: str,
+            health_goals: str,
+            current_symptoms: str = "",
+            lifestyle_factors: str = "",
+            current_supplements: str = ""
+        ) -> str:
+            """
+            Generate a comprehensive health assessment prompt based on Dr. Strunz's methodology.
+            
+            This prompt guides users through a structured health evaluation following
+            Dr. Strunz's functional medicine approach.
+            
+            Args:
+                age: User's age
+                gender: User's gender (male/female)
+                health_goals: Primary health goals (e.g., "energy optimization", "weight loss")
+                current_symptoms: Any current health symptoms
+                lifestyle_factors: Exercise habits, stress levels, sleep quality
+                current_supplements: Current supplement regimen
+            """
+            
+            prompt = f"""# Dr. Strunz Health Assessment & Optimization Guide
+
+## Personal Information
+- **Age**: {age} years
+- **Gender**: {gender}
+- **Primary Health Goals**: {health_goals}
+
+## Current Health Status
+{f"**Current Symptoms**: {current_symptoms}" if current_symptoms else ""}
+{f"**Lifestyle Factors**: {lifestyle_factors}" if lifestyle_factors else ""}
+{f"**Current Supplements**: {current_supplements}" if current_supplements else ""}
+
+## Assessment Framework
+
+Based on Dr. Ulrich Strunz's functional medicine approach, please provide a comprehensive health assessment covering:
+
+### 1. Biochemical Optimization
+- **Blood Values**: Which laboratory tests would Dr. Strunz recommend?
+- **Nutrient Status**: Potential deficiencies based on age, gender, and symptoms
+- **Metabolic Health**: Energy production at cellular level
+
+### 2. Nutritional Medicine
+- **Macronutrient Balance**: Optimal protein, carbohydrate, fat ratios
+- **Micronutrient Needs**: Essential vitamins and minerals
+- **Anti-Inflammatory Diet**: Food recommendations for optimal health
+
+### 3. Lifestyle Optimization
+- **Exercise Protocol**: Movement recommendations for health goals
+- **Stress Management**: Techniques for cortisol regulation
+- **Sleep Optimization**: Strategies for restorative sleep
+
+### 4. Supplementation Strategy
+- **Core Supplements**: Essential nutrients for everyone
+- **Targeted Support**: Specific supplements for health goals
+- **Timing & Dosage**: When and how to take supplements
+
+### 5. Preventive Medicine
+- **Disease Prevention**: Strategies to prevent chronic conditions
+- **Longevity Protocols**: Anti-aging interventions
+- **Regular Monitoring**: Ongoing health tracking
+
+## Request
+Please analyze this health profile and provide personalized recommendations following Dr. Strunz's evidence-based approach to functional medicine. Include specific, actionable steps for biochemical optimization, nutritional support, and lifestyle enhancement.
+
+Focus on:
+- Immediate actions for symptom relief
+- Long-term health optimization strategies
+- Measurable health outcomes
+- Timeline for implementation
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def supplement_analysis_prompt(
+            supplement_list: str,
+            health_condition: str = "",
+            age: int = 40,
+            goals: str = "general health"
+        ) -> str:
+            """
+            Generate a prompt for analyzing supplement interactions and optimization.
+            
+            This prompt helps evaluate supplement regimens according to Dr. Strunz's
+            orthomolecular medicine principles.
+            
+            Args:
+                supplement_list: List of current supplements
+                health_condition: Specific health conditions
+                age: User's age for age-appropriate recommendations
+                goals: Health optimization goals
+            """
+            
+            prompt = f"""# Dr. Strunz Supplement Stack Analysis
+
+## Current Supplement Regimen
+{supplement_list}
+
+## Health Context
+- **Age**: {age} years
+- **Health Goals**: {goals}
+{f"- **Health Conditions**: {health_condition}" if health_condition else ""}
+
+## Analysis Framework
+
+Using Dr. Strunz's orthomolecular medicine principles, please analyze this supplement stack:
+
+### 1. Efficacy Assessment
+- **Evidence-Based Evaluation**: Scientific support for each supplement
+- **Dosage Optimization**: Are doses within therapeutic ranges?
+- **Bioavailability**: Best forms and timing for absorption
+
+### 2. Interaction Analysis
+- **Synergistic Combinations**: Supplements that work better together
+- **Potential Conflicts**: Nutrients that may interfere with each other
+- **Absorption Competition**: Timing considerations for optimal uptake
+
+### 3. Gap Analysis
+- **Missing Essentials**: Core nutrients that should be included
+- **Redundant Supplements**: Overlapping or unnecessary additions
+- **Age-Specific Needs**: Supplements particularly important for this age group
+
+### 4. Optimization Recommendations
+- **Core Foundation**: Essential supplements for everyone
+- **Targeted Support**: Specific additions for health goals
+- **Advanced Protocols**: Additional interventions for optimization
+
+### 5. Implementation Strategy
+- **Timing Protocol**: When to take each supplement
+- **Food Interactions**: With or without meals
+- **Monitoring**: How to track effectiveness
+
+## Request
+Please provide a comprehensive analysis of this supplement regimen following Dr. Strunz's functional medicine approach. Include specific recommendations for optimization, potential interactions, and a structured implementation plan.
+
+Focus on:
+- Evidence-based recommendations
+- Practical implementation guidelines
+- Cost-effectiveness considerations
+- Measurable health outcomes
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def nutrition_optimization_prompt(
+            dietary_preferences: str,
+            health_goals: str,
+            restrictions: str = "",
+            current_diet: str = "",
+            activity_level: str = "moderate"
+        ) -> str:
+            """
+            Generate a prompt for nutritional optimization based on Dr. Strunz's principles.
+            
+            This prompt creates personalized nutrition guidance following Dr. Strunz's
+            low-carb, high-protein, anti-inflammatory dietary approach.
+            
+            Args:
+                dietary_preferences: Food preferences and lifestyle choices
+                health_goals: Specific health and fitness goals
+                restrictions: Any dietary restrictions or allergies
+                current_diet: Description of current eating patterns
+                activity_level: Exercise frequency and intensity
+            """
+            
+            prompt = f"""# Dr. Strunz Nutrition Optimization Protocol
+
+## Dietary Profile
+- **Preferences**: {dietary_preferences}
+- **Health Goals**: {health_goals}
+- **Activity Level**: {activity_level}
+{f"- **Restrictions**: {restrictions}" if restrictions else ""}
+{f"- **Current Diet**: {current_diet}" if current_diet else ""}
+
+## Optimization Framework
+
+Based on Dr. Strunz's nutritional medicine principles, please create a comprehensive nutrition plan:
+
+### 1. Macronutrient Optimization
+- **Protein Requirements**: Optimal intake for muscle health and metabolism
+- **Carbohydrate Strategy**: Smart carb timing and selection
+- **Healthy Fats**: Essential fatty acids for hormone production
+
+### 2. Anti-Inflammatory Foods
+- **Nutrient-Dense Choices**: Foods with highest nutritional value
+- **Anti-Inflammatory Properties**: Foods that reduce systemic inflammation
+- **Antioxidant Rich**: Natural compounds for cellular protection
+
+### 3. Meal Timing & Structure
+- **Intermittent Fasting**: Potential benefits and implementation
+- **Pre/Post Workout**: Nutrition for optimal performance
+- **Circadian Alignment**: Eating patterns for better sleep and energy
+
+### 4. Specific Recommendations
+- **Daily Meal Plan**: Structured eating schedule
+- **Food Combinations**: Optimal nutrient absorption
+- **Hydration Strategy**: Water intake and electrolyte balance
+
+### 5. Implementation & Monitoring
+- **Transition Plan**: How to gradually implement changes
+- **Progress Tracking**: Metrics to monitor success
+- **Troubleshooting**: Common challenges and solutions
+
+## Request
+Please create a personalized nutrition optimization plan following Dr. Strunz's evidence-based approach. Include specific meal recommendations, timing strategies, and measurable health outcomes.
+
+Focus on:
+- Practical meal planning
+- Sustainable lifestyle changes
+- Performance optimization
+- Long-term health benefits
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def research_query_prompt(
+            topic: str,
+            focus_area: str = "general",
+            time_period: str = "all",
+            evidence_level: str = "clinical"
+        ) -> str:
+            """
+            Generate a prompt for researching health topics using Dr. Strunz's knowledge base.
+            
+            This prompt helps structure research queries to extract maximum value
+            from Dr. Strunz's 20+ years of published content.
+            
+            Args:
+                topic: Health topic to research
+                focus_area: Specific aspect to focus on
+                time_period: Time range for research (e.g., "2020-2025", "all")
+                evidence_level: Type of evidence desired (clinical, observational, theoretical)
+            """
+            
+            prompt = f"""# Dr. Strunz Knowledge Base Research Query
+
+## Research Parameters
+- **Topic**: {topic}
+- **Focus Area**: {focus_area}
+- **Time Period**: {time_period}
+- **Evidence Level**: {evidence_level}
+
+## Research Framework
+
+Please conduct a comprehensive research analysis using Dr. Strunz's knowledge base:
+
+### 1. Literature Review
+- **Key Findings**: Main conclusions from Dr. Strunz's work
+- **Evolution of Understanding**: How his views have developed over time
+- **Supporting Evidence**: Scientific basis for recommendations
+
+### 2. Practical Applications
+- **Clinical Protocols**: Specific treatment approaches
+- **Patient Success Stories**: Real-world implementation examples
+- **Dosage Guidelines**: Practical implementation details
+
+### 3. Comparative Analysis
+- **Conventional vs. Functional**: Differences in approach
+- **Contradictory Evidence**: Areas of ongoing debate
+- **Emerging Trends**: New developments in the field
+
+### 4. Implementation Guidance
+- **Step-by-Step Protocols**: Clear implementation instructions
+- **Monitoring Parameters**: How to track progress
+- **Safety Considerations**: Potential risks and contraindications
+
+### 5. Future Directions
+- **Emerging Research**: New areas of investigation
+- **Technology Integration**: Modern tools and testing
+- **Personalization**: Individual variation considerations
+
+## Request
+Please provide a comprehensive research analysis of this topic using Dr. Strunz's published works, newsletter articles, and community discussions. Include both theoretical foundations and practical implementation guidance.
+
+Focus on:
+- Evidence-based conclusions
+- Practical applicability
+- Safety considerations
+- Measurable outcomes
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def longevity_protocol_prompt(
+            age: int,
+            gender: str,
+            health_status: str = "good",
+            risk_factors: str = "",
+            lifestyle_preferences: str = ""
+        ) -> str:
+            """
+            Generate a prompt for creating longevity protocols based on Dr. Strunz's approach.
+            
+            This prompt creates personalized anti-aging strategies following Dr. Strunz's
+            molecular medicine and longevity research.
+            
+            Args:
+                age: Current age
+                gender: Gender for hormone-specific recommendations
+                health_status: Current health status
+                risk_factors: Known health risks or family history
+                lifestyle_preferences: Lifestyle constraints and preferences
+            """
+            
+            prompt = f"""# Dr. Strunz Longevity Protocol
+
+## Personal Profile
+- **Age**: {age} years
+- **Gender**: {gender}
+- **Health Status**: {health_status}
+{f"- **Risk Factors**: {risk_factors}" if risk_factors else ""}
+{f"- **Lifestyle**: {lifestyle_preferences}" if lifestyle_preferences else ""}
+
+## Longevity Framework
+
+Based on Dr. Strunz's molecular medicine approach, please create a comprehensive longevity protocol:
+
+### 1. Cellular Optimization
+- **Mitochondrial Support**: Energy production at cellular level
+- **DNA Protection**: Antioxidant strategies for genetic integrity
+- **Protein Synthesis**: Maintaining muscle mass and function
+
+### 2. Hormone Optimization
+- **Age-Related Decline**: Natural hormone changes and interventions
+- **Bioidentical Support**: Safe hormone replacement strategies
+- **Lifestyle Factors**: Natural hormone optimization
+
+### 3. Metabolic Health
+- **Insulin Sensitivity**: Maintaining metabolic flexibility
+- **Inflammation Control**: Anti-inflammatory protocols
+- **Autophagy Enhancement**: Cellular cleanup mechanisms
+
+### 4. Cognitive Preservation
+- **Brain Health**: Neuroprotective strategies
+- **Memory Support**: Cognitive enhancement protocols
+- **Stress Management**: Cortisol regulation for brain health
+
+### 5. Physical Vitality
+- **Muscle Preservation**: Sarcopenia prevention
+- **Bone Health**: Osteoporosis prevention
+- **Cardiovascular Fitness**: Heart health optimization
+
+### 6. Diagnostic Monitoring
+- **Biomarker Tracking**: Key health indicators to monitor
+- **Regular Assessment**: Frequency of health evaluations
+- **Intervention Adjustments**: Modifying protocols based on results
+
+## Request
+Please create a personalized longevity protocol following Dr. Strunz's molecular medicine approach. Include specific interventions, monitoring strategies, and measurable outcomes for healthy aging.
+
+Focus on:
+- Evidence-based interventions
+- Personalized recommendations
+- Practical implementation
+- Long-term sustainability
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def diagnostic_interpretation_prompt(
+            lab_results: str,
+            age: int,
+            gender: str,
+            symptoms: str = "",
+            reference_ranges: str = ""
+        ) -> str:
+            """
+            Generate a prompt for interpreting laboratory results using Dr. Strunz's optimal values.
+            
+            This prompt helps interpret lab results according to Dr. Strunz's functional medicine
+            approach, focusing on optimal rather than normal values.
+            
+            Args:
+                lab_results: Laboratory test results and values
+                age: Patient age for age-appropriate interpretation
+                gender: Gender for gender-specific considerations
+                symptoms: Current symptoms to correlate with results
+                reference_ranges: Laboratory reference ranges provided
+            """
+            
+            prompt = f"""# Dr. Strunz Laboratory Results Interpretation
+
+## Patient Information
+- **Age**: {age} years
+- **Gender**: {gender}
+{f"- **Symptoms**: {symptoms}" if symptoms else ""}
+
+## Laboratory Results
+{lab_results}
+
+{f"## Reference Ranges
+{reference_ranges}" if reference_ranges else ""}
+
+## Interpretation Framework
+
+Using Dr. Strunz's functional medicine approach, please analyze these laboratory results:
+
+### 1. Optimal vs. Normal Values
+- **Dr. Strunz's Optimal Ranges**: Compare results to functional medicine targets
+- **Standard Reference Ranges**: Differences from conventional medicine
+- **Clinical Significance**: What these values mean for health optimization
+
+### 2. Pattern Recognition
+- **Metabolic Patterns**: Insulin resistance, metabolic syndrome indicators
+- **Inflammatory Markers**: Signs of chronic inflammation
+- **Nutritional Status**: Deficiency patterns and absorption issues
+- **Hormone Balance**: Endocrine system function
+
+### 3. Root Cause Analysis
+- **Underlying Mechanisms**: Why these values are suboptimal
+- **Interconnected Systems**: How different markers relate to each other
+- **Lifestyle Factors**: Diet, exercise, stress contributions
+
+### 4. Optimization Strategy
+- **Nutritional Interventions**: Specific dietary recommendations
+- **Targeted Supplementation**: Supplements to address deficiencies
+- **Lifestyle Modifications**: Exercise, sleep, stress management
+
+### 5. Monitoring Protocol
+- **Follow-up Testing**: Which tests to repeat and when
+- **Progress Markers**: How to track improvement
+- **Red Flags**: Warning signs to watch for
+
+## Request
+Please provide a comprehensive interpretation of these laboratory results following Dr. Strunz's functional medicine approach. Include specific recommendations for optimization and a monitoring strategy.
+
+Focus on:
+- Optimal value targets vs. normal ranges
+- Practical intervention strategies
+- Measurable improvement goals
+- Timeline for reassessment
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def symptom_analysis_prompt(
+            primary_symptom: str,
+            duration: str,
+            severity: str,
+            associated_symptoms: str = "",
+            triggers: str = "",
+            improvements: str = ""
+        ) -> str:
+            """
+            Generate a prompt for analyzing symptoms using Dr. Strunz's functional medicine approach.
+            
+            This prompt helps identify root causes of symptoms rather than just treating symptoms.
+            
+            Args:
+                primary_symptom: Main symptom or complaint
+                duration: How long symptoms have been present
+                severity: Severity level (mild, moderate, severe)
+                associated_symptoms: Other symptoms that occur together
+                triggers: Known triggers that worsen symptoms
+                improvements: What helps improve symptoms
+            """
+            
+            prompt = f"""# Dr. Strunz Symptom Analysis & Root Cause Investigation
+
+## Symptom Profile
+- **Primary Symptom**: {primary_symptom}
+- **Duration**: {duration}
+- **Severity**: {severity}
+{f"- **Associated Symptoms**: {associated_symptoms}" if associated_symptoms else ""}
+{f"- **Triggers**: {triggers}" if triggers else ""}
+{f"- **Improvements**: {improvements}" if improvements else ""}
+
+## Analysis Framework
+
+Using Dr. Strunz's functional medicine approach, please analyze these symptoms:
+
+### 1. Root Cause Investigation
+- **Biochemical Imbalances**: Nutritional deficiencies, hormone disruptions
+- **Inflammatory Processes**: Chronic inflammation patterns
+- **Toxic Load**: Heavy metals, environmental toxins
+- **Digestive Health**: Gut-health connection to symptoms
+
+### 2. Systems Thinking
+- **Interconnected Systems**: How different body systems relate to symptoms
+- **Cascade Effects**: How one imbalance creates others
+- **Feedback Loops**: Self-perpetuating symptom cycles
+
+### 3. Functional Medicine Assessment
+- **Cellular Function**: Mitochondrial health, energy production
+- **Detoxification**: Liver function, elimination pathways
+- **Immune System**: Autoimmune patterns, immune dysfunction
+- **Nervous System**: Stress response, neurotransmitter balance
+
+### 4. Comprehensive Intervention Strategy
+- **Immediate Relief**: Natural approaches for symptom management
+- **Root Cause Treatment**: Addressing underlying imbalances
+- **System Restoration**: Rebuilding optimal function
+- **Prevention**: Preventing recurrence
+
+### 5. Diagnostic Considerations
+- **Recommended Testing**: Laboratory tests to identify root causes
+- **Functional Assessments**: Specialized tests for comprehensive evaluation
+- **Monitoring Parameters**: How to track progress
+
+## Request
+Please provide a comprehensive analysis of these symptoms following Dr. Strunz's functional medicine approach. Focus on identifying root causes rather than just symptom management.
+
+Focus on:
+- Biochemical root causes
+- Natural intervention strategies
+- Comprehensive restoration protocols
+- Prevention strategies
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def athletic_performance_prompt(
+            sport: str,
+            training_level: str,
+            performance_goals: str,
+            current_challenges: str = "",
+            training_schedule: str = "",
+            recovery_issues: str = ""
+        ) -> str:
+            """
+            Generate a prompt for athletic performance optimization using Dr. Strunz's sports medicine approach.
+            
+            This prompt applies Dr. Strunz's experience as a triathlete and sports medicine expert
+            to optimize athletic performance through nutrition and supplementation.
+            
+            Args:
+                sport: Type of sport or athletic activity
+                training_level: Training level (beginner, intermediate, advanced, elite)
+                performance_goals: Specific performance goals
+                current_challenges: Current performance challenges
+                training_schedule: Training frequency and intensity
+                recovery_issues: Recovery or injury concerns
+            """
+            
+            prompt = f"""# Dr. Strunz Athletic Performance Optimization
+
+## Athletic Profile
+- **Sport**: {sport}
+- **Training Level**: {training_level}
+- **Performance Goals**: {performance_goals}
+{f"- **Current Challenges**: {current_challenges}" if current_challenges else ""}
+{f"- **Training Schedule**: {training_schedule}" if training_schedule else ""}
+{f"- **Recovery Issues**: {recovery_issues}" if recovery_issues else ""}
+
+## Performance Optimization Framework
+
+Based on Dr. Strunz's sports medicine expertise and triathlon experience, please provide:
+
+### 1. Nutritional Periodization
+- **Training Fuel**: Optimal nutrition for different training phases
+- **Competition Nutrition**: Race-day fueling strategies
+- **Recovery Nutrition**: Post-training nutritional support
+- **Hydration Protocols**: Electrolyte balance and fluid management
+
+### 2. Supplement Strategy
+- **Performance Enhancers**: Legal, natural performance supplements
+- **Recovery Accelerators**: Supplements for faster recovery
+- **Injury Prevention**: Nutrients for joint and tissue health
+- **Timing Protocols**: When to take supplements for maximum effect
+
+### 3. Biochemical Optimization
+- **Energy Systems**: Optimizing cellular energy production
+- **Oxygen Utilization**: Improving aerobic capacity
+- **Lactate Threshold**: Enhancing anaerobic performance
+- **Hormone Optimization**: Natural hormone support for performance
+
+### 4. Recovery & Regeneration
+- **Sleep Optimization**: Sleep protocols for athletes
+- **Stress Management**: Managing training stress
+- **Inflammation Control**: Anti-inflammatory strategies
+- **Tissue Repair**: Accelerating recovery processes
+
+### 5. Performance Monitoring
+- **Key Biomarkers**: Laboratory tests for athletes
+- **Performance Metrics**: Tracking progress indicators
+- **Fatigue Management**: Recognizing overtraining signs
+- **Adaptation Strategies**: Adjusting protocols based on progress
+
+## Request
+Please create a comprehensive athletic performance optimization plan following Dr. Strunz's sports medicine approach. Include specific nutritional strategies, supplementation protocols, and performance monitoring guidelines.
+
+Focus on:
+- Evidence-based performance enhancement
+- Natural, legal optimization methods
+- Sustainable long-term strategies
+- Measurable performance improvements
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def family_health_prompt(
+            family_size: int,
+            age_ranges: str,
+            health_goals: str,
+            family_health_history: str = "",
+            dietary_preferences: str = "",
+            lifestyle_constraints: str = ""
+        ) -> str:
+            """
+            Generate a prompt for family health optimization using Dr. Strunz's principles.
+            
+            This prompt creates comprehensive family health strategies that can be
+            implemented by the whole family for optimal health outcomes.
+            
+            Args:
+                family_size: Number of family members
+                age_ranges: Age ranges of family members
+                health_goals: Family health goals
+                family_health_history: Relevant family health history
+                dietary_preferences: Family dietary preferences
+                lifestyle_constraints: Time, budget, or other constraints
+            """
+            
+            prompt = f"""# Dr. Strunz Family Health Optimization Plan
+
+## Family Profile
+- **Family Size**: {family_size} members
+- **Age Ranges**: {age_ranges}
+- **Health Goals**: {health_goals}
+{f"- **Family Health History**: {family_health_history}" if family_health_history else ""}
+{f"- **Dietary Preferences**: {dietary_preferences}" if dietary_preferences else ""}
+{f"- **Lifestyle Constraints**: {lifestyle_constraints}" if lifestyle_constraints else ""}
+
+## Family Health Framework
+
+Based on Dr. Strunz's preventive medicine approach, please create a comprehensive family health plan:
+
+### 1. Nutritional Foundation
+- **Family Meal Planning**: Healthy meals everyone will enjoy
+- **Age-Appropriate Nutrition**: Specific needs for different ages
+- **Meal Prep Strategies**: Efficient healthy meal preparation
+- **Healthy Snacking**: Nutritious options for all ages
+
+### 2. Supplement Strategy
+- **Core Family Supplements**: Essential nutrients for everyone
+- **Age-Specific Additions**: Targeted supplements by age group
+- **Budget-Friendly Options**: Cost-effective supplement choices
+- **Easy Implementation**: Simple dosing schedules
+
+### 3. Lifestyle Integration
+- **Family Exercise**: Physical activities everyone can enjoy
+- **Stress Management**: Family stress reduction strategies
+- **Sleep Hygiene**: Healthy sleep habits for all ages
+- **Screen Time Balance**: Managing technology use
+
+### 4. Disease Prevention
+- **Genetic Risk Factors**: Addressing family health history
+- **Immune Support**: Strengthening family immunity
+- **Chronic Disease Prevention**: Long-term health strategies
+- **Early Detection**: Age-appropriate health screening
+
+### 5. Education & Motivation
+- **Health Education**: Teaching healthy habits
+- **Family Challenges**: Fun health competitions
+- **Progress Tracking**: Measuring family health improvements
+- **Sustainable Habits**: Building lasting healthy behaviors
+
+## Request
+Please create a comprehensive family health optimization plan following Dr. Strunz's preventive medicine approach. Include practical strategies that work for busy families while addressing the specific needs of different age groups.
+
+Focus on:
+- Practical, implementable strategies
+- Age-appropriate recommendations
+- Budget-conscious solutions
+- Family-friendly approaches
+"""
+            
+            return prompt
+        
+        @self.app.prompt()
+        async def practitioner_consultation_prompt(
+            practitioner_type: str,
+            patient_case: str,
+            clinical_question: str,
+            current_approach: str = "",
+            treatment_challenges: str = "",
+            desired_outcomes: str = ""
+        ) -> str:
+            """
+            Generate a prompt for healthcare practitioners seeking Dr. Strunz's functional medicine insights.
+            
+            This prompt helps healthcare practitioners integrate Dr. Strunz's functional medicine
+            approach into their clinical practice.
+            
+            Args:
+                practitioner_type: Type of healthcare practitioner
+                patient_case: Patient case description
+                clinical_question: Specific clinical question
+                current_approach: Current treatment approach
+                treatment_challenges: Current treatment challenges
+                desired_outcomes: Desired patient outcomes
+            """
+            
+            prompt = f"""# Dr. Strunz Functional Medicine Consultation
+
+## Practitioner Profile
+- **Practitioner Type**: {practitioner_type}
+- **Clinical Question**: {clinical_question}
+{f"- **Current Approach**: {current_approach}" if current_approach else ""}
+{f"- **Treatment Challenges**: {treatment_challenges}" if treatment_challenges else ""}
+{f"- **Desired Outcomes**: {desired_outcomes}" if desired_outcomes else ""}
+
+## Patient Case
+{patient_case}
+
+## Consultation Framework
+
+Based on Dr. Strunz's functional medicine expertise, please provide clinical insights:
+
+### 1. Functional Medicine Assessment
+- **Root Cause Analysis**: Identifying underlying imbalances
+- **Systems Approach**: Interconnected body systems evaluation
+- **Biochemical Optimization**: Cellular and metabolic considerations
+- **Personalized Medicine**: Individual variation factors
+
+### 2. Diagnostic Considerations
+- **Functional Testing**: Advanced diagnostic options
+- **Biomarker Interpretation**: Optimal vs. normal values
+- **Pattern Recognition**: Common functional medicine patterns
+- **Monitoring Protocols**: Tracking treatment progress
+
+### 3. Treatment Integration
+- **Nutritional Medicine**: Therapeutic nutrition approaches
+- **Supplementation Strategy**: Evidence-based supplement protocols
+- **Lifestyle Medicine**: Comprehensive lifestyle interventions
+- **Conventional Integration**: Combining with conventional treatments
+
+### 4. Clinical Implementation
+- **Patient Education**: Explaining functional medicine concepts
+- **Treatment Protocols**: Step-by-step implementation
+- **Follow-up Strategies**: Monitoring and adjustment protocols
+- **Outcome Measurement**: Tracking clinical improvements
+
+### 5. Professional Development
+- **Continuing Education**: Advanced functional medicine training
+- **Practice Integration**: Implementing functional medicine approaches
+- **Patient Communication**: Explaining complex concepts
+- **Clinical Resources**: Recommended references and tools
+
+## Request
+Please provide comprehensive functional medicine insights for this clinical case following Dr. Strunz's approach. Include specific treatment recommendations, diagnostic considerations, and implementation strategies.
+
+Focus on:
+- Evidence-based functional medicine principles
+- Practical clinical implementation
+- Patient-centered care approaches
+- Measurable clinical outcomes
+"""
+            
+            return prompt
+
     def _register_tools(self):
         """Register all MCP tools"""
         
@@ -796,14 +1564,16 @@ class StrunzKnowledgeMCP:
         """Get MCP server information"""
         return {
             "server_name": "Dr. Strunz Knowledge Base MCP Server",
-            "version": "0.5.0",
+            "version": "0.5.3",
             "purpose": "Comprehensive access to Dr. Strunz's medical knowledge and community insights",
             "capabilities": {
                 "search": "Semantic search across books, newsletters, and forum",
                 "analysis": "Topic evolution, contradiction finding, trend analysis",
                 "protocols": "Personalized health protocol generation",
                 "community": "Real-world insights from 20+ years of discussions",
-                "tools_available": len(self.tool_registry)
+                "prompts": "6 health-focused system prompts for structured interactions",
+                "tools_available": len(self.tool_registry),
+                "prompts_available": 6
             },
             "data_sources": {
                 "books": "13 comprehensive health books",
@@ -815,7 +1585,9 @@ class StrunzKnowledgeMCP:
                 "User profiling for personalized recommendations",
                 "Newsletter evolution analysis over 20 years",
                 "Optimal diagnostic values database",
-                "Community consensus extraction"
+                "Community consensus extraction",
+                "System prompts for guided health interactions",
+                "Structured prompt templates for different use cases"
             ]
         }
     

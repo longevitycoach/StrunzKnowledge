@@ -595,6 +595,9 @@ def handle_initialize(params: Dict) -> Dict:
             "capabilities": {
                 "tools": {
                     "listChanged": False
+                },
+                "prompts": {
+                    "listChanged": False
                 }
             },
             "serverInfo": {

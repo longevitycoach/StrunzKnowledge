@@ -1430,38 +1430,264 @@ grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://claude.ai/oaut
 }
 ```
 
-#### Authentication Flow Diagram
+#### Complete OAuth 2.1 Flow Diagram
 
 ```mermaid
 sequenceDiagram
+    participant U as User
     participant C as Claude Desktop
     participant S as MCP Server
-    participant A as Auth Server
+    participant AS as Auth Server
+    participant VS as Vector Store
+    participant DB as Token Store
     
-    Note over C,A: OAuth 2.1 with PKCE Flow
+    Note over U,DB: Complete OAuth 2.1 with PKCE Flow
     
-    C->>S: GET /.well-known/oauth-authorization-server
-    S-->>C: OAuth endpoints & capabilities
+    rect rgb(240, 248, 255)
+        Note over U,C: 1. User Initiates Connection
+        U->>C: Configure MCP Server
+        Note over C: Server URL: https://strunz.up.railway.app
+    end
     
-    C->>S: POST /oauth/register (Dynamic Client Registration)
-    S-->>C: client_id, client_secret
+    rect rgb(245, 255, 245)
+        Note over C,S: 2. Discovery Phase
+        C->>S: GET /.well-known/oauth-authorization-server
+        S-->>C: OAuth endpoints & capabilities
+        Note over S: Returns: authorization_endpoint, token_endpoint, etc.
+    end
     
-    C->>C: Generate code_verifier & code_challenge
+    rect rgb(255, 248, 220)
+        Note over C,AS: 3. Dynamic Client Registration (RFC 7591)
+        C->>AS: POST /oauth/register
+        Note over C: Body: client_name, redirect_uris, grant_types
+        AS->>DB: Store client registration
+        DB-->>AS: Client stored
+        AS-->>C: client_id, client_secret
+        Note over AS: Auto-generated credentials
+    end
     
-    C->>S: GET /oauth/authorize?code_challenge=...
-    Note over S: Auto-approval for Claude.ai
-    S-->>C: 302 Redirect with authorization code
+    rect rgb(255, 240, 245)
+        Note over C,C: 4. PKCE Preparation
+        C->>C: Generate code_verifier (43-128 chars)
+        C->>C: Generate code_challenge = SHA256(code_verifier)
+        C->>C: Set code_challenge_method = "S256"
+    end
     
-    C->>S: POST /oauth/token (with code_verifier)
-    S-->>C: access_token, refresh_token
+    rect rgb(240, 255, 255)
+        Note over C,AS: 5. Authorization Request
+        C->>AS: GET /oauth/authorize
+        Note over C: Parameters: response_type=code, client_id, redirect_uri,<br/>scope=mcp:tools, state, code_challenge, code_challenge_method
+        AS->>AS: Validate client_id and redirect_uri
+        AS->>AS: Check if client is Claude.ai (auto-approve)
+        
+        alt Claude.ai Client (Auto-Approval)
+            AS-->>C: 302 Redirect with authorization code
+            Note over AS: Immediate approval for Claude Desktop
+        else Other Clients
+            AS-->>C: 302 Redirect to consent page
+            Note over AS: Manual user consent required
+        end
+    end
     
-    Note over C,S: Authenticated MCP Communication
+    rect rgb(250, 240, 255)
+        Note over C,AS: 6. Authorization Code Exchange
+        C->>AS: POST /oauth/token
+        Note over C: Body: grant_type=authorization_code, code, redirect_uri,<br/>code_verifier, client_id, client_secret
+        AS->>AS: Validate authorization code
+        AS->>AS: Verify code_verifier matches code_challenge
+        AS->>AS: Generate access_token (JWT)
+        AS->>DB: Store token with expiration
+        DB-->>AS: Token stored
+        AS-->>C: access_token, token_type, expires_in, scope
+        Note over AS: JWT token valid for 1 hour
+    end
     
-    C->>S: GET /sse (with Bearer token)
-    S-->>C: SSE stream established
+    rect rgb(245, 245, 255)
+        Note over C,S: 7. Authenticated Connection
+        C->>S: GET /sse
+        Note over C: Headers: Authorization: Bearer <access_token>
+        S->>S: Validate JWT token
+        S->>S: Extract user claims and scope
+        S-->>C: 200 OK - SSE connection established
+        Note over S: Server-Sent Events stream ready
+    end
     
-    C->>S: MCP tool calls (authenticated)
-    S-->>C: Tool responses
+    rect rgb(255, 255, 240)
+        Note over C,VS: 8. MCP Tool Usage
+        C->>S: POST /messages (MCP Protocol)
+        Note over C: JSON-RPC 2.0 over SSE transport
+        S->>S: Validate Bearer token
+        S->>S: Parse MCP tool request
+        
+        alt Tool requires vector search
+            S->>VS: Query vector store (singleton)
+            VS-->>S: Search results
+        end
+        
+        S->>S: Process tool logic
+        S-->>C: Tool response via SSE
+        Note over S: JSON-RPC 2.0 response
+    end
+    
+    rect rgb(255, 245, 240)
+        Note over C,AS: 9. Token Refresh (if needed)
+        alt Token expired
+            C->>AS: POST /oauth/token
+            Note over C: Body: grant_type=refresh_token, refresh_token
+            AS->>AS: Validate refresh token
+            AS->>AS: Generate new access_token
+            AS->>DB: Update token store
+            DB-->>AS: Token updated
+            AS-->>C: new access_token, expires_in
+        end
+    end
+    
+    rect rgb(240, 240, 240)
+        Note over C,S: 10. Continuous Usage
+        loop Multiple Tool Calls
+            C->>S: MCP tool requests (with valid token)
+            S->>VS: Vector operations (if needed)
+            VS-->>S: Results
+            S-->>C: Tool responses
+        end
+    end
+    
+    rect rgb(255, 240, 240)
+        Note over C,S: 11. Session Termination
+        alt User closes Claude Desktop
+            C->>S: Close SSE connection
+            S-->>C: Connection closed
+        else Token expires
+            S-->>C: 401 Unauthorized
+            Note over S: Token validation failed
+        end
+    end
+```
+
+#### OAuth 2.1 Component Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        CD[Claude Desktop]
+        CC[Custom MCP Client]
+        WA[Web Application]
+    end
+    
+    subgraph "Authentication Layer"
+        AS[Auth Server]
+        DS[Discovery Service]
+        CR[Client Registry]
+        TM[Token Manager]
+    end
+    
+    subgraph "MCP Server Layer"
+        SS[SSE Server]
+        MP[MCP Protocol Handler]
+        TV[Token Validator]
+        TL[Tool Library]
+    end
+    
+    subgraph "Data Layer"
+        VS[Vector Store Singleton]
+        TS[Token Store]
+        CS[Client Store]
+        LS[Log Store]
+    end
+    
+    subgraph "Security Layer"
+        PKCE[PKCE Validator]
+        JWT[JWT Generator]
+        CORS[CORS Handler]
+        HTTPS[HTTPS Enforcer]
+    end
+    
+    %% Client connections
+    CD --> AS
+    CC --> AS
+    WA --> AS
+    
+    %% Authentication flow
+    AS --> DS
+    AS --> CR
+    AS --> TM
+    AS --> PKCE
+    AS --> JWT
+    
+    %% MCP server connections
+    CD --> SS
+    CC --> SS
+    WA --> SS
+    
+    %% Server processing
+    SS --> MP
+    SS --> TV
+    MP --> TL
+    
+    %% Data access
+    TL --> VS
+    TM --> TS
+    CR --> CS
+    SS --> LS
+    
+    %% Security enforcement
+    SS --> CORS
+    SS --> HTTPS
+    TM --> JWT
+    AS --> PKCE
+    
+    %% Styling
+    classDef client fill:#e1f5fe
+    classDef auth fill:#f3e5f5
+    classDef server fill:#e8f5e8
+    classDef data fill:#fff3e0
+    classDef security fill:#ffebee
+    
+    class CD,CC,WA client
+    class AS,DS,CR,TM auth
+    class SS,MP,TV,TL server
+    class VS,TS,CS,LS data
+    class PKCE,JWT,CORS,HTTPS security
+```
+
+#### Token Lifecycle Management
+
+```mermaid
+stateDiagram-v2
+    [*] --> ClientRegistration
+    
+    ClientRegistration --> CodeGeneration: Client registered
+    CodeGeneration --> Authorization: PKCE code_verifier created
+    Authorization --> TokenExchange: Authorization code received
+    TokenExchange --> ActiveToken: Access token issued
+    
+    ActiveToken --> ValidToken: Token validation
+    ValidToken --> ToolExecution: Valid token
+    ToolExecution --> ValidToken: Continue using
+    
+    ValidToken --> ExpiredToken: Token expires (1 hour)
+    ExpiredToken --> TokenRefresh: Refresh token used
+    TokenRefresh --> ActiveToken: New token issued
+    
+    ActiveToken --> RevokedToken: Manual revocation
+    ExpiredToken --> RevokedToken: No refresh token
+    
+    RevokedToken --> [*]: Session ended
+    
+    state ActiveToken {
+        [*] --> Issued
+        Issued --> InUse
+        InUse --> Validated
+        Validated --> InUse
+    }
+    
+    state TokenExchange {
+        [*] --> CodeValidation
+        CodeValidation --> PKCEValidation
+        PKCEValidation --> JWTGeneration
+        JWTGeneration --> TokenStorage
+        TokenStorage --> [*]
+    }
 ```
 
 ### MCP Protocol Integration
