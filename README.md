@@ -2541,9 +2541,9 @@ The server supports multiple transports:
 Test configurations are available in `test-configs/` directory.
 
 #### Test Reports
-- 📊 [Latest Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Vector store fix validation
-- 🚀 [OAuth Test Report v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) - OAuth implementation tests
-- 📋 [Production Test Report](docs/test-reports/PRODUCTION_TEST_REPORT.md) - Live deployment validation
+- 📊 [Latest Production Test Report v0.6.0](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.0.md) - Comprehensive v0.6.0 validation
+- 🚀 [Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Vector store fix validation
+- 🔧 [OAuth Test Report v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) - OAuth implementation tests
 
 #### Test Categories & Coverage
 
@@ -2591,7 +2591,7 @@ python -m pytest src/tests/ -v -s
 - **Test Environment**: Docker + Railway Production
 - **Status**: ✅ All tests passing
 
-📋 **View Test Reports**: [v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) | [v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) | [Test Organization](docs/test-reports/TEST_ORGANIZATION_SUMMARY.md)
+📋 **View Test Reports**: [v0.6.0 Production](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.0.md) | [v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) | [Test Organization](docs/test-reports/TEST_ORGANIZATION_SUMMARY.md)
 
 ## Deployment
 
@@ -3106,8 +3106,8 @@ The server uses **Server-Sent Events (SSE)** transport for real-time communicati
 - [Deployment Status](docs/DEPLOYMENT_STATUS.md) - Current deployment info
 
 ### Test Reports
-- [Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Latest test results with vector store fix
-- [Test Report v0.5.0](docs/test-reports/TEST_REPORT_v0.5.0.md) - OAuth implementation validation
+- [Production Test Report v0.6.0](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.0.md) - Comprehensive v0.6.0 validation
+- [Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Vector store fix validation
 - [Test Organization](docs/test-reports/TEST_ORGANIZATION_SUMMARY.md) - Test structure and guidelines
 
 ## License
@@ -3121,7 +3121,7 @@ This project is for educational and research purposes. All content from Dr. Ulri
 [![Dr. Strunz](https://img.shields.io/badge/Dr.-Strunz-blue)](https://www.strunz.com)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)
 [![Railway](https://img.shields.io/badge/Deployed-Railway-purple)](https://railway.app)
-[![Tests](https://img.shields.io/badge/Tests-57%20Passing-brightgreen)](docs/test-reports/)
+[![Tests](https://img.shields.io/badge/Tests-80%25%20Passing-brightgreen)](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.0.md)
 - Railway for the seamless deployment platform
 - Contributors and maintainers of this project
 
