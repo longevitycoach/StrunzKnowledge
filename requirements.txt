@@ -1,49 +1,33 @@
-# Web Scraping
-beautifulsoup4==4.12.3
-requests==2.31.0
-lxml==5.1.0
-selenium==4.16.0
-webdriver-manager==4.0.1
-
-# Data Processing
-pandas==2.2.0
-python-dateutil==2.8.2
-
-# OCR and Document Processing
-docling==1.0.0
+# Core MCP SDK Dependencies
+mcp>=1.0.0
 
 # Vector Database
-faiss-cpu==1.7.4
-numpy==1.26.3
-sentence-transformers==2.2.2
+faiss-cpu>=1.7.4
+numpy>=1.26.0
+sentence-transformers>=2.2.0
 
-# MCP Server
-fastmcp==0.1.0
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-sse-starlette==2.0.0
-pyjwt==2.8.0
-python-multipart==0.0.6
-jinja2==3.1.3
+# Web Scraping (for data collection)
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+lxml>=5.1.0
 
-# LLM Integration
-langchain==0.1.20
-langchain-community==0.0.38
-langsmith>=0.1.0,<0.2.0
-tiktoken==0.5.2
+# Data Processing
+pandas>=2.2.0
+python-dateutil>=2.8.0
 
-# Testing
-pytest==8.0.0
-pytest-asyncio==0.23.3
-httpx>=0.28.1
+# Testing Dependencies
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+httpx>=0.28.0
+scikit-learn>=1.3.0
+psutil>=5.9.0
 
 # Utilities
-python-dotenv==1.0.0
-pydantic==2.7.0
-pydantic-settings>=2.6.1
-loguru==0.7.2
+python-dotenv>=1.0.0
+pydantic>=2.7.0
 
-# Development
-black==24.1.1
-flake8==7.0.0
-mypy==1.8.0
+# Optional: FastMCP for fallback (not installed to avoid Railway conflicts)
+# These dependencies are intentionally excluded to prevent deployment issues:
+# - fastmcp (requires FastAPI stack)
+# - fastapi (web framework not needed for MCP stdio protocol)  
+# - uvicorn (ASGI server not needed for MCP stdio protocol)

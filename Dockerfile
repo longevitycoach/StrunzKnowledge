@@ -79,6 +79,6 @@ CMD ["python", "-u", "main.py"]
 
 # Labels for container metadata
 LABEL maintainer="Strunz Knowledge Base Team" \
-      version="0.5.2" \
+      version="0.6.3" \
       description="Dr. Strunz Knowledge Base with MCP Server - Claude Desktop Edition" \
-      build_date="2025-07-16"
+      build_date="2025-07-17"

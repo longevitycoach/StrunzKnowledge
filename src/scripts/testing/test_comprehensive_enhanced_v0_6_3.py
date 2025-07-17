@@ -243,7 +243,7 @@ class EnhancedComprehensiveTestSuite:
         """Test vector store can be initialized"""
         test_result.description = "Attempt to initialize the FAISS vector store with fallback handling"
         test_result.set_input_expected(
-            input_data="get_vector_store() call",
+            input_data="get_vector_store_singleton() call",
             expected_output="Vector store instance or graceful fallback"
         )
         
@@ -258,8 +258,8 @@ class EnhancedComprehensiveTestSuite:
                 })
                 return False
             
-            from src.rag.search import get_vector_store
-            vector_store = get_vector_store()
+            from src.rag.search import get_vector_store_singleton
+            vector_store = get_vector_store_singleton()
             
             if vector_store is not None:
                 test_result.set_success(0, "Vector store initialized successfully", {
@@ -293,8 +293,8 @@ class EnhancedComprehensiveTestSuite:
                 })
                 return False
             
-            from src.rag.search import get_vector_store
-            vector_store = get_vector_store()
+            from src.rag.search import get_vector_store_singleton
+            vector_store = get_vector_store_singleton()
             
             if vector_store is None:
                 test_result.set_failure(0, "Vector store not available")
@@ -804,8 +804,8 @@ class EnhancedComprehensiveTestSuite:
                 })
                 return False
             
-            from src.rag.search import get_vector_store
-            vector_store = get_vector_store()
+            from src.rag.search import get_vector_store_singleton
+            vector_store = get_vector_store_singleton()
             
             if vector_store is None:
                 test_result.set_failure(0, "Vector store not available for performance testing")

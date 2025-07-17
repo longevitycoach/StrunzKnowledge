@@ -59,7 +59,7 @@ from src.mcp.claude_compatible_server import (
 # Create FastAPI app
 app = FastAPI(
     title="Dr. Strunz Knowledge MCP Server",
-    version="0.6.2",
+    version="0.6.3",
     description="MCP server with full prompts support using official SDK"
 )
 
@@ -75,7 +75,7 @@ app.add_middleware(
 # Create MCP server instance
 mcp_server = MCPServer(
     name="Dr. Strunz Knowledge MCP Server",
-    version="0.6.2"
+    version="0.6.3"
 )
 
 # Global transport instance

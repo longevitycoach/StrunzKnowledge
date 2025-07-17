@@ -275,8 +275,8 @@ class StrunzKnowledgeServer:
     async def _init_vector_store(self):
         """Initialize vector store with graceful fallback"""
         try:
-            from src.rag.search import get_vector_store
-            self.vector_store = get_vector_store()
+            from src.rag.search import get_vector_store_singleton
+            self.vector_store = get_vector_store_singleton()
             logger.info("Vector store initialized successfully")
         except Exception as e:
             logger.warning(f"Vector store initialization failed: {e}")

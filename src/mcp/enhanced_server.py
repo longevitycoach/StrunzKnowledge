@@ -1563,7 +1563,7 @@ Focus on:
         """Get MCP server information"""
         return {
             "server_name": "Dr. Strunz Knowledge Base MCP Server",
-            "version": "0.5.4",
+            "version": "0.6.3",
             "purpose": "Comprehensive access to Dr. Strunz's medical knowledge and community insights",
             "capabilities": {
                 "search": "Semantic search across books, newsletters, and forum",
