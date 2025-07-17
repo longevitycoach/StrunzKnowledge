@@ -36,9 +36,8 @@ def parse_array_input(value: Union[str, List[Any], None]) -> Optional[List[Any]]
             except json.JSONDecodeError:
                 pass
                 
-        # If it's a single value, wrap in list
-        if value:
-            return [value]
+        # For invalid JSON that's not an array, return None
+        # to avoid wrapping invalid data in a list
             
     return None
 

@@ -14,6 +14,7 @@ Environment Variables:
 
 import os
 import sys
+import asyncio
 from pathlib import Path
 
 # Add src to path
@@ -48,9 +49,9 @@ def main():
         try:
             # Try clean official SDK server for better Claude.ai compatibility
             from src.mcp.mcp_sdk_clean import main as run_server
-            print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
+            print(f"✅ Clean MCP SDK loaded in {time.time() - start_time:.2f}s")
             print("🎯 Starting MCP server with official SDK...")
-            run_server()
+            asyncio.run(run_server())
         except Exception as e:
             print(f"⚠️ MCP SDK server failed: {e}")
             print("🔄 Falling back to compatible server...")
@@ -65,7 +66,7 @@ def main():
         try:
             from src.mcp.mcp_sdk_clean import main as run_server
             print("🎯 Using clean MCP SDK...")
-            run_server()
+            asyncio.run(run_server())
         except Exception as e:
             print(f"⚠️ MCP SDK not available: {e}")
             print("🔄 Using enhanced server...")

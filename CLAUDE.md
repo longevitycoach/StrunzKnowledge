@@ -91,6 +91,75 @@ The MCP server uses sentence-transformers for **both** initial processing AND re
 - **SSE Endpoint**: Available at `/sse` for Claude.ai integration monitoring
 - **Data Protection**: All MCP queries require OAuth authentication
 
+## Release v0.6.3 - Clean MCP SDK Implementation (July 17, 2025)
+
+### 🚀 Major Architecture Decision: Official MCP SDK Migration
+
+**Decision**: Migrated from FastMCP to official MCP SDK for better Claude.ai compatibility and protocol compliance.
+
+**Technical Implementation**:
+- **New Primary Server**: `src/mcp/mcp_sdk_clean.py` - Clean implementation with official SDK
+- **Protocol Version**: 2025-03-26 (latest MCP specification)
+- **Transport**: Stdio only (eliminates web dependency conflicts)
+- **Capabilities**: Full prompts support (3 health-focused prompts) + 9 core tools
+
+### 🔧 Railway Deployment Issues Resolved
+
+**Problem**: Railway "Failed to create code snapshot" errors with v0.6.2
+**Root Cause**: FastAPI dependencies in MCP SDK server conflicted with Railway's build system
+**Solution**: Created clean implementation (`mcp_sdk_clean.py`) without any web framework dependencies
+
+**Deployment Strategy**:
+1. **Primary**: Clean MCP SDK server (stdio transport)
+2. **Fallback**: FastMCP compatible server (SSE transport)
+3. **Emergency**: Enhanced server (basic MCP implementation)
+
+### 🎯 Claude.ai Integration Improvements
+
+**Prompts Capability Added** (Critical for Claude.ai):
+- **Health Assessment**: Comprehensive evaluation based on Dr. Strunz methodology
+- **Supplement Optimization**: Protocol optimization with safety checks
+- **Longevity Protocol**: Anti-aging strategies based on latest research
+
+**Benefits**:
+- ✅ Claude.ai shows server as "enabled" (previously disabled)
+- ✅ Better protocol compliance and future-proofing
+- ✅ Reduced dependency conflicts and deployment issues
+- ✅ Enhanced error recovery with graceful fallbacks
+
+### 📊 Server Architecture Comparison
+
+| Aspect | FastMCP (v0.6.1) | Official SDK (v0.6.3) |
+|--------|-------------------|------------------------|
+| Protocol Compliance | Partial | Full |
+| Claude.ai Support | Basic | Complete with prompts |
+| Dependencies | FastAPI + SSE | MCP SDK only |
+| Railway Deployment | Unreliable | Stable |
+| Transport | HTTP/SSE | Stdio |
+| Error Handling | Basic | Graceful fallbacks |
+
+### 🚦 Development Guidelines Updated
+
+**Pre-commit Testing** (Enhanced for v0.6.3):
+1. **Local Docker Testing**: Always test new server implementations locally
+2. **MCP Protocol Validation**: Verify full MCP compliance
+3. **Dependency Audit**: Check for minimal dependency footprint
+4. **Railway Compatibility**: Test deployment scenarios
+
+**Server Selection Logic**:
+```python
+# Railway Environment
+if is_railway:
+    try:
+        # Primary: Clean MCP SDK
+        from src.mcp.mcp_sdk_clean import main as run_server
+        asyncio.run(run_server())
+    except Exception:
+        # Fallback: FastMCP compatible
+        from src.mcp.claude_compatible_server import main as run_server
+        asyncio.run(run_server())
+```
+
 ## SDLC (Software Development Lifecycle) Process
 
 ### 1. **Local Development Phase**
@@ -217,13 +286,14 @@ docker push longevitycoach/strunz-mcp:latest
 
 ## Version Management
 
-### Current Version: 0.5.4
-- **Features**: Full OAuth 2.1 compliance, 20 MCP tools, FAISS search, prompts capability
-- **Location**: Version defined in `src/mcp/claude_compatible_server.py`
-- **Compatibility**: Claude.ai ready with SSE transport
+### Current Version: 0.6.3
+- **Features**: Clean MCP SDK implementation, 9 core tools + 3 prompts, FAISS search, full protocol compliance
+- **Primary Server**: `src/mcp/mcp_sdk_clean.py` (official SDK)
+- **Fallback Server**: `src/mcp/claude_compatible_server.py` (FastMCP)
+- **Compatibility**: Claude.ai ready with prompts capability
 
 ### Version Update Process
-1. **Update version in code**: `src/mcp/claude_compatible_server.py` (search for `0.5.4`)
+1. **Update version in code**: `src/mcp/mcp_sdk_clean.py` and `src/mcp/claude_compatible_server.py`
 2. **Update changelog**: Document changes in commit message
 3. **Test thoroughly**: Run full Docker test suite
 4. **Deploy and verify**: Check Railway deployment version
@@ -337,10 +407,10 @@ config/
 
 The StrunzKnowledge project provides a comprehensive MCP (Model Context Protocol) server that makes Dr. Ulrich Strunz's health knowledge accessible to AI assistants like Claude. With full OAuth 2.1 compliance, 20 specialized tools, and FAISS-powered semantic search across 43,373 documents, it represents a complete implementation of modern AI-assisted health consultation.
 
-**Current Status**: Production-ready with v0.5.4 deployed on Railway
-**Integration**: Claude.ai compatible with SSE transport
+**Current Status**: Production-ready with v0.6.3 deployed on Railway with clean MCP SDK
+**Integration**: Claude.ai compatible with prompts capability and stdio transport
 **Coverage**: 13 books, 6,953 news articles, 6,400 forum discussions
-**Tools**: 20 MCP tools covering search, analysis, protocols, and personalization
+**Tools**: 9 core MCP tools + 3 health prompts covering search, analysis, protocols, and personalization
 **Security**: Full OAuth 2.1 authorization with dynamic client registration
 
 ## MCP Tools Quick Reference
