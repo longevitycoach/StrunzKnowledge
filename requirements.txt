@@ -15,6 +15,7 @@ docling==1.0.0
 # Vector Database
 faiss-cpu==1.7.4
 numpy==1.26.3
+sentence-transformers==2.2.2
 
 # MCP Server
 fastmcp==0.1.0
@@ -26,8 +27,9 @@ python-multipart==0.0.6
 jinja2==3.1.3
 
 # LLM Integration
-langchain==0.1.5
-langchain-community>=0.0.17
+langchain==0.1.20
+langchain-community==0.0.38
+langsmith>=0.1.0,<0.2.0
 tiktoken==0.5.2
 
 # Testing

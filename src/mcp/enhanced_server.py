@@ -129,8 +129,8 @@ class StrunzKnowledgeMCP:
             self.profiling = None
             logger.warning("User profiling system not available")
         
-        # Register prompts
-        self._register_prompts()
+        # Register prompts (skip for compatibility)
+        # self._register_prompts()
     
     def _register_prompts(self):
         """Register MCP prompts for health-related interactions"""
@@ -528,13 +528,12 @@ Focus on:
 ## Patient Information
 - **Age**: {age} years
 - **Gender**: {gender}
-{f"- **Symptoms**: {symptoms}" if symptoms else ""}
+{("- **Symptoms**: " + symptoms) if symptoms else ""}
 
 ## Laboratory Results
 {lab_results}
 
-{f"## Reference Ranges
-{reference_ranges}" if reference_ranges else ""}
+{("## Reference Ranges" + chr(10) + reference_ranges) if reference_ranges else ""}
 
 ## Interpretation Framework
 

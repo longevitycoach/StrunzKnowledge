@@ -179,19 +179,19 @@ flowchart TD
 
 **Detailed Workflow Stages:**
 
-**🔍 Research & Discovery (15-45 min)**
+**🔍 Research & Discovery**
 - **Newsletter Analysis**: Search 20+ years of Dr. Strunz articles for specific conditions
 - **Contradiction Mapping**: Identify conflicts between mainstream and functional approaches
 - **Evidence Integration**: Combine book protocols with latest research findings
 - **Community Validation**: Review real-world outcomes from forum discussions
 
-**🧬 Protocol Development (30-60 min)**  
+**🧬 Protocol Development**  
 - **Personalized Protocols**: Create evidence-based treatment plans
 - **Supplement Safety**: Analyze interactions and optimize dosing
 - **Timeline Planning**: Establish realistic expectations and milestones
 - **Patient Education**: Develop clear implementation guidance
 
-**📊 Clinical Implementation (Ongoing)**
+**📊 Clinical Implementation**
 - **Progress Monitoring**: Track biomarkers and symptom improvements
 - **Protocol Refinement**: Adjust based on patient response
 - **Outcome Documentation**: Record successes for community benefit
@@ -606,7 +606,7 @@ graph LR
     H --> J
     I --> J
     
-    J --> K[25(OH)D Target<br/>60-80 ng/ml]
+    J --> K["25OH D Target<br/>60-80 ng/ml"]
     
     style A fill:#fff9c4
     style J fill:#c8e6c9
@@ -695,7 +695,7 @@ timeline
     
     section 6:00 AM
     Wake         : Hydration Protocol
-                 : 500ml water Sea salt Lemon
+                 : 500ml water + Sea salt + Lemon
             
     section 6:30 AM  
     Pre-Workout  : Amino Acid Complex 10g
@@ -2138,15 +2138,47 @@ The StrunzKnowledge project uses GitHub Actions for continuous integration, auto
 
 All scripts are organized under `src/scripts/` for better maintainability. The project includes 40+ scripts for deployment, testing, data management, and analysis.
 
-### 📁 Script Organization
+### 📁 Project Structure
 
 ```
-src/scripts/
-├── deployment/      # Production deployment scripts
-├── testing/         # Comprehensive test suites
-├── data/           # Data processing utilities
-├── analysis/       # Content analysis tools
-└── setup/          # Setup and configuration
+StrunzKnowledge/
+├── main.py                    # Main entry point
+├── Dockerfile                # Container configuration
+├── requirements*.txt          # Python dependencies
+├── data/
+│   ├── faiss_indices/chunks/  # FAISS indices split for GitHub
+│   ├── books/                # PDF books (copyright protected)
+│   ├── raw/                  # Scraped HTML content
+│   └── processed/            # Processed content chunks
+├── src/
+│   ├── mcp/                  # MCP servers (4 files)
+│   │   ├── claude_compatible_server.py  # Production server
+│   │   ├── enhanced_server.py           # 20 MCP tools
+│   │   ├── oauth_provider.py            # OAuth 2.1 implementation
+│   │   └── user_profiling.py            # Health assessment
+│   ├── rag/                  # RAG system (11 files)
+│   │   ├── search.py         # Vector search
+│   │   ├── vector_store.py   # FAISS integration
+│   │   └── *_processor.py    # Content processors
+│   ├── scripts/              # Utilities (46 files)
+│   │   ├── deployment/       # Server deployment (3 files)
+│   │   ├── testing/         # Test scripts (35 files)
+│   │   ├── analysis/        # Analysis tools (2 files)
+│   │   ├── data/            # Data utilities (2 files)
+│   │   └── setup/           # Setup scripts (2 files)
+│   └── tests/               # Test suites (5 files)
+│       ├── test_railway_comprehensive.py
+│       ├── test_enhanced_mcp.py
+│       ├── test_oauth_endpoints.py
+│       ├── test_production_mcp.py
+│       └── test_vector_store_singleton.py
+├── docs/
+│   ├── SCRIPTS.md           # Complete scripts documentation
+│   ├── DEPLOYMENT_CHECKLIST.md
+│   └── test-reports/        # Test execution reports
+└── config/
+    ├── docker/              # Docker configurations
+    └── mcp-inspector/       # MCP test configs
 ```
 
 ### 🚀 Essential Scripts
@@ -2154,37 +2186,51 @@ src/scripts/
 #### Deployment Scripts (`src/scripts/deployment/`)
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `railway_mcp_sse_server.py` | Production MCP server with SSE | Auto-deployed to Railway |
-| `create_release.sh` | Create releases and Docker images | `./create_release.sh v0.5.1` |
-| `claude_desktop_client.js` | Claude Desktop integration | Used in Claude config |
+| [`simple_server.py`](src/scripts/deployment/simple_server.py) | Basic health check server | Lightweight testing |
+| [`create_release.sh`](src/scripts/deployment/create_release.sh) | Create releases and Docker images | `./create_release.sh v0.5.1` |
+| [`claude_desktop_client.js`](src/scripts/deployment/claude_desktop_client.js) | Claude Desktop integration | Used in Claude config |
+| [`build_and_push_docker.sh`](src/scripts/deployment/build_and_push_docker.sh) | Docker build and push automation | `./build_and_push_docker.sh` |
 
-#### Testing Scripts (`src/scripts/testing/`)
+#### Core Testing Scripts (`src/scripts/testing/`)
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `test_mcp_jsonrpc.sh` | Test all 20 MCP tools | `./test_mcp_jsonrpc.sh` |
-| `test_production_mcp.py` | Validate production deployment | `python test_production_mcp.py` |
-| `test_sse_endpoint.sh` | Test SSE functionality | `./test_sse_endpoint.sh URL` |
-| `test_oauth_endpoints.py` | Test OAuth 2.1 implementation | `python test_oauth_endpoints.py` |
-| `simple_test.py` | Quick smoke tests | `python simple_test.py` |
+| [`test_mcp_jsonrpc.sh`](src/scripts/testing/test_mcp_jsonrpc.sh) | Test all 20 MCP tools | `./test_mcp_jsonrpc.sh` |
+| [`test_sse_endpoint.sh`](src/scripts/testing/test_sse_endpoint.sh) | Test SSE functionality | `./test_sse_endpoint.sh URL` |
+| [`test_full_mcp_comprehensive.py`](src/scripts/testing/test_full_mcp_comprehensive.py) | Comprehensive MCP testing | `python test_full_mcp_comprehensive.py` |
+| [`simple_test.py`](src/scripts/testing/simple_test.py) | Quick smoke tests | `python simple_test.py` |
+| [`test_production_mcp.py`](src/scripts/testing/test_production_mcp.py) | Production deployment validation | `python test_production_mcp.py` |
+| [`test_oauth_flow.py`](src/scripts/testing/test_oauth_flow.py) | OAuth 2.1 flow testing | `python test_oauth_flow.py` |
+| [`test_with_fast_agent.py`](src/scripts/testing/test_with_fast_agent.py) | Fast Agent MCP testing | `python test_with_fast_agent.py` |
+
+**Note**: 28 total testing scripts available for comprehensive validation
 
 #### Data Management (`src/scripts/data/`)
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `split_faiss_index.py` | Split indices for GitHub (<40MB) | `python split_faiss_index.py` |
-| `reconstruct_indices.sh` | Rebuild indices in Docker | Auto-runs during build |
+| [`split_faiss_index.py`](src/scripts/data/split_faiss_index.py) | Split indices for GitHub (<40MB) | `python split_faiss_index.py` |
+| [`reconstruct_indices.sh`](src/scripts/data/reconstruct_indices.sh) | Rebuild indices in Docker | Auto-runs during build |
 
 #### Content Management (`src/scripts/`)
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `scraping_manager.py` | Coordinate content extraction | `python scraping_manager.py` |
-| `check_new_content.py` | Check for updates | `python check_new_content.py` |
-| `validate_indices.py` | Validate FAISS indices | `python validate_indices.py` |
+| [`scraping_manager.py`](src/scripts/scraping_manager.py) | Coordinate content extraction | `python scraping_manager.py` |
+| [`check_new_content.py`](src/scripts/check_new_content.py) | Check for updates | `python check_new_content.py` |
+| [`validate_indices.py`](src/scripts/validate_indices.py) | Validate FAISS indices | `python validate_indices.py` |
+| [`update_manager.py`](src/scripts/update_manager.py) | Manage content updates | `python update_manager.py` |
+| [`integrated_update_system.py`](src/scripts/integrated_update_system.py) | Integrated update pipeline | `python integrated_update_system.py` |
+| [`cleanup_old_indices.py`](src/scripts/cleanup_old_indices.py) | Clean old FAISS indices | `python cleanup_old_indices.py` |
 
 #### Setup Scripts (`src/scripts/setup/`)
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `setup_claude_desktop.py` | Configure Claude Desktop | `python setup_claude_desktop.py` |
-| `claude_desktop_local_proxy.py` | Local development proxy | `python claude_desktop_local_proxy.py` |
+| [`setup_claude_desktop.py`](src/scripts/setup/setup_claude_desktop.py) | Configure Claude Desktop | `python setup_claude_desktop.py` |
+| [`claude_desktop_local_proxy.py`](src/scripts/setup/claude_desktop_local_proxy.py) | Local development proxy | `python claude_desktop_local_proxy.py` |
+
+#### Analysis Scripts (`src/scripts/analysis/`)
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| [`analyze_strunz_content.py`](src/scripts/analysis/analyze_strunz_content.py) | Analyze content structure and statistics | `python analyze_strunz_content.py` |
+| [`refined_strunz_analysis.py`](src/scripts/analysis/refined_strunz_analysis.py) | Enhanced content analysis with topic modeling | `python refined_strunz_analysis.py` |
 
 ### 📊 Testing Infrastructure
 
@@ -2204,14 +2250,26 @@ The project includes 25+ test scripts covering:
 # Test production deployment
 python src/scripts/testing/test_production_mcp.py
 
+# Test SSE endpoint
+./src/scripts/testing/test_sse_endpoint.sh https://strunz.up.railway.app/sse
+
 # Validate FAISS indices
 python src/scripts/validate_indices.py
 
 # Check for new content
 python src/scripts/check_new_content.py
 
+# Update content pipeline
+python src/scripts/integrated_update_system.py
+
 # Create a new release
 ./src/scripts/deployment/create_release.sh v0.6.0
+
+# Build and push Docker image
+./src/scripts/deployment/build_and_push_docker.sh
+
+# Analyze content structure
+python src/scripts/analysis/analyze_strunz_content.py
 ```
 
 For detailed script documentation, see [SCRIPTS.md](docs/SCRIPTS.md).
@@ -2410,43 +2468,7 @@ Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health
 
 ## 🛠️ Available MCP Tools
 
-The Dr. Strunz Knowledge MCP server provides 20 specialized tools for health optimization:
-
-### 1. Search & Discovery Tools
-- **`knowledge_search`** - Advanced semantic search across all sources (books, news, forum)
-- **`find_contradictions`** - Identify conflicting information and debates in health topics
-- **`trace_topic_evolution`** - Track how health concepts evolved over 20+ years
-
-### 2. Health Protocol Tools
-- **`create_health_protocol`** - Generate personalized treatment plans based on Dr. Strunz principles
-- **`analyze_supplement_stack`** - Evaluate safety and efficacy of supplement combinations
-- **`nutrition_calculator`** - Calculate nutritional needs following functional medicine principles
-
-### 3. Diagnostic Values Tool 🆕
-- **`get_optimal_diagnostic_values`** - Get Dr. Strunz's optimal lab ranges personalized by age, gender, and conditions
-
-### 4. Community Insights Tools
-- **`get_community_insights`** - Extract real-world experiences and success stories from forum
-- **`get_trending_insights`** - Discover trending health topics by user role
-- **`summarize_posts`** - Get AI-powered summaries of forum discussions
-
-### 5. Newsletter Analysis Tools
-- **`analyze_strunz_newsletter_evolution`** - Track 20+ years of newsletter content evolution
-- **`get_guest_authors_analysis`** - Understand Dr. Strunz's unique editorial approach
-- **`track_health_topic_trends`** - Follow specific health topic development over time
-
-### 6. User Journey Tools
-- **`get_health_assessment_questions`** - Generate personalized health questionnaire
-- **`assess_user_health_profile`** - Create user profile and assign appropriate role
-- **`create_personalized_protocol`** - Generate user-specific health protocols
-- **`get_user_journey_guide`** - Provide step-by-step journey based on user role
-
-### 7. Information Tools
-- **`get_dr_strunz_biography`** - Comprehensive biography and achievements
-- **`get_mcp_server_purpose`** - Server capabilities and usage guide
-- **`get_vector_db_analysis`** - Database statistics and content metrics
-- **`get_book_recommendations`** - Personalized Dr. Strunz book recommendations
-- **`compare_approaches`** - Compare different health approaches from multiple sources
+The Dr. Strunz Knowledge MCP server provides 20 specialized tools for health optimization. For detailed tool descriptions, see the [Enhanced MCP Server](#enhanced-mcp-server) section above.
 
 ### Production Endpoints
 

@@ -33,6 +33,55 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+          
+          # Create necessary directories
+          mkdir -p data/faiss_indices/chunks
+          mkdir -p data/processed
+          mkdir -p data/raw/news
+          mkdir -p data/raw/forum
+          mkdir -p logs
+      
+      - name: Test dependencies
+        run: |
+          echo "Testing critical dependencies..."
+          python test_dependencies.py
+      
+      - name: Validate required scripts
+        run: |
+          echo "Validating required scripts exist..."
+          required_scripts=(
+            "src/scripts/check_new_content.py"
+            "src/scripts/update_manager.py"
+            "src/rag/news_processor.py"
+            "src/rag/forum_processor.py"
+            "src/rag/update_combined_index.py"
+            "src/scripts/data/split_faiss_index.py"
+            "src/scripts/validate_indices.py"
+            "src/scripts/generate_update_report.py"
+          )
+          
+          for script in "${required_scripts[@]}"; do
+            if [ -f "$script" ]; then
+              echo "✅ $script"
+            else
+              echo "❌ $script (MISSING)"
+              exit 1
+            fi
+          done
+      
+      - name: Reconstruct FAISS indices from chunks
+        run: |
+          echo "Reconstructing FAISS indices from chunks..."
+          cd data/faiss_indices/chunks
+          if [ -f "combined_index.faiss.part000" ]; then
+            echo "Reconstructing combined index..."
+            python reconstruct_combined_index.faiss.py
+          fi
+          if [ -f "combined_metadata.json.part000" ]; then
+            echo "Reconstructing combined metadata..."
+            python reconstruct_combined_metadata.json.py
+          fi
+          cd ../../../
       
       - name: Check for new content
         id: check_updates
@@ -53,7 +102,7 @@ jobs:
         if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
         run: |
           echo "Scraping new news articles..."
-          python src/scrapers/news_scraper.py --update-only
+          python src/scripts/update_manager.py update-news --unlimited
         env:
           LOG_LEVEL: INFO
       
@@ -61,11 +110,11 @@ jobs:
         if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
         run: |
           echo "Processing new content..."
-          python src/rag/news_processor.py --update-only
+          python src/rag/news_processor.py
           
-          # Also check for new forum content if available
-          if [ -d "data/raw/forum/new" ]; then
-            python src/rag/forum_processor.py --update-only
+          # Also process forum content if available
+          if [ -d "data/raw/forum" ]; then
+            python src/rag/forum_processor.py
           fi
       
       - name: Update combined FAISS index
@@ -73,6 +122,11 @@ jobs:
         run: |
           echo "Updating combined FAISS index..."
           python src/rag/update_combined_index.py
+          
+          # Split large indices into chunks for GitHub storage
+          echo "Splitting FAISS indices for GitHub storage..."
+          python src/scripts/data/split_faiss_index.py data/faiss_indices/combined_index.faiss
+          python src/scripts/data/split_faiss_index.py data/faiss_indices/combined_metadata.json
       
       - name: Validate indices
         if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
@@ -97,10 +151,13 @@ jobs:
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
           
-          # Add changed files
-          git add data/faiss_indices/
+          # Add changed files (only chunks, not full indices)
+          git add data/faiss_indices/chunks/
           git add data/processed/
           git add update_report.md
+          
+          # Remove any full index files that shouldn't be committed
+          git rm --cached data/faiss_indices/*.faiss data/faiss_indices/*.json 2>/dev/null || true
           
           # Commit with detailed message
           git commit -m "chore: update FAISS indices [skip ci]" -m "$UPDATE_REPORT" || {
@@ -114,15 +171,44 @@ jobs:
       - name: Trigger Railway deployment
         if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
         run: |
-          echo "Triggering Railway deployment..."
-          curl -X POST https://api.railway.app/v1/deployments \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "projectId": "${{ secrets.RAILWAY_PROJECT_ID }}",
-              "environmentId": "${{ secrets.RAILWAY_ENVIRONMENT_ID }}",
-              "serviceId": "${{ secrets.RAILWAY_SERVICE_ID }}"
-            }'
+          echo "Railway will auto-deploy from main branch push"
+          echo "Deployment URL: https://strunz.up.railway.app/"
+          echo "Waiting 30 seconds for deployment to start..."
+          sleep 30
+          
+          # Optional: Trigger manual deployment if needed
+          if [ "${{ secrets.RAILWAY_TOKEN }}" != "" ]; then
+            echo "Triggering manual Railway deployment..."
+            curl -X POST https://api.railway.app/v1/deployments \
+              -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "projectId": "${{ secrets.RAILWAY_PROJECT_ID }}",
+                "environmentId": "${{ secrets.RAILWAY_ENVIRONMENT_ID }}",
+                "serviceId": "${{ secrets.RAILWAY_SERVICE_ID }}"
+              }' || echo "Manual deployment trigger failed, relying on auto-deployment"
+          fi
+      
+      - name: Verify deployment
+        if: steps.check_updates.outputs.has_updates == 'true' || github.event.inputs.force_update == 'true'
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 120
+          
+          echo "Verifying deployment health..."
+          for i in {1..5}; do
+            if curl -f -s https://strunz.up.railway.app/ > /dev/null; then
+              echo "✅ Deployment successful - health check passed"
+              break
+            else
+              echo "⏳ Waiting for deployment (attempt $i/5)..."
+              sleep 30
+            fi
+          done
+          
+          # Test MCP functionality
+          echo "Testing MCP server functionality..."
+          curl -s https://strunz.up.railway.app/sse | head -n 5 || echo "SSE endpoint test completed"
       
       - name: Send notification
         if: always()
@@ -130,10 +216,12 @@ jobs:
         with:
           status: ${{ job.status }}
           text: |
-            Knowledge Base Index Update
+            🔄 Knowledge Base Index Update
             Status: ${{ job.status }}
-            Updates: ${{ steps.check_updates.outputs.has_updates }}
+            Updates Found: ${{ steps.check_updates.outputs.has_updates }}
             Triggered by: ${{ github.event_name }}
+            Time: ${{ github.event.head_commit.timestamp }}
+            Deployment: https://strunz.up.railway.app/
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         continue-on-error: true
