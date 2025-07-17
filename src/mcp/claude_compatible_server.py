@@ -277,7 +277,7 @@ async def health_check():
             return JSONResponse({
                 "status": "healthy",
                 "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.5.4",
+                "version": "0.6.1",
                 "timestamp": datetime.now().isoformat()
             }, status_code=200)
         
@@ -288,7 +288,7 @@ async def health_check():
         response_data = {
             "status": health_status["overall"],
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.5.4",
+            "version": "0.6.1",
             "protocol_version": PROTOCOL_VERSION,
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
@@ -327,7 +327,7 @@ async def health_check():
         return JSONResponse({
             "status": "healthy",
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.5.4",
+            "version": "0.6.1",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "railway": {
@@ -350,7 +350,7 @@ async def detailed_health_check():
         diagnostics = {
             "server_info": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.5.4",
+                "version": "0.6.1",
                 "protocol_version": PROTOCOL_VERSION,
                 "transport": "sse",
                 "start_time": datetime.fromtimestamp(start_time).isoformat(),
@@ -417,7 +417,7 @@ async def railway_status():
             "health_status": health_status["overall"],
             "deployment_timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
-            "version": "0.5.4",
+            "version": "0.6.1",
             "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
             "critical_services": {
                 "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
@@ -545,6 +545,8 @@ async def messages_endpoint(request: Request, user=Depends(get_current_user)):
             result = handle_tools_list()
         elif method == "tools/call":
             result = await handle_tool_call(params)
+        elif method == "prompts/list":
+            result = handle_prompts_list()
         else:
             result = {
                 "error": {
@@ -602,7 +604,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.5.4"
+                "version": "0.6.1"
             }
         }
     }
@@ -636,6 +638,16 @@ def handle_tools_list() -> Dict:
     return {
         "result": {
             "tools": tools
+        }
+    }
+
+def handle_prompts_list() -> Dict:
+    """Handle prompts/list request"""
+    # For now, return an empty list of prompts
+    # In the future, this could be extended to include actual prompts
+    return {
+        "result": {
+            "prompts": []
         }
     }
 
