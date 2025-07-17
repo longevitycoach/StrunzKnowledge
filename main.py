@@ -46,10 +46,10 @@ def main():
         print("🔄 This may take 30-60 seconds while loading FAISS indices...")
         
         try:
-            # Try official SDK server for better Claude.ai compatibility
-            from src.mcp.mcp_sdk_server import main as run_server
+            # Try clean official SDK server for better Claude.ai compatibility
+            from src.mcp.mcp_sdk_clean import main as run_server
             print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
-            print("🎯 Starting MCP server with SSE transport...")
+            print("🎯 Starting MCP server with official SDK...")
             run_server()
         except Exception as e:
             print(f"⚠️ MCP SDK server failed: {e}")
@@ -63,7 +63,7 @@ def main():
         # Local development - try MCP SDK first
         print("🏠 Starting local development server...")
         try:
-            from src.mcp.mcp_sdk_server import main as run_server
+            from src.mcp.mcp_sdk_clean import main as run_server
             print("🎯 Using official MCP SDK...")
             run_server()
         except Exception as e:
