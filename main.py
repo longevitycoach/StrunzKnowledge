@@ -41,20 +41,20 @@ def main():
     print(f"⏰ Startup Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     if is_railway:
-        # Railway deployment - use Claude-compatible server
-        print("📡 Loading Railway deployment with Claude-compatible MCP server...")
+        # Railway deployment - use official MCP SDK server for proper prompts support
+        print("📡 Loading Railway deployment with official MCP SDK server...")
         print("🔄 This may take 30-60 seconds while loading FAISS indices...")
         
-        from src.mcp.claude_compatible_server import main as run_server
-        import asyncio
+        # Use official SDK server for better Claude.ai compatibility
+        from src.mcp.mcp_sdk_server import main as run_server
         
         print(f"✅ Server initialized in {time.time() - start_time:.2f}s")
-        print("🎯 Starting FastAPI server...")
-        asyncio.run(run_server())
+        print("🎯 Starting MCP server with SSE transport...")
+        run_server()
     else:
-        # Local development - use enhanced server
-        print("🏠 Starting local development server...")
-        from src.mcp.enhanced_server import main as run_server
+        # Local development - use official SDK in stdio mode
+        print("🏠 Starting local development server with official MCP SDK...")
+        from src.mcp.mcp_sdk_server import main as run_server
         run_server()
 
 if __name__ == "__main__":
