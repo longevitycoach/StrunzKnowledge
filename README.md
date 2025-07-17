@@ -2541,9 +2541,9 @@ The server supports multiple transports:
 Test configurations are available in `test-configs/` directory.
 
 #### Test Reports
-- 📊 [Latest Production Test Report v0.6.3](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.3.md) - Clean MCP SDK validation
-- ⚡ [Local Docker Test Report v0.6.3](docs/test-reports/LOCAL_DOCKER_TEST_REPORT_v0.6.3.md) - Local testing validation
-- 🚀 [Test Report v0.6.0](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.0.md) - OAuth integration tests
+- 📊 [Production Test Report v0.6.3](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.3_2025-07-17.md) - **100% Pass Rate** ✅
+- 🧪 [Enhanced Comprehensive Test Report v0.6.3](docs/test-reports/ENHANCED_COMPREHENSIVE_TEST_REPORT_v0.6.3_2025-07-17.md) - **73.7% Pass Rate** ⚠️
+- 📋 [Test Reports Index](docs/test-reports/README.md) - Complete testing documentation
 - 🔧 [Test Report v0.5.1](docs/test-reports/TEST_REPORT_v0.5.1.md) - Vector store fix validation
 
 #### Test Categories & Coverage
@@ -2950,8 +2950,9 @@ This knowledge base is for research and personal use. All content belongs to Dr.
 - ✅ **Enhanced Error Recovery** - Graceful degradation tested
 
 **📊 Test Validation:**
-- [Production Test Report v0.6.3](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.3_2025-07-17.md) - 100% pass rate
-- [Comprehensive Test Report v0.6.3](docs/test-reports/COMPREHENSIVE_TEST_REPORT_v0.6.3_2025-07-17.md) - Core functionality verified
+- [Production Test Report v0.6.3](docs/test-reports/PRODUCTION_TEST_REPORT_v0.6.3_2025-07-17.md) - **100% Pass Rate** ✅
+- [Enhanced Comprehensive Test Report v0.6.3](docs/test-reports/ENHANCED_COMPREHENSIVE_TEST_REPORT_v0.6.3_2025-07-17.md) - **73.7% Pass Rate** ⚠️ (missing local deps)
+- [Test Reports Index](docs/test-reports/README.md) - Complete testing documentation
 
 ---
 
