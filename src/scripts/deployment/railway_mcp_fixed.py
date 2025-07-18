@@ -46,7 +46,7 @@ from src.mcp.claude_compatible_server import (
 # Create FastAPI app
 app = FastAPI(
     title="Dr. Strunz Knowledge MCP Server",
-    version="0.7.0",
+    version="0.7.1",
     description="Fixed MCP server with proper tool handling"
 )
 
@@ -66,7 +66,7 @@ _tool_registry = None
 async def startup_event():
     """Initialize server on startup"""
     global _tool_registry
-    logger.info("Starting Fixed Railway MCP Server v0.7.0")
+    logger.info("Starting Fixed Railway MCP Server v0.7.1")
     
     # Preload vector store
     try:
@@ -161,7 +161,7 @@ async def messages_endpoint(request: Request):
                     },
                     "serverInfo": {
                         "name": "Dr. Strunz Knowledge MCP Server",
-                        "version": "0.7.0"
+                        "version": "0.7.1"
                     }
                 },
                 "id": body.get("id")

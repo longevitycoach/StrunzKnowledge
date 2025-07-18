@@ -2,7 +2,7 @@
 """
 Clean MCP SDK Server - Official Implementation
 Dr. Strunz Knowledge Base MCP Server using official MCP SDK
-Version: 0.7.0 - Clean implementation without web dependencies
+Version: 0.7.1 - Clean implementation without web dependencies
 """
 
 import os
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 # Server info
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.7.0"
+SERVER_VERSION = "0.7.1"
 PROTOCOL_VERSION = "2025-03-26"
 
 class StrunzKnowledgeServer:
