@@ -604,7 +604,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.6.1"
+                "version": "0.7.1"
             }
         }
     }

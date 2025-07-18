@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Fixed Railway MCP Server with Proper Tool Handling
-Combines OAuth/SSE from claude_compatible_server with proper MCP tool execution
+Claude.ai Compatible MCP Server
+This server implements Claude.ai's specific requirements on top of standard MCP
 """
 
 import os
@@ -9,8 +9,10 @@ import sys
 import asyncio
 import logging
 import json
+import uuid
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from datetime import datetime
 
 # Add src to path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -24,8 +26,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import FastAPI
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Query
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -45,9 +47,9 @@ from src.mcp.claude_compatible_server import (
 
 # Create FastAPI app
 app = FastAPI(
-    title="Dr. Strunz Knowledge MCP Server",
-    version="0.7.1",
-    description="Fixed MCP server with proper tool handling"
+    title="Dr. Strunz Knowledge MCP Server (Claude.ai Compatible)",
+    version="0.7.2",
+    description="MCP server with Claude.ai specific compatibility"
 )
 
 # Add CORS middleware
@@ -59,14 +61,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global tool registry reference
+# Global tool registry and client storage
 _tool_registry = None
+_claude_clients = {}  # Store Claude.ai client registrations
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize server on startup"""
     global _tool_registry
-    logger.info("Starting Fixed Railway MCP Server v0.7.1")
+    logger.info("Starting Claude.ai Compatible MCP Server v0.7.2")
     
     # Preload vector store
     try:
@@ -84,7 +87,7 @@ app.get("/")(health_check)
 app.get("/health")(health_check)
 app.get("/railway-health")(railway_health)
 
-# OAuth endpoints
+# Standard OAuth endpoints
 app.get("/.well-known/oauth-authorization-server")(oauth_metadata)
 app.get("/.well-known/oauth-protected-resource")(oauth_protected_resource)
 app.post("/oauth/register")(register_client)
@@ -92,82 +95,116 @@ app.get("/oauth/authorize")(authorize)
 app.post("/oauth/authorize")(authorize_post)
 app.post("/oauth/token")(token_endpoint)
 
-# MCP resource discovery
+# MCP resource discovery - Enhanced for Claude.ai
 @app.get("/.well-known/mcp/resource")
 async def mcp_resource():
-    """MCP resource discovery endpoint"""
+    """Enhanced MCP resource discovery for Claude.ai"""
+    base_url = f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
+    
     return JSONResponse({
         "mcpVersion": "2025-03-26",
-        "transport": ["sse"],
+        "serverInfo": {
+            "name": "Dr. Strunz Knowledge MCP Server",
+            "version": "0.7.2",
+            "vendor": "Longevity Coach"
+        },
+        "transport": ["sse", "http"],
         "endpoints": {
-            "sse": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}/sse",
-            "messages": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}/messages"
+            "sse": f"{base_url}/sse",
+            "messages": f"{base_url}/messages",
+            "tools": f"{base_url}/tools",
+            "prompts": f"{base_url}/prompts"
         },
         "authentication": {
             "type": "oauth2",
+            "required": False,  # Claude.ai might not require auth
             "oauth2": {
-                "authorizationUrl": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}/oauth/authorize",
-                "tokenUrl": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}/oauth/token",
+                "authorizationUrl": f"{base_url}/oauth/authorize",
+                "tokenUrl": f"{base_url}/oauth/token",
+                "registrationUrl": f"{base_url}/oauth/register",
                 "scopes": {
                     "read": "Read access to knowledge base",
                     "write": "Write access (not implemented)"
                 }
             }
+        },
+        "capabilities": {
+            "tools": True,
+            "prompts": True,
+            "resources": False,
+            "sampling": False
         }
     })
 
-# Claude.ai specific endpoint
+# Claude.ai specific authentication endpoint
 @app.get("/api/organizations/{org_id}/mcp/start-auth/{auth_id}")
-async def claude_ai_start_auth(org_id: str, auth_id: str, redirect_url: str = None):
+async def claude_ai_start_auth(
+    org_id: str, 
+    auth_id: str,
+    redirect_url: Optional[str] = Query(None),
+    open_in_browser: Optional[int] = Query(None)
+):
     """Claude.ai specific authentication endpoint"""
-    logger.info(f"Claude.ai auth request: org={org_id}, auth={auth_id}, redirect={redirect_url}")
+    logger.info(f"Claude.ai auth: org={org_id}, auth={auth_id}, redirect={redirect_url}, browser={open_in_browser}")
     
-    # Claude.ai expects a redirect to OAuth flow
-    # Generate a client and redirect to our standard OAuth
-    import uuid
-    client_id = f"claude_{uuid.uuid4().hex[:16]}"
+    # Store Claude.ai client info
+    client_id = f"claude_{auth_id[:16]}"
+    _claude_clients[client_id] = {
+        "org_id": org_id,
+        "auth_id": auth_id,
+        "redirect_url": redirect_url,
+        "created_at": datetime.now().isoformat()
+    }
     
-    # Register the client internally
+    # Option 1: Return success directly (no OAuth needed)
+    if os.environ.get("CLAUDE_AI_NO_AUTH", "true").lower() == "true":
+        return JSONResponse({
+            "status": "success",
+            "server_url": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}",
+            "auth_not_required": True,
+            "message": "MCP server ready for use"
+        })
+    
+    # Option 2: Redirect to OAuth flow
     oauth_redirect = redirect_url or "https://claude.ai/api/callback"
+    oauth_params = {
+        "client_id": client_id,
+        "redirect_uri": oauth_redirect,
+        "response_type": "code",
+        "state": auth_id,
+        "scope": "read"
+    }
     
-    # Redirect to our standard OAuth authorize endpoint
-    from fastapi.responses import RedirectResponse
-    oauth_url = f"/oauth/authorize?client_id={client_id}&redirect_uri={oauth_redirect}&response_type=code&state={auth_id}"
+    # Build OAuth URL
+    oauth_url = f"/oauth/authorize?" + "&".join([f"{k}={v}" for k, v in oauth_params.items()])
     
     return RedirectResponse(url=oauth_url, status_code=302)
 
-# SSE endpoint
-@app.get("/sse")
-async def sse_endpoint(request: Request):
-    """SSE endpoint for MCP communication"""
-    from fastapi.responses import StreamingResponse
+# Claude.ai callback endpoint
+@app.get("/api/callback")
+async def claude_ai_callback(code: str = None, state: str = None, error: str = None):
+    """Handle OAuth callback for Claude.ai"""
+    if error:
+        return JSONResponse({"error": error}, status_code=400)
     
-    async def event_generator():
-        # Send initial connection ready
-        yield f"event: message\ndata: {json.dumps({'jsonrpc': '2.0', 'method': 'connection/ready', 'params': {'sessionId': 'fixed-session'}})}\n\n"
-        
-        # Keep connection alive
-        while True:
-            await asyncio.sleep(30)
-            yield f"event: ping\ndata: {json.dumps({'type': 'ping'})}\n\n"
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
-        }
-    )
+    return JSONResponse({
+        "status": "success",
+        "code": code,
+        "state": state,
+        "message": "Authentication successful"
+    })
 
-# Messages endpoint with proper tool handling
+# Enhanced messages endpoint with better error handling
 @app.post("/messages")
 async def messages_endpoint(request: Request):
-    """Handle MCP messages via HTTP POST with tool execution"""
+    """Handle MCP messages with Claude.ai compatibility"""
     try:
         body = await request.json()
         method = body.get("method", "")
+        
+        # Log Claude.ai requests for debugging
+        if "claude" in request.headers.get("user-agent", "").lower():
+            logger.info(f"Claude.ai request: {method}")
         
         # Handle different MCP methods
         if method == "initialize":
@@ -177,18 +214,20 @@ async def messages_endpoint(request: Request):
                     "protocolVersion": "2025-03-26",
                     "capabilities": {
                         "tools": {"listChanged": False},
-                        "prompts": {"listChanged": False}
+                        "prompts": {"listChanged": False},
+                        "resources": {"subscribe": False, "listChanged": False},
+                        "sampling": {}
                     },
                     "serverInfo": {
                         "name": "Dr. Strunz Knowledge MCP Server",
-                        "version": "0.7.1"
+                        "version": "0.7.2",
+                        "vendor": "Longevity Coach"
                     }
                 },
                 "id": body.get("id")
             })
         
         elif method == "tools/list":
-            # List all available tools
             tools = []
             for name, func in _tool_registry.items():
                 tools.append({
@@ -208,17 +247,15 @@ async def messages_endpoint(request: Request):
             })
         
         elif method == "tools/call":
-            # Execute tool
             params = body.get("params", {})
             tool_name = params.get("name")
             tool_args = params.get("arguments", {})
             
             if tool_name in _tool_registry:
                 try:
-                    # Execute the tool
                     tool_func = _tool_registry[tool_name]
                     
-                    # Handle async functions
+                    # Execute tool
                     if asyncio.iscoroutinefunction(tool_func):
                         result = await tool_func(**tool_args)
                     else:
@@ -263,7 +300,6 @@ async def messages_endpoint(request: Request):
                 })
         
         elif method == "prompts/list":
-            # List prompts
             prompts = [
                 {
                     "name": "health_assessment",
@@ -298,7 +334,10 @@ async def messages_endpoint(request: Request):
             })
         
         else:
-            # Unknown method
+            # Log unknown methods from Claude.ai
+            if "claude" in request.headers.get("user-agent", "").lower():
+                logger.warning(f"Unknown Claude.ai method: {method}")
+            
             return JSONResponse({
                 "jsonrpc": "2.0",
                 "error": {
@@ -319,6 +358,32 @@ async def messages_endpoint(request: Request):
             "id": body.get("id") if "body" in locals() else None
         }, status_code=500)
 
+# SSE endpoint
+@app.get("/sse")
+async def sse_endpoint(request: Request):
+    """SSE endpoint for MCP communication"""
+    from fastapi.responses import StreamingResponse
+    
+    async def event_generator():
+        # Send initial connection ready
+        session_id = str(uuid.uuid4())
+        yield f"event: message\ndata: {json.dumps({'jsonrpc': '2.0', 'method': 'connection/ready', 'params': {'sessionId': session_id}})}\n\n"
+        
+        # Keep connection alive
+        while True:
+            await asyncio.sleep(30)
+            yield f"event: ping\ndata: {json.dumps({'type': 'ping', 'timestamp': datetime.now().isoformat()})}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
 def main():
     """Main entry point"""
     port = int(os.environ.get("PORT", 8000))
@@ -326,7 +391,7 @@ def main():
     
     logger.info(f"Starting server on {host}:{port}")
     logger.info(f"Public domain: {os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}")
-    logger.info("Fixed MCP server with proper tool execution")
+    logger.info("Claude.ai compatible MCP server with enhanced endpoints")
     
     # Run server
     uvicorn.run(app, host=host, port=port, log_level="info")

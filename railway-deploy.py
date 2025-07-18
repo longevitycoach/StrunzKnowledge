@@ -32,11 +32,11 @@ def main():
     print("🔄 This may take 30-60 seconds while loading FAISS indices...")
     
     try:
-        # Try Fixed Railway MCP server with proper tool handling
-        from src.scripts.deployment.railway_mcp_fixed import main as run_server
+        # Try Claude.ai Compatible MCP server
+        from src.scripts.deployment.railway_claude_ai_compatible import main as run_server
         import asyncio
-        print(f"✅ Fixed Railway MCP server loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting fixed MCP server with tool execution...")
+        print(f"✅ Claude.ai Compatible MCP server loaded in {time.time() - start_time:.2f}s")
+        print("🎯 Starting Claude.ai compatible server with enhanced endpoints...")
         asyncio.run(run_server())
         
     except Exception as e:

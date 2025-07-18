@@ -42,3 +42,94 @@ The following Dr. Ulrich Strunz books have been processed:
 - Always run all tests locally in docker first, before checking in the code
 - Exceptions: documentation and tests do not require docker testing
 - Configure Railway to not deploy with tests or documentation changes
+
+## MCP Claude.ai Integration Investigation Plan
+
+### Current Issue Analysis (2025-07-18)
+Claude.ai returns "not_available" error when trying to add our MCP server. Investigation reveals:
+
+1. **OAuth Flow Works**: `/oauth/authorize` returns 307 redirect correctly
+2. **Tool Execution Works**: `tools/call` method executes properly
+3. **Missing Endpoint**: Claude.ai tries to access `/api/organizations/{org_id}/mcp/start-auth/{auth_id}` which doesn't exist on our server
+
+### Root Cause Hypothesis
+Claude.ai might be using a proprietary API wrapper around standard MCP, expecting specific endpoints that aren't part of the official MCP specification.
+
+### Testing Plan
+
+#### Phase 1: Official MCP Client Testing
+1. **Install Official Python MCP SDK**
+   ```bash
+   pip install mcp
+   ```
+
+2. **Create Test Client Script**
+   - Use official MCP client to connect to our server
+   - Test OAuth2 authentication flow
+   - Verify tool listing and execution
+   - Document any missing endpoints or methods
+
+3. **Test Transport Types**
+   - SSE (Server-Sent Events) - Currently implemented
+   - HTTP/REST - Currently implemented
+   - stdio - Used by Claude Desktop (local only)
+   - WebSocket - Not implemented
+
+#### Phase 2: Claude.ai Specific Requirements
+1. **Analyze Claude.ai Requests**
+   - Monitor all incoming requests from Claude.ai
+   - Document the exact API flow Claude.ai expects
+   - Identify proprietary endpoints like `/api/organizations/.../mcp/start-auth/...`
+
+2. **Implement Missing Endpoints**
+   - Add Claude.ai specific endpoints if needed
+   - Maintain compatibility with standard MCP
+
+#### Phase 3: Authentication Investigation
+1. **OAuth2 vs API Key**
+   - Claude.ai might expect API key authentication
+   - Test if OAuth2 is actually used or just for show
+
+2. **Discovery Endpoints**
+   - Verify `.well-known/mcp/resource` format
+   - Check if additional discovery endpoints are needed
+
+### Implementation Strategy
+
+#### Option 1: Add Claude.ai Compatibility Layer
+```python
+# Add Claude.ai specific endpoints
+@app.get("/api/organizations/{org_id}/mcp/start-auth/{auth_id}")
+async def claude_ai_start_auth(org_id: str, auth_id: str):
+    # Redirect to standard OAuth flow
+    return RedirectResponse("/oauth/authorize?...")
+```
+
+#### Option 2: Use Different Transport
+- Claude.ai might only work with stdio transport (local)
+- HTTP/SSE might be for different use cases
+
+#### Option 3: Contact Anthropic Support
+- The "not_available" error might indicate server registration issue
+- May need to register our server with Anthropic
+
+### Testing Commands
+
+```bash
+# Test with official MCP client
+python -m mcp.client connect https://strunz.up.railway.app
+
+# Test OAuth flow manually
+curl -X POST https://strunz.up.railway.app/oauth/register \
+  -d '{"client_name": "Test Client", "redirect_uris": ["https://claude.ai/callback"]}'
+
+# Monitor Railway logs
+railway logs --service strunz-knowledge --tail
+```
+
+### Success Criteria
+- [ ] Official MCP client can connect and execute tools
+- [ ] Claude.ai can discover our server
+- [ ] Claude.ai can authenticate (if needed)
+- [ ] Claude.ai can list and execute tools
+- [ ] No "not_available" errors
