@@ -32,15 +32,16 @@ def main():
     print("🔄 This may take 30-60 seconds while loading FAISS indices...")
     
     try:
-        # Try clean MCP SDK first
-        from src.mcp.mcp_sdk_clean import main as run_server
-        print(f"✅ Clean MCP SDK loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting MCP server with official SDK...")
-        run_server()
+        # Try Railway official MCP server with SSE support
+        from src.scripts.deployment.railway_official_mcp_server import main as run_server
+        import asyncio
+        print(f"✅ Railway MCP server loaded in {time.time() - start_time:.2f}s")
+        print("🎯 Starting official MCP server with SSE transport...")
+        asyncio.run(run_server())
         
     except Exception as e:
-        print(f"⚠️ Clean MCP SDK failed: {e}")
-        print("🔄 Falling back to compatible server...")
+        print(f"⚠️ Railway MCP server failed: {e}")
+        print("🔄 Falling back to Claude compatible server...")
         
         try:
             from src.mcp.claude_compatible_server import main as run_server
