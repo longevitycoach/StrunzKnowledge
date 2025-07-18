@@ -47,11 +47,12 @@ from src.scripts.startup.preload_vector_store import preload_vector_store
 from src.mcp.enhanced_server import tool_registry
 from src.mcp.claude_compatible_server import (
     health_check,
-    oauth_discovery,
-    oauth_register,
-    oauth_authorize_get,
-    oauth_authorize_post,
-    oauth_token,
+    oauth_metadata,
+    oauth_protected_resource,
+    register_client,
+    authorize,
+    authorize_post,
+    token_endpoint,
     railway_health
 )
 
@@ -157,12 +158,12 @@ app.get("/health")(health_check)
 app.get("/railway-health")(railway_health)
 
 # OAuth endpoints
-app.get("/.well-known/oauth-authorization-server")(oauth_discovery)
-app.get("/.well-known/oauth-protected-resource")(oauth_discovery)
-app.post("/oauth/register")(oauth_register)
-app.get("/oauth/authorize")(oauth_authorize_get)
-app.post("/oauth/authorize")(oauth_authorize_post)
-app.post("/oauth/token")(oauth_token)
+app.get("/.well-known/oauth-authorization-server")(oauth_metadata)
+app.get("/.well-known/oauth-protected-resource")(oauth_protected_resource)
+app.post("/oauth/register")(register_client)
+app.get("/oauth/authorize")(authorize)
+app.post("/oauth/authorize")(authorize_post)
+app.post("/oauth/token")(token_endpoint)
 
 # MCP resource discovery
 @app.get("/.well-known/mcp/resource")
