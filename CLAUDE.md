@@ -37,3 +37,8 @@ The following Dr. Ulrich Strunz books have been processed:
 ### Test Report Guidelines
 - **All Test Reports need a comprehensive test coverage of all MCPO capabilities.**
 - **Positive and negative tests must be implemented for all roles, use cases, and user journeys.**
+
+### Deployment Guidelines
+- Always run all tests locally in docker first, before checking in the code
+- Exceptions: documentation and tests do not require docker testing
+- Configure Railway to not deploy with tests or documentation changes
