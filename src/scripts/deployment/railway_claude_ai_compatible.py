@@ -384,7 +384,7 @@ async def sse_endpoint(request: Request):
         }
     )
 
-def main():
+async def main():
     """Main entry point"""
     port = int(os.environ.get("PORT", 8000))
     host = "0.0.0.0"
@@ -394,7 +394,10 @@ def main():
     logger.info("Claude.ai compatible MCP server with enhanced endpoints")
     
     # Run server
-    uvicorn.run(app, host=host, port=port, log_level="info")
+    config = uvicorn.Config(app, host=host, port=port, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
