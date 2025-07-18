@@ -32,11 +32,11 @@ def main():
     print("🔄 This may take 30-60 seconds while loading FAISS indices...")
     
     try:
-        # Try Railway official MCP server with SSE support
-        from src.scripts.deployment.railway_official_mcp_server import main as run_server
+        # Try Fixed Railway MCP server with proper tool handling
+        from src.scripts.deployment.railway_mcp_fixed import main as run_server
         import asyncio
-        print(f"✅ Railway MCP server loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting official MCP server with SSE transport...")
+        print(f"✅ Fixed Railway MCP server loaded in {time.time() - start_time:.2f}s")
+        print("🎯 Starting fixed MCP server with tool execution...")
         asyncio.run(run_server())
         
     except Exception as e:
