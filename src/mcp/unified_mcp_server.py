@@ -146,6 +146,7 @@ async def startup_event():
 # Health check endpoints
 @app.get("/")
 @app.get("/health")
+@app.post("/")  # Handle Claude.ai POST requests after OAuth
 async def health_check():
     """Basic health check endpoint"""
     return JSONResponse({
@@ -581,8 +582,12 @@ async def handle_prompt_get(body: Dict) -> JSONResponse:
 
 # SSE endpoint
 @app.get("/sse")
+@app.post("/sse")  # Handle Claude.ai POST requests
 async def sse_endpoint(request: Request):
     """SSE endpoint for real-time communication"""
+    # Log the request for debugging
+    logger.info(f"SSE request: method={request.method}, headers={dict(request.headers)}")
+    
     async def event_generator():
         # Send initial connection message
         session_id = str(uuid.uuid4())
