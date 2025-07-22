@@ -33,7 +33,33 @@ import uvicorn
 
 # Import our components
 from src.scripts.startup.preload_vector_store import preload_vector_store
-from src.mcp.enhanced_server import tool_registry
+
+# Initialize simple tool registry for testing
+def get_mcp_server_purpose():
+    """Get information about this MCP server"""
+    return {
+        "name": "Dr. Strunz Knowledge MCP Server",
+        "version": "0.7.3",
+        "purpose": "Claude.ai compatible MCP server with health and nutrition tools",
+        "endpoint_test": "Claude.ai endpoint working"
+    }
+
+def get_dr_strunz_biography():
+    """Get Dr. Strunz's biography"""
+    return {
+        "name": "Dr. Ulrich Strunz",
+        "specialty": "Molecular medicine and nutritional therapy",
+        "books": "13 books on health, nutrition, and longevity",
+        "approach": "Evidence-based preventive medicine"
+    }
+
+# Simple tool registry for testing
+_tool_registry = {
+    "get_mcp_server_purpose": get_mcp_server_purpose,
+    "get_dr_strunz_biography": get_dr_strunz_biography,
+}
+
+logger.info(f"Loaded {len(_tool_registry)} tools (simple registry for Claude.ai testing)")
 from src.mcp.claude_compatible_server import (
     health_check,
     oauth_metadata,
@@ -78,9 +104,11 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Failed to preload vector store: {e}")
     
-    # Store tool registry
-    _tool_registry = tool_registry
-    logger.info(f"Loaded {len(tool_registry)} tools")
+    # Tool registry already loaded globally
+    if _tool_registry is not None:
+        logger.info(f"Loaded {len(_tool_registry)} tools")
+    else:
+        logger.error("Tool registry is None - tools not available")
 
 # Health endpoints
 app.get("/")(health_check)
@@ -251,11 +279,11 @@ async def messages_endpoint(request: Request):
             tool_name = params.get("name")
             tool_args = params.get("arguments", {})
             
-            if tool_name in _tool_registry:
+            if _tool_registry and tool_name in _tool_registry:
                 try:
                     tool_func = _tool_registry[tool_name]
                     
-                    # Execute tool
+                    # Execute tool (functions should already be extracted)
                     if asyncio.iscoroutinefunction(tool_func):
                         result = await tool_func(**tool_args)
                     else:
