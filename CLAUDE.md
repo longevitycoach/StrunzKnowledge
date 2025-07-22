@@ -200,3 +200,14 @@ railway logs --service strunz-knowledge --tail
 
 ### SDK and Library Guidance
 - **Dont use FastMCP use the official MCP SDK for Python**: https://github.com/modelcontextprotocol/python-sdk
+
+## CLI Commands and Deployment Guidance
+
+### Railway CLI Commands
+- **Check Build Errors**: `railway logs --service strunz-knowledge`
+- **Check Deployment Errors**: `railway logs --deployment`
+- **Run Specific Service Logs**: `railway logs --service <service-name>`
+- **Check Latest Release Endpoint**:
+  - Local: `http://localhost:3000`
+  - Docker: `http://localhost:8080`
+  - Railway Production: `https://strunz.up.railway.app`

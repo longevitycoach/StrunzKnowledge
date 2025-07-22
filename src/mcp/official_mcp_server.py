@@ -62,7 +62,7 @@ except ImportError as e:
 
 # Server configuration
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.7.8"
+SERVER_VERSION = "0.7.9"
 
 class StrunzOfficialMCPServer:
     """Official MCP SDK implementation for Dr. Strunz Knowledge Base"""
