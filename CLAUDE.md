@@ -43,6 +43,22 @@ The following Dr. Ulrich Strunz books have been processed:
 - Exceptions: documentation and tests do not require docker testing
 - Configure Railway to not deploy with tests or documentation changes
 
+### GitHub Release Guidelines
+- **MANDATORY**: Every time you create a git tag (e.g., v0.7.5), you MUST create a corresponding GitHub release
+- **Command**: Use `gh release create` immediately after pushing tags
+- **Format**: Include comprehensive release notes with:
+  - Title summarizing the main change
+  - What's New/Fixed section
+  - Testing evidence or results
+  - Technical details of changes
+  - Breaking changes (if any)
+- **Example**:
+  ```bash
+  git tag -a v0.7.5 -m "Short description"
+  git push origin v0.7.5
+  gh release create v0.7.5 --title "v0.7.5: Main Feature" --notes "## What's New..."
+  ```
+
 ## MCP Claude.ai Integration Investigation Plan
 
 ### Current Issue Analysis (2025-07-18)
