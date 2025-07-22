@@ -1036,6 +1036,8 @@ This project provides a comprehensive searchable database of Dr. Strunz's health
 
 The knowledge base includes 13 carefully curated books by Dr. Ulrich Strunz:
 
+> **📚 Note on Book Processing**: The PDF books have been pre-processed and indexed into the FAISS vector database during initial setup. The extraction process using Docling (see `docs/BOOK_EXTRACTION_GUIDE.md`) is only needed for initial data preparation or when adding new books. **Production deployments do not require Docling or any PDF processing dependencies** - they use the pre-built FAISS indices included in the repository.
+
 #### 1. Fitness & Nutrition
 - **Das Strunz-Low-Carb-Kochbuch** (2016) - Comprehensive low-carb recipes
 - **No-Carb-Smoothies** (2015) - Sugar-free smoothie recipes
@@ -2283,6 +2285,8 @@ For detailed script documentation, see [SCRIPTS.md](docs/SCRIPTS.md).
 - 4GB RAM minimum
 - 2GB free disk space
 - macOS, Linux, or Windows with WSL
+
+> **💡 Production Note**: The Docling library is NOT required for running the MCP server or searching the knowledge base. All book content has been pre-processed into FAISS indices. Docling is only needed if you want to process new PDF books (see `docs/BOOK_EXTRACTION_GUIDE.md`).
 
 ### Installation
 

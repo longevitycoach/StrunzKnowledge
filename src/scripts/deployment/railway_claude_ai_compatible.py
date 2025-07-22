@@ -74,7 +74,7 @@ from src.mcp.claude_compatible_server import (
 # Create FastAPI app
 app = FastAPI(
     title="Dr. Strunz Knowledge MCP Server (Claude.ai Compatible)",
-    version="0.7.2",
+    version="0.7.4",
     description="MCP server with Claude.ai specific compatibility"
 )
 
@@ -87,15 +87,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global tool registry and client storage
-_tool_registry = None
+# Global client storage
 _claude_clients = {}  # Store Claude.ai client registrations
+# Note: _tool_registry is already initialized above with simple tools
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize server on startup"""
-    global _tool_registry
-    logger.info("Starting Claude.ai Compatible MCP Server v0.7.2")
+    logger.info("Starting Claude.ai Compatible MCP Server v0.7.4")
     
     # Preload vector store
     try:
