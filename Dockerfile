@@ -1,4 +1,5 @@
 # Use Python 3.11 slim image as base
+# Rebuild trigger: v0.7.10 deployment fix
 FROM python:3.11-slim
 
 # Set environment variables
