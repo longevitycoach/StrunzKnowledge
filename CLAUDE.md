@@ -59,6 +59,20 @@ The following Dr. Ulrich Strunz books have been processed:
   gh release create v0.7.5 --title "v0.7.5: Main Feature" --notes "## What's New..."
   ```
 
+### Release Version Synchronization
+- **MANDATORY**: When creating a new release, update version numbers in ALL target systems
+- **Files to update**:
+  - `railway-deploy.py` - Main Railway deployment script
+  - `src/scripts/deployment/railway_claude_ai_compatible.py` - All version references
+  - `src/scripts/deployment/railway_official_mcp_server.py`
+  - `src/scripts/deployment/railway_mcp_fixed.py`
+  - `src/mcp/claude_compatible_server.py` - All version references
+  - `src/mcp/enhanced_server.py`
+  - `Dockerfile` (if version is referenced)
+  - `README.md` (if version is displayed)
+- **Use consistent version format**: `0.7.X` (not `v0.7.X` in code)
+- **Verify before committing**: Run `grep -r "0\\.7\\.[0-9]" src/ railway-deploy.py | grep -v test`
+
 ## MCP Claude.ai Integration Investigation Plan
 
 ### Current Issue Analysis (2025-07-18)
