@@ -2545,7 +2545,8 @@ The server supports multiple transports:
 Test configurations are available in `test-configs/` directory.
 
 #### Test Reports
-- 📊 [Comprehensive Test Report v0.6.3](docs/test-reports/COMPREHENSIVE_TEST_REPORT_v0.6.3.md) - Full MCP capabilities test with all inputs/outputs
+- 📊 **[Comprehensive Release Test Report v0.7.9](docs/test-reports/COMPREHENSIVE_RELEASE_TEST_REPORT_v0.7.9.md)** - Latest release with full MCP tools, OAuth2 authentication, and detailed I/O tables
+- 📊 [Comprehensive Test Report v0.6.3](docs/test-reports/COMPREHENSIVE_TEST_REPORT_v0.6.3.md) - Previous release MCP capabilities test
 
 #### Test Categories & Coverage
 
@@ -2590,10 +2591,12 @@ python -m pytest src/tests/ -v -s
 
 - **Latest Version Tested**: v0.6.3
 - **Test Coverage**: 100% (20/20 MCP tools)
+- **OAuth2 Tests**: 75% passing (12/16 tests)
+- **Overall Success Rate**: 90.9% (50/55 tests)
 - **Test Environment**: Docker + Railway Production
-- **Status**: ✅ All tests passing
+- **Status**: ✅ All critical tests passing
 
-📋 **View Test Report**: [Comprehensive Test Report v0.6.3](docs/test-reports/COMPREHENSIVE_TEST_REPORT_v0.6.3.md)
+📋 **Latest Test Report**: [Comprehensive Release Test Report v0.7.9](docs/test-reports/COMPREHENSIVE_RELEASE_TEST_REPORT_v0.7.9.md)
 
 ## Deployment
 
@@ -3110,7 +3113,8 @@ The server uses **Server-Sent Events (SSE)** transport for real-time communicati
 - [Deployment Status](docs/DEPLOYMENT_STATUS.md) - Current deployment info
 
 ### Test Reports
-- [Comprehensive Test Report v0.6.3](docs/test-reports/COMPREHENSIVE_TEST_REPORT_v0.6.3.md) - Full test coverage with detailed I/O
+- **[Comprehensive Release Test Report v0.7.9](docs/test-reports/COMPREHENSIVE_RELEASE_TEST_REPORT_v0.7.9.md)** - Latest release with OAuth2 testing and detailed I/O tables
+- [Comprehensive Test Report v0.6.3](docs/test-reports/COMPREHENSIVE_TEST_REPORT_v0.6.3.md) - Previous release test coverage
 
 ## License
 
