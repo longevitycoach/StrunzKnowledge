@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 # Import FastAPI components
 from fastapi import FastAPI, Request, Query
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -298,7 +298,7 @@ async def claude_ai_start_auth(
     open_in_browser: Optional[int] = Query(None)
 ):
     """Claude.ai specific authentication endpoint"""
-    logger.info(f"Claude.ai auth request: org={org_id}, auth={auth_id}")
+    logger.info(f"Claude.ai auth request: org={org_id}, auth={auth_id}, redirect={redirect_url}")
     
     # Store Claude.ai client info
     client_id = f"claude_{auth_id[:16]}"
@@ -309,13 +309,76 @@ async def claude_ai_start_auth(
         "created_at": datetime.now().isoformat()
     }
     
-    # Return success directly (no OAuth needed for now)
-    return JSONResponse({
-        "status": "success",
-        "server_url": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}",
-        "auth_not_required": True,
-        "message": "MCP server ready for use"
-    })
+    # Check if we should skip OAuth (for simpler integration)
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "false").lower() == "true":
+        return JSONResponse({
+            "status": "success",
+            "server_url": f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}",
+            "auth_not_required": True,
+            "message": "MCP server ready for use"
+        })
+    
+    # Otherwise redirect to OAuth flow
+    base_url = f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
+    oauth_params = {
+        "response_type": "code",
+        "client_id": client_id,
+        "redirect_uri": redirect_url or f"{base_url}/api/mcp/auth_callback",
+        "state": auth_id,
+        "scope": "read"
+    }
+    
+    oauth_url = f"{base_url}/oauth/authorize?" + urllib.parse.urlencode(oauth_params)
+    return RedirectResponse(url=oauth_url, status_code=302)
+
+
+# Claude.ai OAuth callback endpoint
+@app.get("/api/mcp/auth_callback")
+async def claude_ai_oauth_callback(
+    code: str = Query(None),
+    state: str = Query(None),
+    error: str = Query(None)
+):
+    """Handle OAuth callback for Claude.ai"""
+    logger.info(f"OAuth callback: code={code[:10] if code else None}..., state={state}, error={error}")
+    
+    if error:
+        return JSONResponse({
+            "status": "error",
+            "error": error
+        }, status_code=400)
+    
+    # Return success HTML that Claude.ai can understand
+    return HTMLResponse(f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>MCP Server Connected</title>
+        <script>
+            // Notify parent window if in iframe
+            if (window.parent !== window) {{
+                window.parent.postMessage({{
+                    type: 'mcp-oauth-success',
+                    code: '{code}',
+                    state: '{state}'
+                }}, '*');
+            }}
+            
+            // Try to close window after success
+            setTimeout(() => {{
+                window.close();
+            }}, 2000);
+        </script>
+    </head>
+    <body style="font-family: system-ui; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+        <div style="text-align: center;">
+            <h1 style="color: #10b981;">✓ Successfully Connected!</h1>
+            <p>Dr. Strunz Knowledge MCP Server is now connected.</p>
+            <p>You can close this window.</p>
+        </div>
+    </body>
+    </html>
+    """)
 
 
 # MCP Messages endpoint
