@@ -68,9 +68,9 @@ def update_version(new_version: str):
                     content
                 )
             else:
-                # For plain version numbers
+                # For plain version numbers - be more specific to avoid replacing IP addresses
                 new_content = re.sub(
-                    r'\d+\.\d+\.\d+',
+                    r'(?<!")(?<!/)(?<!\.)(\d+\.\d+\.\d+)(?!")(?!\.)',
                     new_version,
                     content
                 )
