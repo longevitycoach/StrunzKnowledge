@@ -32,6 +32,15 @@ The following Dr. Ulrich Strunz books have been processed:
 - **Status**: Limited data available (only showing date 02.05.2020)
 - **Note**: Forum scraping appears incomplete and may need to be redone
 
+## Project Structure and Development Guidelines
+
+### Project Organization
+- **Do not create scripts in the root file**
+- **Create scripts in:**
+  - `src/scripts/` for main scripts
+  - `src/test/` for test scripts
+- **Create documentation as markdown (.md) files in the `docs/` folder**
+
 ## Test Reports and Development Guidance
 
 ### Test Report Guidelines
@@ -61,13 +70,17 @@ The following Dr. Ulrich Strunz books have been processed:
 
 ### Release Version Synchronization
 - **MANDATORY**: When creating a new release, update version numbers in ALL target systems
-- **Files to update**:
+- **CRITICAL**: The version shown at https://strunz.up.railway.app/ comes from `src/mcp/claude_compatible_server.py` (health_check function)
+- **Automated Update Script**: Use `python src/scripts/update_version.py X.Y.Z` to update all versions
+- **Files automatically updated**:
   - `railway-deploy.py` - Main Railway deployment script
   - `src/scripts/deployment/railway_claude_ai_compatible.py` - All version references
   - `src/scripts/deployment/railway_official_mcp_server.py`
   - `src/scripts/deployment/railway_mcp_fixed.py`
-  - `src/mcp/claude_compatible_server.py` - All version references
+  - `src/mcp/claude_compatible_server.py` - All version references (CRITICAL for production endpoint)
   - `src/mcp/enhanced_server.py`
+  - `src/mcp/mcp_sdk_clean.py`
+- **Manual update if needed**:
   - `Dockerfile` (if version is referenced)
   - `README.md` (if version is displayed)
 - **Use consistent version format**: `0.7.X` (not `v0.7.X` in code)
