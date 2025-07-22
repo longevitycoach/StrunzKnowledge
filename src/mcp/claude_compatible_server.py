@@ -1,38 +1,49 @@
 #!/usr/bin/env python3
 """
-Claude.ai Compatible MCP Server
-Uses protocol version 2025-03-26 with SSE transport (2024-11-05 style)
+Official MCP SDK Implementation - Claude.ai Compatible Server  
+Uses the official MCP Python SDK from https://github.com/modelcontextprotocol/python-sdk
 """
 
 import os
 import sys
-import json
-import uuid
-import time
 import asyncio
 import logging
+import json
+from pathlib import Path
+from typing import Dict, Any, Optional, List
 from datetime import datetime
-from typing import Dict, Optional, AsyncGenerator
 
-from fastapi import FastAPI, Request, HTTPException, Header, Depends, Query, Form
-from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sse_starlette.sse import EventSourceResponse
-import uvicorn
+# Add src to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Protocol version that Claude.ai supports
+# Import official MCP SDK
+try:
+    from mcp import Server
+    from mcp.server import stdio_server
+    from mcp.types import TextContent
+    OFFICIAL_MCP_AVAILABLE = True
+    logger.info("✅ Official MCP SDK available")
+except ImportError as e:
+    logger.error(f"❌ Official MCP SDK not available: {e}")
+    logger.error("Install with: pip install mcp")
+    OFFICIAL_MCP_AVAILABLE = False
+    sys.exit(1)
+
+# Server configuration
+SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
+SERVER_VERSION = "0.7.8"
 PROTOCOL_VERSION = "2025-03-26"
 
-# Debug: Log when server starts
-logger.info("=== CLAUDE COMPATIBLE SERVER v0.5.4 WITH PROMPTS CAPABILITY ===")
-logger.info("This version includes prompts capability, performance optimization, and Claude Desktop compatibility")
-logger.info(f"Build timestamp: {datetime.now().isoformat()}")
-
 # Track server start time for uptime calculation
-start_time = time.time()
+start_time = datetime.now()
 
 # Create FastAPI app
 app = FastAPI(title="Dr. Strunz Knowledge MCP Server")

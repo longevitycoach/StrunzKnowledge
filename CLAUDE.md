@@ -86,6 +86,25 @@ The following Dr. Ulrich Strunz books have been processed:
 - **Use consistent version format**: `0.7.X` (not `v0.7.X` in code)
 - **Verify before committing**: Run `grep -r "0\\.7\\.[0-9]" src/ railway-deploy.py | grep -v test`
 
+### Docker Package Description Guidelines
+- **MANDATORY**: ALWAYS provide descriptions for Docker packages in GitHub Container Registry
+- **Location**: Package descriptions are set via Dockerfile LABEL instructions (OCI-compliant)
+- **Required Labels in Dockerfile**:
+  ```dockerfile
+  LABEL org.opencontainers.image.title="StrunzKnowledge MCP Server"
+  LABEL org.opencontainers.image.description="Dr. Strunz Knowledge Base MCP Server - A comprehensive health and nutrition knowledge system based on Dr. Ulrich Strunz's work. Provides semantic search across 13 books, 6,953 news articles, and forum content via the Model Context Protocol (MCP) for Claude Desktop and Claude.ai integration."
+  LABEL org.opencontainers.image.authors="longevitycoach"
+  LABEL org.opencontainers.image.source="https://github.com/longevitycoach/StrunzKnowledge"
+  LABEL org.opencontainers.image.documentation="https://github.com/longevitycoach/StrunzKnowledge/blob/main/README.md"
+  LABEL org.opencontainers.image.licenses="MIT"
+  LABEL org.opencontainers.image.vendor="longevitycoach"
+  LABEL org.opencontainers.image.url="https://strunz.up.railway.app"
+  LABEL org.opencontainers.image.version="0.7.8"
+  ```
+- **Update Process**: Update these labels whenever creating a new release
+- **Verification**: Check package at https://github.com/longevitycoach/StrunzKnowledge/pkgs/container/strunzknowledge/
+- **Cleanup Scripts**: Use `src/scripts/cleanup_dockerhub_versions.sh` to maintain clean registry (keep only latest 5 versions)
+
 ## MCP Claude.ai Integration Investigation Plan
 
 ### Current Issue Analysis (2025-07-18)
@@ -176,3 +195,8 @@ railway logs --service strunz-knowledge --tail
 - [ ] Claude.ai can authenticate (if needed)
 - [ ] Claude.ai can list and execute tools
 - [ ] No "not_available" errors
+
+## Development Notes and Warnings
+
+### SDK and Library Guidance
+- **Dont use FastMCP use the official MCP SDK for Python**: https://github.com/modelcontextprotocol/python-sdk

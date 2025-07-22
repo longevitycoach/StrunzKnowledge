@@ -78,8 +78,16 @@ HEALTHCHECK --interval=30s --timeout=20s --start-period=120s --retries=10 \
 # Default command to run the MCP server
 CMD ["python", "-u", "main.py"]
 
-# Labels for container metadata
+# Labels for container metadata (OCI compliant)
 LABEL maintainer="Strunz Knowledge Base Team" \
-      version="0.6.3" \
-      description="Dr. Strunz Knowledge Base with MCP Server - Claude Desktop Edition" \
-      build_date="2025-07-17"
+      version="0.7.8" \
+      org.opencontainers.image.title="StrunzKnowledge MCP Server" \
+      org.opencontainers.image.description="Dr. Strunz Knowledge Base MCP Server - A comprehensive health and nutrition knowledge system based on Dr. Ulrich Strunz's work. Provides semantic search across 13 books, 6,953 news articles, and forum content via the Model Context Protocol (MCP) for Claude Desktop and Claude.ai integration." \
+      org.opencontainers.image.authors="longevitycoach" \
+      org.opencontainers.image.source="https://github.com/longevitycoach/StrunzKnowledge" \
+      org.opencontainers.image.documentation="https://github.com/longevitycoach/StrunzKnowledge/blob/main/README.md" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="longevitycoach" \
+      org.opencontainers.image.url="https://strunz.up.railway.app" \
+      org.opencontainers.image.created="2025-07-22" \
+      org.opencontainers.image.version="0.7.8"

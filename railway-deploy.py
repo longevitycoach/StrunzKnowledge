@@ -32,28 +32,18 @@ def main():
     print("🔄 This may take 30-60 seconds while loading FAISS indices...")
     
     try:
-        # Try Claude.ai Compatible MCP server
-        from src.scripts.deployment.railway_claude_ai_compatible import main as run_server
+        # Use unified MCP server with fixes for tool exposure
+        from src.mcp.unified_mcp_server import main as run_server
         import asyncio
-        print(f"✅ Claude.ai Compatible MCP server loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting Claude.ai compatible server with enhanced endpoints...")
+        print(f"✅ Unified MCP server loaded in {time.time() - start_time:.2f}s")
+        print("🎯 Starting unified server with all 20 tools exposed...")
+        print("🔧 Fixes: OAuth2 redirect & FastMCP tool extraction")
         asyncio.run(run_server())
         
     except Exception as e:
-        print(f"⚠️ Railway MCP server failed: {e}")
-        print("🔄 Falling back to Claude compatible server...")
-        
-        try:
-            from src.mcp.claude_compatible_server import main as run_server
-            import asyncio
-            print(f"✅ Fallback server loaded in {time.time() - start_time:.2f}s")
-            print("🎯 Starting FastAPI server...")
-            asyncio.run(run_server())
-            
-        except Exception as e2:
-            print(f"❌ All servers failed: {e2}")
-            print("🆘 Critical deployment failure")
-            sys.exit(1)
+        print(f"❌ Unified MCP server failed: {e}")
+        print("🆘 Critical deployment failure")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
