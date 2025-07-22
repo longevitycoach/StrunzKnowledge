@@ -44,6 +44,7 @@ RUN pip install --no-cache-dir -r requirements-flexible.txt
 # Copy application source code
 COPY src/ ./src/
 COPY main.py ./
+COPY railway-deploy.py ./
 
 # Create config directory (it may be empty)
 RUN mkdir -p config
