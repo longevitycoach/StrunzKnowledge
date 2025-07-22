@@ -1310,25 +1310,93 @@ The comprehensive visualization above shows:
 
 ## Claude Web (claude.ai) Configuration ✅
 
-**For Claude Web users**, simply add this MCP server:
+**For Claude Web users**, the Dr. Strunz Knowledge MCP Server is ready to connect with simplified OAuth integration.
 
+### Quick Setup
+
+1. **In Claude.ai**, go to your MCP connections
+2. **Add the server URL**: `https://strunz.up.railway.app`
+3. **Complete the OAuth flow** (automatically handled)
+4. **Start using all 20 tools immediately!**
+
+### OAuth Authentication Flow
+
+The server implements OAuth 2.1 with Dynamic Client Registration for secure Claude.ai integration:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Claude as Claude.ai
+    participant MCP as Strunz MCP Server
+    participant OAuth as OAuth Provider
+    
+    User->>Claude: Add MCP Server
+    Claude->>MCP: GET /.well-known/mcp/resource
+    MCP-->>Claude: Server info + OAuth config
+    
+    Claude->>MCP: GET /api/organizations/{org}/mcp/start-auth/{auth}
+    MCP-->>Claude: {"auth_not_required": true} or Redirect to OAuth
+    
+    alt OAuth Required
+        Claude->>OAuth: GET /oauth/authorize
+        OAuth-->>Claude: Redirect with auth code
+        Claude->>OAuth: POST /oauth/token
+        OAuth-->>Claude: Access token
+    end
+    
+    Claude->>MCP: POST /messages (with token)
+    MCP-->>Claude: Tool responses
+    
+    Claude->>MCP: GET /sse (establish connection)
+    MCP-->>Claude: Server-sent events stream
 ```
-Server URL: https://strunz.up.railway.app/mcp
-Authentication: Bearer token (automatic)
-```
 
-**Available Tools:**
-- `knowledge_search` - Search Dr. Strunz knowledge base
-- `get_optimal_diagnostic_values` - Get personalized optimal lab ranges  
-- `create_health_protocol` - Create health optimization protocols
-- `analyze_supplement_stack` - Analyze supplement combinations
-- `get_dr_strunz_biography` - Get Dr. Strunz background
+### Available Tools
 
-Claude.ai will automatically:
-- Detect OAuth support
-- Handle authentication flow
-- Connect via SSE transport
-- Provide access to all 20 tools immediately!
+Once connected, you have access to all 20 MCP tools:
+
+**🔍 Search & Analysis**
+- `knowledge_search` - Semantic search across all content
+- `find_contradictions` - Analyze conflicting information
+- `trace_topic_evolution` - Track how topics evolved over time
+- `compare_approaches` - Compare different health approaches
+
+**🏥 Health Protocols**
+- `create_health_protocol` - Personalized health optimization
+- `get_optimal_diagnostic_values` - Age/gender-specific lab ranges
+- `analyze_supplement_stack` - Supplement interaction analysis
+- `nutrition_calculator` - Calculate nutritional needs
+
+**📊 Insights & Trends**
+- `get_community_insights` - Community discussion analysis
+- `get_trending_insights` - Current trending topics
+- `analyze_strunz_newsletter_evolution` - Newsletter trends
+- `track_health_topic_trends` - Topic frequency over time
+
+**ℹ️ Information**
+- `get_dr_strunz_biography` - Dr. Strunz background
+- `get_mcp_server_purpose` - Server capabilities
+- `get_vector_db_analysis` - Database statistics
+
+### Authentication Details
+
+The server supports two authentication modes:
+
+1. **Simplified Mode** (Default): No OAuth required
+   - Server returns `auth_not_required: true`
+   - Immediate access to all tools
+
+2. **Full OAuth Mode**: Standard OAuth 2.1 flow
+   - Dynamic Client Registration (RFC 7591)
+   - Authorization Code with PKCE
+   - Automatic token refresh
+
+Claude.ai automatically handles:
+- OAuth endpoint discovery
+- Client registration
+- Authorization flow
+- Token management
+- SSE connection establishment
 
 ## Claude Desktop Configuration
 
@@ -1874,6 +1942,71 @@ async def research_query():
 # Developer Documentation
 
 ## Technical Architecture
+
+### OAuth 2.1 Implementation
+
+The MCP server implements full OAuth 2.1 with Dynamic Client Registration for secure authentication:
+
+```mermaid
+flowchart TB
+    subgraph "Claude.ai OAuth Flow"
+        A[Claude.ai Client] -->|1. Discovery| B[/.well-known/mcp/resource]
+        B -->|2. OAuth Info| C[OAuth Endpoints]
+        A -->|3. Start Auth| D[/api/organizations/{org}/mcp/start-auth/{auth}]
+        
+        D -->|4a. Skip OAuth| E[Return Success]
+        D -->|4b. Full OAuth| F[Redirect to /oauth/authorize]
+        
+        F -->|5. Authorization| G[User Consent]
+        G -->|6. Redirect| H[/api/mcp/auth_callback]
+        H -->|7. Auth Code| I[Claude.ai]
+        
+        I -->|8. Exchange| J[POST /oauth/token]
+        J -->|9. Access Token| K[Authenticated Session]
+        
+        K -->|10. Connect| L[SSE/Messages]
+    end
+    
+    subgraph "OAuth Endpoints"
+        M[/.well-known/oauth-authorization-server]
+        N[/oauth/register - Dynamic Registration]
+        O[/oauth/authorize - Authorization]
+        P[/oauth/token - Token Exchange]
+        Q[/api/mcp/auth_callback - Callback Handler]
+    end
+```
+
+#### OAuth Endpoints
+
+**1. Discovery Endpoints**
+- `/.well-known/mcp/resource` - MCP server metadata with OAuth config
+- `/.well-known/oauth-authorization-server` - OAuth 2.1 server metadata
+
+**2. OAuth Flow Endpoints**
+- `/oauth/register` - Dynamic Client Registration (RFC 7591)
+- `/oauth/authorize` - Authorization endpoint with PKCE support
+- `/oauth/token` - Token exchange endpoint
+- `/api/mcp/auth_callback` - OAuth callback handler for Claude.ai
+
+**3. Claude.ai Specific**
+- `/api/organizations/{org_id}/mcp/start-auth/{auth_id}` - Claude.ai auth initialization
+
+#### Authentication Modes
+
+**Simplified Mode (Default)**
+```json
+{
+  "status": "success",
+  "auth_not_required": true,
+  "server_url": "https://strunz.up.railway.app"
+}
+```
+
+**Full OAuth Mode**
+- Dynamic client registration
+- Authorization code flow with PKCE
+- Automatic token refresh
+- Secure callback handling
 
 ### System Overview
 
