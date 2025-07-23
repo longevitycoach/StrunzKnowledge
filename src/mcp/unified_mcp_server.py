@@ -82,7 +82,7 @@ class SimpleOAuthProvider:
 
 # Server configuration
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.7.10"
+SERVER_VERSION = "0.7.11"
 PROTOCOL_VERSION = "2025-03-26"
 
 # Initialize components
