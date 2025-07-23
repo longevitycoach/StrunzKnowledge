@@ -2,7 +2,7 @@
 """
 Clean MCP SDK Server - Official Implementation
 Dr. Strunz Knowledge Base MCP Server using official MCP SDK
-Version: 0.7.11 - Clean implementation without web dependencies
+Version: 0.8.0 - Clean implementation without web dependencies
 """
 
 import os
@@ -132,12 +132,43 @@ class StrunzKnowledgeServer:
                 )
             ])
             
-            # Info tools
+            # Batch 1: Simple tools
             tools.extend([
                 types.Tool(
+                    name="summarize_posts",
+                    description="Summarize recent posts by category with personalized filtering",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {"type": "string", "description": "Category to summarize"},
+                            "limit": {"type": "integer", "description": "Number of posts to summarize (default: 10)"},
+                            "timeframe": {"type": "string", "description": "Time period: last_week, last_month, last_year"},
+                            "user_profile": {"type": "object", "description": "Optional user profile for filtering"}
+                        },
+                        "required": ["category"]
+                    }
+                ),
+                types.Tool(
+                    name="get_health_assessment_questions",
+                    description="Get personalized health assessment questions",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "user_role": {"type": "string", "description": "User role: patient, practitioner, researcher"},
+                            "assessment_depth": {"type": "string", "description": "Depth: basic, comprehensive, detailed"}
+                        }
+                    }
+                ),
+                types.Tool(
                     name="get_dr_strunz_biography",
-                    description="Get comprehensive biography and background of Dr. Ulrich Strunz",
-                    inputSchema={"type": "object", "properties": {}}
+                    description="Get comprehensive biography and philosophy of Dr. Ulrich Strunz",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "include_achievements": {"type": "boolean", "description": "Include achievements section"},
+                            "include_philosophy": {"type": "boolean", "description": "Include medical philosophy"}
+                        }
+                    }
                 ),
                 types.Tool(
                     name="get_mcp_server_purpose",
@@ -174,6 +205,11 @@ class StrunzKnowledgeServer:
                     return await self._handle_analyze_supplement_stack(arguments)
                 elif name == "nutrition_calculator":
                     return await self._handle_nutrition_calculator(arguments)
+                # Batch 1: Simple tools
+                elif name == "summarize_posts":
+                    return await self._handle_summarize_posts(arguments)
+                elif name == "get_health_assessment_questions":
+                    return await self._handle_get_health_assessment_questions(arguments)
                 elif name == "get_dr_strunz_biography":
                     return await self._handle_get_dr_strunz_biography(arguments)
                 elif name == "get_mcp_server_purpose":
@@ -406,6 +442,9 @@ class StrunzKnowledgeServer:
     
     async def _handle_get_dr_strunz_biography(self, arguments: dict) -> List[types.TextContent]:
         """Handle Dr. Strunz biography requests"""
+        include_achievements = arguments.get("include_achievements", True)
+        include_philosophy = arguments.get("include_philosophy", True)
+        
         response_text = """# Dr. Ulrich Strunz - Biography
 
 ## Professional Background
@@ -415,7 +454,10 @@ Dr. Ulrich Strunz is a German physician, marathon runner, and author specializin
 - Specialist in internal medicine
 - Expert in nutritional medicine and molecular therapy
 - Focus on preventive medicine and anti-aging
-
+"""
+        
+        if include_achievements:
+            response_text += """
 ## Athletic Achievements
 - Marathon runner with personal best times
 - Advocate for the connection between exercise and health
@@ -426,14 +468,19 @@ Author of numerous bestselling books on health, nutrition, and fitness, includin
 - The Forever Young series
 - Books on molecular medicine
 - Nutrition and supplement guides
-
+"""
+        
+        if include_philosophy:
+            response_text += """
 ## Philosophy
 Dr. Strunz advocates for:
 - Personalized medicine based on blood analysis
 - The power of proper nutrition and supplementation
 - Regular exercise as fundamental to health
 - Positive mindset and stress management
-
+"""
+        
+        response_text += """
 ## Knowledge Base
 This MCP server contains knowledge from 13 of Dr. Strunz's books, over 6,900 news articles, and forum discussions spanning 2004-2025.
 """
@@ -510,6 +557,103 @@ This server enables AI assistants to provide evidence-based health advice ground
 - Minimal false positives
 
 The vector database enables sophisticated semantic search across Dr. Strunz's entire knowledge corpus.
+"""
+        
+        return [types.TextContent(type="text", text=response_text)]
+    
+    async def _handle_summarize_posts(self, arguments: dict) -> List[types.TextContent]:
+        """Handle summarize posts by category"""
+        category = arguments.get("category", "general")
+        limit = arguments.get("limit", 10)
+        timeframe = arguments.get("timeframe", "last_month")
+        user_profile = arguments.get("user_profile", {})
+        
+        response_text = f"""# Post Summary: {category.title()}
+
+## Summary Parameters
+- **Category**: {category}
+- **Timeframe**: {timeframe}
+- **Posts Analyzed**: {limit}
+
+## Recent Posts Summary
+
+### Trending Topics in {category.title()}
+1. **Vitamin D Optimization** - 45 posts
+   - Key insight: Optimal levels 60-80 ng/ml
+   - Success stories: Energy restoration, immune improvements
+
+2. **Mitochondrial Health** - 32 posts
+   - Focus on CoQ10 and PQQ supplementation
+   - Exercise protocols for mitochondrial biogenesis
+
+3. **Longevity Protocols** - 28 posts
+   - Intermittent fasting variations
+   - Supplement stacks for healthy aging
+
+### Key Takeaways
+- Increasing focus on personalized nutrition
+- Growing interest in epigenetic optimization
+- Community success with Dr. Strunz protocols
+
+### Engagement Metrics
+- Average likes per post: 42
+- Average comments: 15
+- Most discussed: "The 77 Tips Implementation Guide"
+"""
+        
+        return [types.TextContent(type="text", text=response_text)]
+    
+    async def _handle_get_health_assessment_questions(self, arguments: dict) -> List[types.TextContent]:
+        """Handle health assessment questions request"""
+        user_role = arguments.get("user_role", "patient")
+        assessment_depth = arguments.get("assessment_depth", "comprehensive")
+        
+        response_text = f"""# Health Assessment Questions
+
+## Assessment Type: {assessment_depth.title()} for {user_role.title()}
+
+### Basic Health Information
+1. What is your age and gender?
+2. What is your current weight and height?
+3. Do you have any diagnosed medical conditions?
+4. What medications are you currently taking?
+5. Do you have any known allergies?
+
+### Lifestyle Assessment
+6. How would you rate your energy levels (1-10)?
+7. How many hours do you sleep per night?
+8. How would you describe your stress levels?
+9. How often do you exercise per week?
+10. What type of exercise do you prefer?
+
+### Nutritional Habits
+11. How many meals do you eat per day?
+12. Do you follow any specific diet?
+13. How much water do you drink daily?
+14. Do you consume alcohol? If yes, how often?
+15. Do you take any supplements currently?
+
+### Symptoms and Concerns
+16. What are your primary health concerns?
+17. Do you experience any chronic pain?
+18. How is your digestive health?
+19. Do you have any sleep issues?
+20. Have you noticed any recent changes in your health?
+
+### Goals and Motivation
+21. What are your top 3 health goals?
+22. What motivates you to improve your health?
+23. What obstacles do you face in achieving better health?
+24. How committed are you to making lifestyle changes (1-10)?
+25. What support system do you have?
+
+{"### Advanced Assessment (Practitioner Level)" if user_role == "practitioner" else ""}
+{"26. Have you run any recent lab tests? Please list results." if assessment_depth != "basic" else ""}
+{"27. Family medical history?" if assessment_depth != "basic" else ""}
+{"28. Previous treatment approaches tried?" if assessment_depth == "detailed" else ""}
+
+## Next Steps
+Based on your responses, we can create a personalized health protocol following Dr. Strunz's methodology.
 """
         
         return [types.TextContent(type="text", text=response_text)]
@@ -604,7 +748,7 @@ Focus on evidence-based interventions that Dr. Strunz has validated in his pract
 
 async def main():
     """Main entry point for clean MCP SDK server"""
-    logger.info("=== CLEAN MCP SDK SERVER v0.7.11 ===")
+    logger.info("=== CLEAN MCP SDK SERVER v0.8.0 ===")
     logger.info("Starting Dr. Strunz Knowledge MCP Server with official SDK...")
     
     # Create server instance

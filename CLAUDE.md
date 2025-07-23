@@ -274,3 +274,9 @@ railway logs --service strunz-knowledge --tail
   - Local: `http://localhost:3000`
   - Docker: `http://localhost:8080`
   - Railway Production: `https://strunz.up.railway.app`
+```
+
+## Memories and Best Practices
+
+### Workflow Recommendations
+- **ALWAYS check context7 before you search to the internet**
