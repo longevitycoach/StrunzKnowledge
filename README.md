@@ -1340,6 +1340,8 @@ sequenceDiagram
     alt OAuth Required
         Claude->>OAuth: GET /oauth/authorize
         OAuth-->>Claude: Redirect with auth code
+        Claude->>MCP: GET /api/mcp/auth_callback?code={code}&state={state}
+        MCP-->>Claude: Success page with postMessage
         Claude->>OAuth: POST /oauth/token
         OAuth-->>Claude: Access token
     end
@@ -1349,6 +1351,160 @@ sequenceDiagram
     
     Claude->>MCP: GET /sse (establish connection)
     MCP-->>Claude: Server-sent events stream
+```
+
+### OAuth Flow - Curl Examples
+
+#### 1. Discovery Endpoint
+```bash
+# Discover server capabilities and OAuth configuration
+curl https://strunz.up.railway.app/.well-known/mcp/resource
+
+# Response:
+{
+  "mcpVersion": "2025-03-26",
+  "serverInfo": {
+    "name": "Dr. Strunz Knowledge MCP Server",
+    "version": "0.7.10"
+  },
+  "capabilities": {
+    "tools": true,
+    "prompts": true,
+    "resources": false
+  },
+  "authentication": {
+    "type": "oauth2",
+    "authorization_endpoint": "https://strunz.up.railway.app/oauth/authorize",
+    "token_endpoint": "https://strunz.up.railway.app/oauth/token",
+    "registration_endpoint": "https://strunz.up.railway.app/oauth/register"
+  }
+}
+```
+
+#### 2. Claude.ai Start Auth (Simplified Mode)
+```bash
+# Claude.ai initiates authentication
+curl https://strunz.up.railway.app/api/organizations/org123/mcp/start-auth/auth456
+
+# Response (Simplified Mode - Default):
+{
+  "status": "success",
+  "auth_not_required": true,
+  "server_url": "https://strunz.up.railway.app",
+  "message": "MCP server ready for use"
+}
+```
+
+#### 3. OAuth Client Registration
+```bash
+# Register a new OAuth client
+curl -X POST https://strunz.up.railway.app/oauth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_name": "Claude.ai MCP Client",
+    "redirect_uris": ["https://claude.ai/api/mcp/auth_callback"],
+    "grant_types": ["authorization_code"],
+    "response_types": ["code"]
+  }'
+
+# Response:
+{
+  "client_id": "client_abc123...",
+  "client_secret": "secret_xyz789...",
+  "client_name": "Claude.ai MCP Client",
+  "redirect_uris": ["https://claude.ai/api/mcp/auth_callback"],
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"]
+}
+```
+
+#### 4. OAuth Authorization (If Required)
+```bash
+# Authorization URL (user would visit in browser)
+https://strunz.up.railway.app/oauth/authorize?
+  response_type=code&
+  client_id=client_abc123&
+  redirect_uri=https://claude.ai/api/mcp/auth_callback&
+  state=random_state_value&
+  code_challenge=challenge_value&
+  code_challenge_method=S256
+
+# After user approves, redirects to:
+https://claude.ai/api/mcp/auth_callback?code=auth_code_xyz&state=random_state_value
+```
+
+#### 5. OAuth Callback Handler
+```bash
+# Test the callback endpoint
+curl "https://strunz.up.railway.app/api/mcp/auth_callback?code=test123&state=test"
+
+# Returns HTML with JavaScript postMessage for Claude.ai iframe communication
+```
+
+#### 6. Token Exchange
+```bash
+# Exchange authorization code for access token
+curl -X POST https://strunz.up.railway.app/oauth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "auth_code_xyz",
+    "client_id": "client_abc123",
+    "client_secret": "secret_xyz789",
+    "redirect_uri": "https://claude.ai/api/mcp/auth_callback",
+    "code_verifier": "verifier_value"
+  }'
+
+# Response:
+{
+  "access_token": "access_token_abc...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "refresh_token_xyz..."
+}
+```
+
+#### 7. MCP Protocol Messages
+```bash
+# Initialize MCP session
+curl -X POST https://strunz.up.railway.app/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer access_token_abc..." \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "1.0.0",
+      "clientInfo": {"name": "Claude.ai"}
+    },
+    "id": 1
+  }'
+
+# List available tools
+curl -X POST https://strunz.up.railway.app/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer access_token_abc..." \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/list",
+    "params": {},
+    "id": 2
+  }'
+```
+
+#### 8. SSE Connection
+```bash
+# Establish Server-Sent Events connection
+curl -N -H "Accept: text/event-stream" \
+     -H "Authorization: Bearer access_token_abc..." \
+     https://strunz.up.railway.app/sse
+
+# Streams events like:
+# event: ping
+# data: {"timestamp": "2025-07-22T19:30:00Z"}
+#
+# event: tool_update
+# data: {"tool": "knowledge_search", "status": "ready"}
 ```
 
 ### Available Tools

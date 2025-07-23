@@ -147,6 +147,7 @@ async def startup_event():
 @app.get("/")
 @app.get("/health")
 @app.post("/")  # Handle Claude.ai POST requests after OAuth
+@app.head("/")  # Handle HEAD requests from Claude.ai
 async def health_check():
     """Basic health check endpoint"""
     return JSONResponse({
@@ -187,7 +188,10 @@ async def mcp_resource():
     if os.environ.get('RAILWAY_ENVIRONMENT') is None:
         base_url = f"http://localhost:{os.environ.get('PORT', '8000')}"
     
-    return JSONResponse({
+    # Check if we should skip authentication entirely
+    skip_auth = os.environ.get("CLAUDE_AI_SKIP_OAUTH", "false").lower() == "true"
+    
+    response = {
         "mcpVersion": PROTOCOL_VERSION,
         "serverInfo": {
             "name": SERVER_NAME,
@@ -201,9 +205,19 @@ async def mcp_resource():
             "tools": f"{base_url}/tools",
             "prompts": f"{base_url}/prompts"
         },
-        "authentication": {
+        "capabilities": {
+            "tools": True,
+            "prompts": True,
+            "resources": False,
+            "sampling": False
+        }
+    }
+    
+    # Only include authentication if not skipped
+    if not skip_auth:
+        response["authentication"] = {
             "type": "oauth2",
-            "required": False,
+            "required": True,
             "oauth2": {
                 "authorizationUrl": f"{base_url}/oauth/authorize",
                 "tokenUrl": f"{base_url}/oauth/token",
@@ -213,14 +227,9 @@ async def mcp_resource():
                     "write": "Write access (not implemented)"
                 }
             }
-        },
-        "capabilities": {
-            "tools": True,
-            "prompts": True,
-            "resources": False,
-            "sampling": False
         }
-    })
+    
+    return JSONResponse(response)
 
 
 # OAuth2 endpoints
@@ -232,6 +241,28 @@ async def oauth_metadata():
         base_url = f"http://localhost:{os.environ.get('PORT', '8000')}"
     
     return JSONResponse(_oauth_provider.get_metadata(base_url))
+
+
+@app.get("/.well-known/oauth-protected-resource")
+async def oauth_protected_resource():
+    """OAuth2 protected resource metadata"""
+    base_url = f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
+    if os.environ.get('RAILWAY_ENVIRONMENT') is None:
+        base_url = f"http://localhost:{os.environ.get('PORT', '8000')}"
+    
+    return JSONResponse({
+        "resource": base_url,
+        "authorization_servers": [base_url],
+        "bearer_methods_supported": ["header"],
+        "resource_documentation": f"{base_url}/docs",
+        "resource_signing_alg_values_supported": ["RS256"],
+        "resource_endpoints": [
+            f"{base_url}/messages",
+            f"{base_url}/sse",
+            f"{base_url}/tools",
+            f"{base_url}/prompts"
+        ]
+    })
 
 
 @app.post("/oauth/register")
