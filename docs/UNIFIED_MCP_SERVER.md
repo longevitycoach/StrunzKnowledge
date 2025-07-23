@@ -37,8 +37,8 @@ This created confusion and maintenance overhead.
 
 ### 1. Local Development
 ```bash
-# Simple start
-python start_server.py
+# Use main entry point (start_server.py was removed)
+python main.py
 
 # Or directly
 python src/mcp/unified_mcp_server.py

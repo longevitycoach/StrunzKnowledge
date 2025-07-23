@@ -44,10 +44,10 @@ python main.py
 **Purpose**: Lightweight health check server for testing
 **Usage**: Fallback when MCP server fails to load
 
-### start_server.py (DEPRECATED)
-**Location**: `src/scripts/deployment/start_server.py`
+### start_server.py (REMOVED)
+**Location**: `archive/deprecated-scripts/start_server.py`
 **Purpose**: Legacy server starter
-**Status**: Deprecated - use `main.py` instead
+**Status**: Removed in cleanup - use `main.py` instead
 
 ## Testing Scripts
 
@@ -163,8 +163,9 @@ python src/scripts/data/split_faiss_index.py data/faiss_indices/combined_index.f
 
 ## Cleanup Notes
 
-The following scripts have been deprecated and should not be used:
-- `start_server.py` - Use `main.py` instead
+The following scripts have been removed/deprecated:
+- `start_server.py` - REMOVED, archived. Use `main.py` instead
+- `official_mcp_server.py` - REMOVED, was duplicate of `mcp_sdk_clean.py`
 - `test_mcp_curl.sh` - Use `test_mcp_jsonrpc.sh`
 - `test_mcp_sse.py` - Use `test_sse_endpoint.sh`
 
