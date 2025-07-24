@@ -22,7 +22,7 @@ def main():
     """Deploy to Railway with fallback strategy"""
     start_time = time.time()
     
-    print(f"🚀 Starting Dr. Strunz Knowledge Base MCP Server v0.8.0...")
+    print(f"🚀 Starting Dr. Strunz Knowledge Base MCP Server v0.8.1...")
     print(f"📍 Environment: Railway")
     print(f"🌍 Public Domain: {os.environ.get('RAILWAY_PUBLIC_DOMAIN')}")
     print(f"🔧 Port: {os.environ.get('PORT')}")
