@@ -32,16 +32,17 @@ def main():
     print("🔄 This may take 30-60 seconds while loading FAISS indices...")
     
     try:
-        # Use clean MCP SDK server with Official SDK
-        from src.mcp.mcp_sdk_clean import main as run_server
+        # Use claude_compatible_server which provides HTTP endpoints
+        from src.mcp.claude_compatible_server import main as run_server
         import asyncio
-        print(f"✅ Clean MCP SDK server loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting server with all 24 tools exposed...")
-        print("🔧 Using Official MCP SDK - FastMCP eliminated")
+        print(f"✅ Claude-compatible server loaded in {time.time() - start_time:.2f}s")
+        print("🎯 Starting server with HTTP/SSE endpoints...")
+        print("🔧 Using MCP SDK tools with HTTP wrapper")
+        print("🌐 Health check endpoint: /railway-health")
         asyncio.run(run_server())
         
     except Exception as e:
-        print(f"❌ MCP SDK server failed: {e}")
+        print(f"❌ Server startup failed: {e}")
         print("🆘 Critical deployment failure")
         sys.exit(1)
 
