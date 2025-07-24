@@ -3,7 +3,7 @@
 
 # Core Python Dependencies
 python-dotenv==1.0.0
-pydantic==2.7.0
+pydantic>=2.7.4
 pydantic-settings>=2.6.1
 loguru==0.7.2
 
@@ -30,8 +30,9 @@ numpy==1.26.3
 faiss-cpu==1.7.4
 
 # LLM Integration
-langchain==0.1.5
-langchain-community>=0.0.17
+langchain>=0.1.17
+langchain-community>=0.0.38
+langsmith>=0.1.0,<0.2.0
 tiktoken==0.5.2
 sentence-transformers>=2.2.0
 
