@@ -74,16 +74,23 @@ try:
 except Exception as e:
     logger.warning(f"Vector store preload error: {e}")
 
-# Import enhanced server tools
-enhanced_server = None
+# Import MCP SDK server and tools
+server_instance = None
 tool_registry = {}
 try:
-    from src.mcp.enhanced_server import StrunzKnowledgeMCP
-    enhanced_server = StrunzKnowledgeMCP()
-    tool_registry = enhanced_server.tool_registry
-    logger.info(f"Loaded {len(tool_registry)} tools")
+    from src.mcp.mcp_sdk_clean import StrunzKnowledgeServer
+    server_instance = StrunzKnowledgeServer()
+    
+    # Extract tools from the MCP server
+    # The server has handlers registered, we need to create a compatible registry
+    for tool_name in dir(server_instance):
+        if tool_name.startswith('_handle_'):
+            actual_name = tool_name.replace('_handle_', '')
+            tool_registry[actual_name] = getattr(server_instance, tool_name)
+    
+    logger.info(f"Loaded {len(tool_registry)} tools from MCP SDK server")
 except Exception as e:
-    logger.error(f"Failed to load tools: {e}")
+    logger.error(f"Failed to load MCP SDK tools: {e}")
 
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -678,10 +685,17 @@ async def handle_tool_call(params: Dict) -> Dict:
     
     try:
         tool_func = tool_registry[tool_name]
-        result = await tool_func(**tool_args)
+        # MCP SDK handlers expect a dict argument
+        result = await tool_func(tool_args)
         
-        # Format result for Claude
-        if isinstance(result, dict):
+        # Handle MCP SDK response format (List[TextContent])
+        if isinstance(result, list) and len(result) > 0:
+            # Extract text from TextContent objects
+            if hasattr(result[0], 'text'):
+                text = result[0].text
+            else:
+                text = str(result[0])
+        elif isinstance(result, dict):
             text = json.dumps(result, indent=2)
         else:
             text = str(result)
