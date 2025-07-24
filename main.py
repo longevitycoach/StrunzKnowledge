@@ -1,62 +1,111 @@
 #!/usr/bin/env python3
 """
-Dr. Strunz Knowledge Base - Main Entry Point
-
-This is the main entry point for the Dr. Strunz Knowledge Base MCP Server.
-For production deployment, use the scripts in src/scripts/deployment/
+Unified Main Entry Point for StrunzKnowledge MCP Server
+Supports both stdio (Claude Desktop) and HTTP/SSE (Railway) transports
 
 Environment Variables:
-- RAILWAY_PUBLIC_DOMAIN: Public domain for Railway deployment (default: strunz.up.railway.app)
-- RAILWAY_PRIVATE_DOMAIN: Private domain for Railway internal (default: strunz.railway.internal)
-- PORT: Server port (default: 8000)
+- TRANSPORT: Force specific transport (stdio, http, sse) - auto-detected if not set
+- RAILWAY_ENVIRONMENT: Railway deployment environment
+- PORT: Server port for HTTP transport (default: 8000)
+- MCP_STDIO_MODE: Force stdio mode for Claude Desktop
 - LOG_LEVEL: Logging level (default: INFO)
 """
 
 import os
 import sys
 import asyncio
+import logging
+import time
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Set default Railway domains
-os.environ.setdefault('RAILWAY_PUBLIC_DOMAIN', 'strunz.up.railway.app')
-os.environ.setdefault('RAILWAY_PRIVATE_DOMAIN', 'strunz.railway.internal')
-os.environ.setdefault('PORT', '8000')
-os.environ.setdefault('LOG_LEVEL', 'INFO')
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, os.environ.get('LOG_LEVEL', 'INFO')),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-def main():
-    """Main entry point - determines which server to run."""
-    import time
+def get_transport_type():
+    """Determine which transport to use based on environment"""
+    # Check explicit transport setting
+    transport = os.environ.get('TRANSPORT', '').lower()
+    if transport in ['stdio', 'http', 'sse']:
+        return transport
+    
+    # Auto-detect based on environment
+    if os.environ.get('RAILWAY_ENVIRONMENT'):
+        # Railway deployment - use HTTP/SSE
+        return 'http'
+    elif os.environ.get('MCP_STDIO_MODE'):
+        # Explicit stdio mode
+        return 'stdio'
+    elif os.environ.get('PORT'):
+        # Port specified - assume HTTP
+        return 'http'
+    else:
+        # Default to stdio for local Claude Desktop
+        return 'stdio'
+
+async def run_stdio_server():
+    """Run MCP server in stdio mode for Claude Desktop"""
+    logger.info("Starting MCP server in stdio mode for Claude Desktop")
+    
+    try:
+        from src.mcp.mcp_sdk_clean import main
+        await main()
+    except ImportError as e:
+        logger.error(f"Failed to import stdio server: {e}")
+        logger.info("Installing MCP SDK...")
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "mcp>=1.0.0"])
+        from src.mcp.mcp_sdk_clean import main
+        await main()
+
+async def run_http_server():
+    """Run MCP server in HTTP/SSE mode for Railway"""
+    logger.info("Starting MCP server in HTTP/SSE mode for Railway")
+    
+    try:
+        from src.mcp.claude_compatible_server import main
+        await main()
+    except ImportError as e:
+        logger.error(f"Failed to import HTTP server: {e}")
+        logger.info("Installing FastAPI dependencies...")
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "fastapi", "uvicorn", "sse-starlette"])
+        from src.mcp.claude_compatible_server import main
+        await main()
+
+async def main():
+    """Main entry point - selects appropriate transport"""
     start_time = time.time()
+    transport = get_transport_type()
     
-    # Check environment
-    is_railway = os.environ.get('RAILWAY_ENVIRONMENT') is not None
-    is_production = os.environ.get('RAILWAY_ENVIRONMENT') == 'production'
-    
-    print(f"🚀 Starting Dr. Strunz Knowledge Base MCP Server...")
-    print(f"📍 Environment: {'Railway' if is_railway else 'Local'}")
+    print(f"🚀 Starting StrunzKnowledge MCP Server v0.9.0")
+    print(f"📡 Transport mode: {transport}")
+    print(f"📍 Environment: {os.environ.get('RAILWAY_ENVIRONMENT', 'local')}")
     print(f"🌍 Public Domain: {os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}")
     print(f"🔧 Port: {os.environ.get('PORT', '8000')}")
     print(f"⏰ Startup Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     
-    if is_railway:
-        # Railway deployment - First try MCP SDK, fallback to compatible server
-        print("📡 Loading Railway deployment with clean MCP SDK server...")
-        print("🔄 This may take 30-60 seconds while loading FAISS indices...")
-        
-        # Use clean official SDK server
-        from src.mcp.mcp_sdk_clean import main as run_server
-        print(f"✅ Clean MCP SDK loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting MCP server with official SDK...")
-        asyncio.run(run_server())
+    if transport == 'stdio':
+        print("🖥️  Using stdio transport for Claude Desktop")
+        await run_stdio_server()
     else:
-        # Local development - try MCP SDK first
-        print("🏠 Starting local development server...")
-        from src.mcp.mcp_sdk_clean import main as run_server
-        print("🎯 Using clean MCP SDK...")
-        asyncio.run(run_server())
+        print("🌐 Using HTTP/SSE transport for web deployment")
+        print("🔄 This may take 30-60 seconds while loading FAISS indices...")
+        await run_http_server()
+    
+    print(f"✅ Server loaded in {time.time() - start_time:.2f}s")
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Server stopped by user")
+    except Exception as e:
+        logger.error(f"Server error: {e}")
+        sys.exit(1)
