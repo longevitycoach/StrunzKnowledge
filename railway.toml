@@ -6,7 +6,7 @@ dockerfilePath = "Dockerfile"
 [deploy]
 startCommand = "python railway-deploy.py"
 restartPolicyType = "always"
-healthcheckPath = "/railway-health"
+healthcheckPath = "/"
 healthcheckTimeout = 300
 
 # Environment variables (will be overridden by Railway dashboard)
