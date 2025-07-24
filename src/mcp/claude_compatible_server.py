@@ -9,9 +9,19 @@ import sys
 import asyncio
 import logging
 import json
+import time
+import uuid
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
+
+# FastAPI imports
+from fastapi import FastAPI, Request, Depends, Query, Form, HTTPException
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
+from sse_starlette.sse import EventSourceResponse
+import uvicorn
 
 # Add src to path
 project_root = Path(__file__).parent.parent.parent
@@ -24,26 +34,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Import official MCP SDK
-try:
-    from mcp import Server
-    from mcp.server import stdio_server
-    from mcp.types import TextContent
-    OFFICIAL_MCP_AVAILABLE = True
-    logger.info("✅ Official MCP SDK available")
-except ImportError as e:
-    logger.error(f"❌ Official MCP SDK not available: {e}")
-    logger.error("Install with: pip install mcp")
-    OFFICIAL_MCP_AVAILABLE = False
-    sys.exit(1)
+# MCP SDK is not needed for HTTP server - only for tool imports
+OFFICIAL_MCP_AVAILABLE = False
 
 # Server configuration
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.7.9"
+SERVER_VERSION = "0.8.3"
 PROTOCOL_VERSION = "2025-03-26"
 
 # Track server start time for uptime calculation
-start_time = datetime.now()
+start_time = time.time()
 
 # Create FastAPI app
 app = FastAPI(title="Dr. Strunz Knowledge MCP Server")
