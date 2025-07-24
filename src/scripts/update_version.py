@@ -30,9 +30,7 @@ def update_version(new_version: str):
         ('src/scripts/deployment/railway_mcp_fixed.py', r'\d+\.\d+\.\d+'),
         
         # Core server files
-        ('src/mcp/unified_mcp_server.py', r'SERVER_VERSION = "\d+\.\d+\.\d+"'),
         ('src/mcp/claude_compatible_server.py', r'"version": "\d+\.\d+\.\d+"'),
-        ('src/mcp/enhanced_server.py', r'"version": "\d+\.\d+\.\d+"'),
         ('src/mcp/mcp_sdk_clean.py', r'\d+\.\d+\.\d+'),
     ]
     

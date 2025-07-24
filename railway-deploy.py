@@ -32,16 +32,16 @@ def main():
     print("🔄 This may take 30-60 seconds while loading FAISS indices...")
     
     try:
-        # Use unified MCP server with fixes for tool exposure
-        from src.mcp.unified_mcp_server import main as run_server
+        # Use clean MCP SDK server with Official SDK
+        from src.mcp.mcp_sdk_clean import main as run_server
         import asyncio
-        print(f"✅ Unified MCP server loaded in {time.time() - start_time:.2f}s")
-        print("🎯 Starting unified server with all 20 tools exposed...")
-        print("🔧 Fixes: OAuth2 redirect & FastMCP tool extraction")
+        print(f"✅ Clean MCP SDK server loaded in {time.time() - start_time:.2f}s")
+        print("🎯 Starting server with all 24 tools exposed...")
+        print("🔧 Using Official MCP SDK - FastMCP eliminated")
         asyncio.run(run_server())
         
     except Exception as e:
-        print(f"❌ Unified MCP server failed: {e}")
+        print(f"❌ MCP SDK server failed: {e}")
         print("🆘 Critical deployment failure")
         sys.exit(1)
 
