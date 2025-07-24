@@ -81,7 +81,7 @@ CMD ["python", "-u", "main.py"]
 
 # Labels for container metadata (OCI compliant)
 LABEL maintainer="Strunz Knowledge Base Team" \
-      version="0.7.9" \
+      version="0.8.0" \
       org.opencontainers.image.title="StrunzKnowledge MCP Server" \
       org.opencontainers.image.description="Dr. Strunz Knowledge Base MCP Server - A comprehensive health and nutrition knowledge system based on Dr. Ulrich Strunz's work. Provides semantic search across 13 books, 6,953 news articles, and forum content via the Model Context Protocol (MCP) for Claude Desktop and Claude.ai integration." \
       org.opencontainers.image.authors="longevitycoach" \
@@ -91,4 +91,4 @@ LABEL maintainer="Strunz Knowledge Base Team" \
       org.opencontainers.image.vendor="longevitycoach" \
       org.opencontainers.image.url="https://strunz.up.railway.app" \
       org.opencontainers.image.created="2025-07-22" \
-      org.opencontainers.image.version="0.7.9"
+      org.opencontainers.image.version="0.8.0"
