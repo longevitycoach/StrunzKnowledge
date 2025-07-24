@@ -1,0 +1,17 @@
+# GitHub Commands Snippet for BMad Agents
+# Add these commands to any agent's commands section
+
+github-commands:
+  - github-manage: "Access all GitHub issue operations (interactive menu)"
+  - github-create-issue: "Create a new GitHub issue"
+  - github-list-issues: "List and search GitHub issues"  
+  - github-update-issue: "Update an existing GitHub issue"
+  - github-close-issue: "Close a GitHub issue with reason"
+  
+github-dependencies:
+  tasks:
+    - github-manage.md
+    - github-create-issue.md
+    - github-list-issues.md
+    - github-update-issue.md
+    - github-close-issue.md

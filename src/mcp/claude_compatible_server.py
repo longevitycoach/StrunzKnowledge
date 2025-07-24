@@ -189,7 +189,7 @@ async def perform_health_checks():
         tool_check = {
             "status": "healthy",
             "total_tools": len(tool_registry),
-            "tools_available": list(tool_registry.keys())[:10]  # Show first 10 tools
+            "tools_available": list(tool_registry.keys())  # Show all tools
         }
         
         if len(tool_registry) == 0:
@@ -302,6 +302,9 @@ async def health_check():
         # Perform comprehensive health checks
         health_status = await perform_health_checks()
         
+        # Get prompts (tools ending with _prompt)
+        prompt_tools = [tool for tool in tool_registry.keys() if tool.endswith('_prompt')]
+        
         # Base response for all methods
         response_data = {
             "status": health_status["overall"],
@@ -311,6 +314,11 @@ async def health_check():
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
+            "tools_summary": {
+                "total": len(tool_registry),
+                "tools": list(tool_registry.keys()),
+                "prompts": prompt_tools
+            },
             "health": health_status,
             "endpoints": {
                 "sse": "/sse",
