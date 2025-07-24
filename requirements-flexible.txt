@@ -17,11 +17,12 @@ numpy~=1.26.0
 # System Monitoring
 psutil~=5.9.0
 
-# MCP Server (let pip resolve exact versions)
-fastmcp>=0.1.0
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-sse-starlette>=2.0.0
+# MCP Server - Using Official SDK
+# FastMCP removed - now using Official MCP SDK
+mcp>=1.0.0
+# OAuth and template support
+pyjwt>=2.8.0
+jinja2>=3.1.0
 
 # LLM Integration (let these resolve together)
 langchain>=0.1.5

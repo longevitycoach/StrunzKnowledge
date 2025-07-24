@@ -1,0 +1,27 @@
+# Quick test Dockerfile for MCP SDK server
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements-prod.txt .
+COPY requirements-flexible.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements-flexible.txt
+
+# Copy source code
+COPY src/ ./src/
+COPY main.py ./
+
+# Create data directories
+RUN mkdir -p data/faiss_indices/combined data/raw data/processed logs
+
+# Copy pre-built FAISS indices if available
+COPY data/faiss_indices/combined/index.faiss data/faiss_indices/combined/index.faiss || true
+COPY data/faiss_indices/combined/metadata.json data/faiss_indices/combined/metadata.json || true
+
+EXPOSE 8000
+
+# Simple command to test the MCP SDK server
+CMD ["python", "-c", "from src.mcp.mcp_sdk_clean import main; import asyncio; asyncio.run(main())"]

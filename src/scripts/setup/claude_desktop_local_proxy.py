@@ -2,10 +2,16 @@
 """
 Claude Desktop Local Proxy for Strunz Knowledge MCP Server
 Uses FastMCP to create a local STDIO proxy to the remote Railway server
+
+NOTE: This utility script still uses FastMCP for creating a proxy.
+The main server (mcp_sdk_clean.py) uses the Official MCP SDK.
 """
 
 import requests
 import json
+
+# NOTE: This script requires FastMCP to be installed separately if used
+# pip install fastmcp
 from fastmcp import FastMCP
 
 # Create FastMCP app for Claude Desktop

@@ -1068,7 +1068,7 @@ Dr. Strunz's newsletter occasionally features guest authors who align with his m
 
 ## Personalization Notes
 {"- Athletic training increases nutrient demands" if athlete else ""}
-{"- Age " + str(age) + " considerations: Focus on " + ("hormonal optimization" if age > 40 else "prevention") else ""}
+{"- Age " + str(age) + " considerations: Focus on " + ("hormonal optimization" if age > 40 else "prevention") if age else ""}
 {"- Existing conditions require adjusted targets" if conditions else ""}
 
 ## Dr. Strunz's Key Principles
