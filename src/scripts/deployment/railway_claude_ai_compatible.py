@@ -39,7 +39,7 @@ def get_mcp_server_purpose():
     """Get information about this MCP server"""
     return {
         "name": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.9.5",
+        "version": "0.9.6",
         "purpose": "Claude.ai compatible MCP server with health and nutrition tools",
         "endpoint_test": "Claude.ai endpoint working"
     }
@@ -74,7 +74,7 @@ from src.mcp.claude_compatible_server import (
 # Create FastAPI app
 app = FastAPI(
     title="Dr. Strunz Knowledge MCP Server (Claude.ai Compatible)",
-    version="0.9.5",
+    version="0.9.6",
     description="MCP server with Claude.ai specific compatibility"
 )
 
@@ -94,7 +94,7 @@ _claude_clients = {}  # Store Claude.ai client registrations
 @app.on_event("startup")
 async def startup_event():
     """Initialize server on startup"""
-    logger.info("Starting Claude.ai Compatible MCP Server v0.9.5")
+    logger.info("Starting Claude.ai Compatible MCP Server v0.9.6")
     
     # Preload vector store
     try:
@@ -122,46 +122,47 @@ app.get("/oauth/authorize")(authorize)
 app.post("/oauth/authorize")(authorize_post)
 app.post("/oauth/token")(token_endpoint)
 
-# MCP resource discovery - Enhanced for Claude.ai
-@app.get("/.well-known/mcp/resource")
-async def mcp_resource():
-    """Enhanced MCP resource discovery for Claude.ai"""
-    base_url = f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
-    
-    return JSONResponse({
-        "mcpVersion": "2025-03-26",
-        "serverInfo": {
-            "name": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.5",
-            "vendor": "Longevity Coach"
-        },
-        "transport": ["sse", "http"],
-        "endpoints": {
-            "sse": f"{base_url}/sse",
-            "messages": f"{base_url}/messages",
-            "tools": f"{base_url}/tools",
-            "prompts": f"{base_url}/prompts"
-        },
-        "authentication": {
-            "type": "oauth2",
-            "required": False,  # Claude.ai might not require auth
-            "oauth2": {
-                "authorizationUrl": f"{base_url}/oauth/authorize",
-                "tokenUrl": f"{base_url}/oauth/token",
-                "registrationUrl": f"{base_url}/oauth/register",
-                "scopes": {
-                    "read": "Read access to knowledge base",
-                    "write": "Write access (not implemented)"
-                }
-            }
-        },
-        "capabilities": {
-            "tools": True,
-            "prompts": True,
-            "resources": False,
-            "sampling": False
-        }
-    })
+# MCP resource discovery - DISABLED for Claude.ai compatibility
+# The working bloodtest-mcp-server has NO resource discovery endpoint
+# @app.get("/.well-known/mcp/resource")
+# async def mcp_resource():
+#     """Enhanced MCP resource discovery for Claude.ai"""
+#     base_url = f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
+#     
+#     return JSONResponse({
+#         "mcpVersion": "2025-03-26",
+#         "serverInfo": {
+#             "name": "Dr. Strunz Knowledge MCP Server",
+#             "version": "0.9.6",
+#             "vendor": "Longevity Coach"
+#         },
+#         "transport": ["sse", "http"],
+#         "endpoints": {
+#             "sse": f"{base_url}/sse",
+#             "messages": f"{base_url}/messages",
+#             "tools": f"{base_url}/tools",
+#             "prompts": f"{base_url}/prompts"
+#         },
+#         "authentication": {
+#             "type": "oauth2",
+#             "required": False,  # Claude.ai might not require auth
+#             "oauth2": {
+#                 "authorizationUrl": f"{base_url}/oauth/authorize",
+#                 "tokenUrl": f"{base_url}/oauth/token",
+#                 "registrationUrl": f"{base_url}/oauth/register",
+#                 "scopes": {
+#                     "read": "Read access to knowledge base",
+#                     "write": "Write access (not implemented)"
+#                 }
+#             }
+#         },
+#         "capabilities": {
+#             "tools": True,
+#             "prompts": True,
+#             "resources": False,
+#             "sampling": False
+#         }
+#     })
 
 # Claude.ai specific authentication endpoint
 @app.get("/api/organizations/{org_id}/mcp/start-auth/{auth_id}")
@@ -247,7 +248,7 @@ async def messages_endpoint(request: Request):
                     },
                     "serverInfo": {
                         "name": "Dr. Strunz Knowledge MCP Server",
-                        "version": "0.9.5",
+                        "version": "0.9.6",
                         "vendor": "Longevity Coach"
                     }
                 },

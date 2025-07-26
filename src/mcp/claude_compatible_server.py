@@ -16,7 +16,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 # FastAPI imports
-from fastapi import FastAPI, Request, Depends, Query, Form, HTTPException
+from fastapi import FastAPI, Request, Response, Depends, Query, Form, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,7 +39,7 @@ OFFICIAL_MCP_AVAILABLE = False
 
 # Server configuration
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.8.3"
+SERVER_VERSION = "0.9.6"
 PROTOCOL_VERSION = "2025-03-26"
 
 # Track server start time for uptime calculation
@@ -295,7 +295,7 @@ async def health_check():
             return JSONResponse({
                 "status": "healthy",
                 "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.5",
+                "version": "0.9.6",
                 "timestamp": datetime.now().isoformat()
             }, status_code=200)
         
@@ -309,7 +309,7 @@ async def health_check():
         response_data = {
             "status": health_status["overall"],
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.5",
+            "version": "0.9.6",
             "protocol_version": PROTOCOL_VERSION,
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
@@ -353,7 +353,7 @@ async def health_check():
         return JSONResponse({
             "status": "healthy",
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.5",
+            "version": "0.9.6",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "railway": {
@@ -376,7 +376,7 @@ async def detailed_health_check():
         diagnostics = {
             "server_info": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.5",
+                "version": "0.9.6",
                 "protocol_version": PROTOCOL_VERSION,
                 "transport": "sse",
                 "start_time": datetime.fromtimestamp(start_time).isoformat(),
@@ -443,7 +443,7 @@ async def railway_status():
             "health_status": health_status["overall"],
             "deployment_timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
-            "version": "0.9.5",
+            "version": "0.9.6",
             "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
             "critical_services": {
                 "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
@@ -477,7 +477,7 @@ async def debug_env():
         "CLAUDE_AI_SKIP_OAUTH": os.environ.get("CLAUDE_AI_SKIP_OAUTH", "not_set"),
         "CLAUDE_AI_MINIMAL_OAUTH": os.environ.get("CLAUDE_AI_MINIMAL_OAUTH", "not_set"),
         "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT", "not_set"),
-        "version": "0.9.5",
+        "version": "0.9.6",
         "oauth_mode": "minimal" if os.environ.get("CLAUDE_AI_MINIMAL_OAUTH", "false").lower() == "true" else ("disabled" if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true" else "full")
     })
 
@@ -489,9 +489,16 @@ async def sse_endpoint(request: Request, user=Depends(get_current_user)):
     SSE endpoint for Claude.ai MCP communication.
     Uses the older SSE transport that Claude.ai expects.
     """
-    # Handle HEAD requests for health checks
+    # Handle HEAD requests for health checks - must return SSE headers
     if request.method == "HEAD":
-        return JSONResponse({"status": "ok"}, status_code=200)
+        return Response(
+            status_code=200,
+            headers={
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no"
+            }
+        )
     
     # Check if this is a Claude Desktop request
     user_agent = request.headers.get("user-agent", "")
@@ -641,7 +648,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.5"
+                "version": "0.9.6"
             }
         }
     }
@@ -1003,37 +1010,12 @@ async def claude_ai_callback(code: str = Query(None), state: str = Query(None), 
         "message": "Authentication successful"
     })
 
-# MCP Resource Discovery
-@app.get("/.well-known/mcp/resource")
-async def mcp_resource_metadata():
-    """MCP resource metadata for discovery"""
-    base_url = os.environ.get('BASE_URL', 'https://strunz.up.railway.app')
-    
-    # Base metadata
-    metadata = {
-        "mcpVersion": PROTOCOL_VERSION,
-        "transport": ["sse"],
-        "endpoints": {
-            "sse": f"{base_url}/sse",
-            "messages": f"{base_url}/messages"
-        }
-    }
-    
-    # Only add authentication if OAuth is not skipped
-    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() != "true":
-        metadata["authentication"] = {
-            "type": "oauth2",
-            "oauth2": {
-                "authorizationUrl": f"{base_url}/oauth/authorize",
-                "tokenUrl": f"{base_url}/oauth/token",
-                "scopes": {
-                    "read": "Read access to knowledge base",
-                    "write": "Write access (not implemented)"
-                }
-            }
-        }
-    
-    return metadata
+# MCP Resource Discovery - REMOVED for Claude.ai compatibility
+# The working bloodtest-mcp-server has NO resource discovery endpoint
+# @app.get("/.well-known/mcp/resource")
+# async def mcp_resource_metadata():
+#     """MCP resource metadata for discovery"""
+#     # REMOVED - Claude.ai works without this endpoint
 
 
 async def main():

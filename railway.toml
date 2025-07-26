@@ -44,8 +44,4 @@ value = "true"
 
 [[envs]]
 name = "CLAUDE_AI_SKIP_OAUTH"
-value = "false"
-
-[[envs]]
-name = "CLAUDE_AI_MINIMAL_OAUTH"
 value = "true"
