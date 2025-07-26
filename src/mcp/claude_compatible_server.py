@@ -295,7 +295,7 @@ async def health_check():
             return JSONResponse({
                 "status": "healthy",
                 "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.3",
+                "version": "0.9.4",
                 "timestamp": datetime.now().isoformat()
             }, status_code=200)
         
@@ -309,7 +309,7 @@ async def health_check():
         response_data = {
             "status": health_status["overall"],
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.3",
+            "version": "0.9.4",
             "protocol_version": PROTOCOL_VERSION,
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
@@ -353,7 +353,7 @@ async def health_check():
         return JSONResponse({
             "status": "healthy",
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.3",
+            "version": "0.9.4",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "railway": {
@@ -376,7 +376,7 @@ async def detailed_health_check():
         diagnostics = {
             "server_info": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.3",
+                "version": "0.9.4",
                 "protocol_version": PROTOCOL_VERSION,
                 "transport": "sse",
                 "start_time": datetime.fromtimestamp(start_time).isoformat(),
@@ -443,7 +443,7 @@ async def railway_status():
             "health_status": health_status["overall"],
             "deployment_timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
-            "version": "0.9.3",
+            "version": "0.9.4",
             "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
             "critical_services": {
                 "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
@@ -476,7 +476,7 @@ async def debug_env():
     return JSONResponse({
         "CLAUDE_AI_SKIP_OAUTH": os.environ.get("CLAUDE_AI_SKIP_OAUTH", "not_set"),
         "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT", "not_set"),
-        "version": "0.9.3"
+        "version": "0.9.4"
     })
 
 @app.get("/sse")
@@ -639,7 +639,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.3"
+                "version": "0.9.4"
             }
         }
     }
@@ -867,6 +867,19 @@ async def authorize_post(
         return RedirectResponse(url=redirect_url)
     else:
         return RedirectResponse(url=f"{redirect_uri}?error=access_denied")
+
+# Add route for Claude.ai which uses /authorize instead of /oauth/authorize
+@app.get("/authorize")
+async def authorize_redirect(
+    request: Request
+):
+    """Redirect /authorize to /oauth/authorize for Claude.ai compatibility"""
+    # Always return 404 when OAuth is disabled
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        raise HTTPException(status_code=404, detail="OAuth not enabled")
+    # If OAuth were enabled, redirect to the correct path
+    query_string = str(request.url.query)
+    return RedirectResponse(url=f"/oauth/authorize?{query_string}")
 
 @app.post("/oauth/token")
 async def token_endpoint(
