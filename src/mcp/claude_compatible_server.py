@@ -875,19 +875,92 @@ async def userinfo(user=Depends(get_current_user)):
     """User Info Endpoint"""
     return {"sub": "user", "name": "Dr. Strunz Knowledge User"}
 
+# Claude.ai specific endpoints
+@app.get("/api/organizations/{org_id}/mcp/start-auth/{auth_id}")
+async def claude_ai_start_auth(org_id: str, auth_id: str, redirect_url: Optional[str] = Query(None)):
+    """Claude.ai specific authentication start endpoint"""
+    # Store client info
+    client_id = f"claude_{auth_id[:16]}"
+    
+    # Check if OAuth should be skipped (default: true for Claude.ai)
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        return JSONResponse({
+            "status": "success",
+            "auth_not_required": True,
+            "server_url": "https://strunz.up.railway.app",
+            "message": "MCP server ready for use"
+        })
+    
+    # Otherwise redirect to OAuth flow
+    oauth_redirect = redirect_url or "https://claude.ai/api/callback"
+    oauth_params = {
+        "client_id": client_id,
+        "redirect_uri": oauth_redirect,
+        "response_type": "code",
+        "state": auth_id,
+        "scope": "read"
+    }
+    
+    # Build OAuth URL
+    oauth_url = f"/oauth/authorize?" + "&".join([f"{k}={v}" for k, v in oauth_params.items()])
+    return RedirectResponse(url=oauth_url, status_code=302)
+
+@app.get("/api/mcp/auth_callback")
+async def claude_ai_oauth_callback(code: str = Query(None), state: str = Query(None)):
+    """OAuth callback handler for Claude.ai"""
+    # Return success HTML with postMessage for iframe communication
+    return HTMLResponse(f'''
+        <html>
+        <head><title>MCP Authentication</title></head>
+        <body>
+            <script>
+                // Send message to parent window (Claude.ai)
+                if (window.parent !== window) {{
+                    window.parent.postMessage({{
+                        type: 'mcp-oauth-success',
+                        code: '{code}',
+                        state: '{state}'
+                    }}, '*');
+                }}
+            </script>
+            <h1>✓ Successfully Connected!</h1>
+            <p>You can close this window now.</p>
+        </body>
+        </html>
+    ''')
+
+@app.get("/api/callback")
+async def claude_ai_callback(code: str = Query(None), state: str = Query(None), error: str = Query(None)):
+    """Alternative callback endpoint for Claude.ai"""
+    if error:
+        return JSONResponse({"error": error}, status_code=400)
+    
+    return JSONResponse({
+        "status": "success",
+        "code": code,
+        "state": state,
+        "message": "Authentication successful"
+    })
+
 # MCP Resource Discovery
 @app.get("/.well-known/mcp/resource")
 async def mcp_resource_metadata():
     """MCP resource metadata for discovery"""
     base_url = os.environ.get('BASE_URL', 'https://strunz.up.railway.app')
-    return {
+    
+    # Base metadata
+    metadata = {
         "mcpVersion": PROTOCOL_VERSION,
         "transport": ["sse"],
         "endpoints": {
             "sse": f"{base_url}/sse",
             "messages": f"{base_url}/messages"
-        },
-        "authentication": {
+        }
+    }
+    
+    # Only add authentication if OAuth is not skipped
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() != "true":
+        metadata["authentication"] = {
             "type": "oauth2",
             "oauth2": {
                 "authorizationUrl": f"{base_url}/oauth/authorize",
@@ -898,7 +971,8 @@ async def mcp_resource_metadata():
                 }
             }
         }
-    }
+    
+    return metadata
 
 
 async def main():
