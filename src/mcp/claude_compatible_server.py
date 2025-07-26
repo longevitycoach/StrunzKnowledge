@@ -39,7 +39,7 @@ OFFICIAL_MCP_AVAILABLE = False
 
 # Server configuration
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.9.8"
+SERVER_VERSION = "0.9.9"
 PROTOCOL_VERSION = "2025-03-26"
 
 # Track server start time for uptime calculation
@@ -295,7 +295,7 @@ async def health_check():
             return JSONResponse({
                 "status": "healthy",
                 "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.8",
+                "version": "0.9.9",
                 "timestamp": datetime.now().isoformat()
             }, status_code=200)
         
@@ -309,7 +309,7 @@ async def health_check():
         response_data = {
             "status": health_status["overall"],
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.8",
+            "version": "0.9.9",
             "protocol_version": PROTOCOL_VERSION,
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
@@ -353,7 +353,7 @@ async def health_check():
         return JSONResponse({
             "status": "healthy",
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.8",
+            "version": "0.9.9",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "railway": {
@@ -376,7 +376,7 @@ async def detailed_health_check():
         diagnostics = {
             "server_info": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.8",
+                "version": "0.9.9",
                 "protocol_version": PROTOCOL_VERSION,
                 "transport": "sse",
                 "start_time": datetime.fromtimestamp(start_time).isoformat(),
@@ -443,7 +443,7 @@ async def railway_status():
             "health_status": health_status["overall"],
             "deployment_timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
-            "version": "0.9.8",
+            "version": "0.9.9",
             "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
             "critical_services": {
                 "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
@@ -477,7 +477,7 @@ async def debug_env():
         "CLAUDE_AI_SKIP_OAUTH": os.environ.get("CLAUDE_AI_SKIP_OAUTH", "not_set"),
         "CLAUDE_AI_MINIMAL_OAUTH": os.environ.get("CLAUDE_AI_MINIMAL_OAUTH", "not_set"),
         "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT", "not_set"),
-        "version": "0.9.8",
+        "version": "0.9.9",
         "oauth_mode": "minimal" if os.environ.get("CLAUDE_AI_MINIMAL_OAUTH", "false").lower() == "true" else ("disabled" if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true" else "full")
     })
 
@@ -542,7 +542,7 @@ async def sse_endpoint(request: Request, user=Depends(get_current_user)):
                         },
                         "serverInfo": {
                             "name": "Dr. Strunz Knowledge MCP Server",
-                            "version": "0.9.8"
+                            "version": "0.9.9"
                         }
                     },
                     "id": init_data.get("id")
@@ -594,6 +594,7 @@ async def sse_endpoint(request: Request, user=Depends(get_current_user)):
 
 @app.post("/messages")
 @app.post("/messages/")
+@app.post("/mcp")  # Claude.ai sometimes uses /mcp instead of /messages
 async def messages_endpoint(request: Request, session_id: Optional[str] = Query(None), user=Depends(get_current_user)):
     """
     Messages endpoint for MCP requests.
@@ -675,7 +676,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.8"
+                "version": "0.9.9"
             }
         }
     }
@@ -825,6 +826,7 @@ async def oauth_protected_resource():
     }
 
 @app.post("/oauth/register")
+@app.post("/register")  # Claude.ai uses /register instead of /oauth/register
 async def register_client(request: Request):
     """Dynamic Client Registration (RFC 7591)"""
     # If minimal OAuth is enabled, let minimal_oauth handle this

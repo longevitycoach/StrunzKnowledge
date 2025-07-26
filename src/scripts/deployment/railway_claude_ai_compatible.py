@@ -39,7 +39,7 @@ def get_mcp_server_purpose():
     """Get information about this MCP server"""
     return {
         "name": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.9.8",
+        "version": "0.9.9",
         "purpose": "Claude.ai compatible MCP server with health and nutrition tools",
         "endpoint_test": "Claude.ai endpoint working"
     }
@@ -74,7 +74,7 @@ from src.mcp.claude_compatible_server import (
 # Create FastAPI app
 app = FastAPI(
     title="Dr. Strunz Knowledge MCP Server (Claude.ai Compatible)",
-    version="0.9.8",
+    version="0.9.9",
     description="MCP server with Claude.ai specific compatibility"
 )
 
@@ -94,7 +94,7 @@ _claude_clients = {}  # Store Claude.ai client registrations
 @app.on_event("startup")
 async def startup_event():
     """Initialize server on startup"""
-    logger.info("Starting Claude.ai Compatible MCP Server v0.9.8")
+    logger.info("Starting Claude.ai Compatible MCP Server v0.9.9")
     
     # Preload vector store
     try:
@@ -133,7 +133,7 @@ app.post("/oauth/token")(token_endpoint)
 #         "mcpVersion": "2025-03-26",
 #         "serverInfo": {
 #             "name": "Dr. Strunz Knowledge MCP Server",
-#             "version": "0.9.8",
+#             "version": "0.9.9",
 #             "vendor": "Longevity Coach"
 #         },
 #         "transport": ["sse", "http"],
@@ -248,7 +248,7 @@ async def messages_endpoint(request: Request):
                     },
                     "serverInfo": {
                         "name": "Dr. Strunz Knowledge MCP Server",
-                        "version": "0.9.8",
+                        "version": "0.9.9",
                         "vendor": "Longevity Coach"
                     }
                 },
