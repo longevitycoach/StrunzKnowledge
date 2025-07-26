@@ -41,3 +41,7 @@ value = "strunz.railway.internal"
 [[envs]]
 name = "RAILWAY_HEALTHCHECK_BASIC"
 value = "true"
+
+[[envs]]
+name = "CLAUDE_AI_SKIP_OAUTH"
+value = "true"
