@@ -39,7 +39,7 @@ OFFICIAL_MCP_AVAILABLE = False
 
 # Server configuration
 SERVER_NAME = "Dr. Strunz Knowledge MCP Server"
-SERVER_VERSION = "0.9.9"
+SERVER_VERSION = "1.0.0"
 PROTOCOL_VERSION = "2025-03-26"
 
 # Track server start time for uptime calculation
@@ -295,7 +295,7 @@ async def health_check():
             return JSONResponse({
                 "status": "healthy",
                 "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.9",
+                "version": "1.0.0",
                 "timestamp": datetime.now().isoformat()
             }, status_code=200)
         
@@ -309,7 +309,7 @@ async def health_check():
         response_data = {
             "status": health_status["overall"],
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.9",
+            "version": "1.0.0",
             "protocol_version": PROTOCOL_VERSION,
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
@@ -353,7 +353,7 @@ async def health_check():
         return JSONResponse({
             "status": "healthy",
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.9",
+            "version": "1.0.0",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "railway": {
@@ -376,7 +376,7 @@ async def detailed_health_check():
         diagnostics = {
             "server_info": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.9",
+                "version": "1.0.0",
                 "protocol_version": PROTOCOL_VERSION,
                 "transport": "sse",
                 "start_time": datetime.fromtimestamp(start_time).isoformat(),
@@ -443,7 +443,7 @@ async def railway_status():
             "health_status": health_status["overall"],
             "deployment_timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
-            "version": "0.9.9",
+            "version": "1.0.0",
             "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
             "critical_services": {
                 "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
@@ -477,7 +477,7 @@ async def debug_env():
         "CLAUDE_AI_SKIP_OAUTH": os.environ.get("CLAUDE_AI_SKIP_OAUTH", "not_set"),
         "CLAUDE_AI_MINIMAL_OAUTH": os.environ.get("CLAUDE_AI_MINIMAL_OAUTH", "not_set"),
         "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT", "not_set"),
-        "version": "0.9.9",
+        "version": "1.0.0",
         "oauth_mode": "minimal" if os.environ.get("CLAUDE_AI_MINIMAL_OAUTH", "false").lower() == "true" else ("disabled" if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true" else "full")
     })
 
@@ -542,7 +542,7 @@ async def sse_endpoint(request: Request, user=Depends(get_current_user)):
                         },
                         "serverInfo": {
                             "name": "Dr. Strunz Knowledge MCP Server",
-                            "version": "0.9.9"
+                            "version": "1.0.0"
                         }
                     },
                     "id": init_data.get("id")
@@ -619,6 +619,12 @@ async def messages_endpoint(request: Request, session_id: Optional[str] = Query(
             result = await handle_tool_call(params)
         elif method == "prompts/list":
             result = handle_prompts_list()
+        elif method == "resources/list":
+            result = handle_resources_list()
+        elif method == "notifications/initialized":
+            result = handle_initialized_notification()
+        elif method == "notifications/cancelled":
+            result = handle_cancelled_notification()
         else:
             result = {
                 "error": {
@@ -676,7 +682,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.9"
+                "version": "1.0.0"
             }
         }
     }
@@ -715,13 +721,39 @@ def handle_tools_list() -> Dict:
 
 def handle_prompts_list() -> Dict:
     """Handle prompts/list request"""
-    # For now, return an empty list of prompts
-    # In the future, this could be extended to include actual prompts
+    # Return actual prompts from our tool registry
+    prompts = []
+    for name, func in tool_registry.items():
+        if name.endswith('_prompt'):
+            prompts.append({
+                "name": name,
+                "description": (func.__doc__ or "").strip() or f"Prompt: {name}",
+                "arguments": []
+            })
+    
     return {
         "result": {
-            "prompts": []
+            "prompts": prompts
         }
     }
+
+def handle_resources_list() -> Dict:
+    """Handle resources/list request"""
+    # MCP resources represent external data sources
+    # For now, we don't expose any resources (our tools handle data internally)
+    return {
+        "result": {
+            "resources": []
+        }
+    }
+
+def handle_initialized_notification() -> Dict:
+    """Handle notifications/initialized - no response needed"""
+    return {}
+
+def handle_cancelled_notification() -> Dict:
+    """Handle notifications/cancelled - no response needed"""
+    return {}
 
 
 async def handle_tool_call(params: Dict) -> Dict:
