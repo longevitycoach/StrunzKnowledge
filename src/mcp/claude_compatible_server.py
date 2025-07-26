@@ -295,7 +295,7 @@ async def health_check():
             return JSONResponse({
                 "status": "healthy",
                 "server": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.1",
+                "version": "0.9.2",
                 "timestamp": datetime.now().isoformat()
             }, status_code=200)
         
@@ -309,7 +309,7 @@ async def health_check():
         response_data = {
             "status": health_status["overall"],
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.1",
+            "version": "0.9.2",
             "protocol_version": PROTOCOL_VERSION,
             "transport": "sse",
             "timestamp": datetime.now().isoformat(),
@@ -353,7 +353,7 @@ async def health_check():
         return JSONResponse({
             "status": "healthy",
             "server": "Dr. Strunz Knowledge MCP Server",
-            "version": "0.9.1",
+            "version": "0.9.2",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "railway": {
@@ -376,7 +376,7 @@ async def detailed_health_check():
         diagnostics = {
             "server_info": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.1",
+                "version": "0.9.2",
                 "protocol_version": PROTOCOL_VERSION,
                 "transport": "sse",
                 "start_time": datetime.fromtimestamp(start_time).isoformat(),
@@ -443,7 +443,7 @@ async def railway_status():
             "health_status": health_status["overall"],
             "deployment_timestamp": datetime.now().isoformat(),
             "uptime_seconds": round(time.time() - start_time, 2),
-            "version": "0.9.1",
+            "version": "0.9.2",
             "ready_for_traffic": health_status["overall"] in ["healthy", "degraded"],
             "critical_services": {
                 "vector_store": health_status["checks"].get("vector_store", {}).get("status", "unknown"),
@@ -630,7 +630,7 @@ def handle_initialize(params: Dict) -> Dict:
             },
             "serverInfo": {
                 "name": "Dr. Strunz Knowledge MCP Server",
-                "version": "0.9.1"
+                "version": "0.9.2"
             }
         }
     }
@@ -734,10 +734,14 @@ async def handle_tool_call(params: Dict) -> Dict:
         }
 
 
-# OAuth Endpoints
+# OAuth Endpoints - Only enabled when OAuth is not skipped
 @app.get("/.well-known/oauth-authorization-server")
 async def oauth_metadata():
     """OAuth 2.1 Authorization Server Metadata (RFC 8414)"""
+    # If OAuth is skipped, return 404
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        raise HTTPException(status_code=404, detail="OAuth not enabled")
+    
     base_url = os.environ.get('BASE_URL', 'https://strunz.up.railway.app')
     return {
         "issuer": base_url,
@@ -756,6 +760,10 @@ async def oauth_metadata():
 @app.get("/.well-known/oauth-protected-resource")
 async def oauth_protected_resource():
     """OAuth 2.0 Protected Resource Metadata (RFC 8705)"""
+    # If OAuth is skipped, return 404
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        raise HTTPException(status_code=404, detail="OAuth not enabled")
+    
     base_url = os.environ.get('BASE_URL', 'https://strunz.up.railway.app')
     return {
         "resource": base_url,
@@ -767,6 +775,10 @@ async def oauth_protected_resource():
 @app.post("/oauth/register")
 async def register_client(request: Request):
     """Dynamic Client Registration (RFC 7591)"""
+    # If OAuth is skipped, return 404
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        raise HTTPException(status_code=404, detail="OAuth not enabled")
+    
     try:
         data = await request.json()
         client_id = f"client_{uuid.uuid4().hex[:16]}"
@@ -797,6 +809,9 @@ async def authorize(
     code_challenge_method: Optional[str] = Query(default=None)
 ):
     """OAuth Authorization Endpoint"""
+    # If OAuth is skipped, return 404
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        raise HTTPException(status_code=404, detail="OAuth not enabled")
     # For simplicity, auto-approve for known clients
     if "claude" in client_id.lower() or "claude.ai" in redirect_uri:
         # Generate authorization code
@@ -853,6 +868,9 @@ async def token_endpoint(
     redirect_uri: Optional[str] = Form(default=None)
 ):
     """OAuth Token Endpoint"""
+    # If OAuth is skipped, return 404
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        raise HTTPException(status_code=404, detail="OAuth not enabled")
     try:
         if grant_type == "authorization_code":
             # Generate access token
