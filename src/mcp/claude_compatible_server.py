@@ -470,6 +470,15 @@ async def railway_status():
         }, status_code=500)
 
 
+@app.get("/debug/env")
+async def debug_env():
+    """Debug endpoint to check environment variables"""
+    return JSONResponse({
+        "CLAUDE_AI_SKIP_OAUTH": os.environ.get("CLAUDE_AI_SKIP_OAUTH", "not_set"),
+        "RAILWAY_ENVIRONMENT": os.environ.get("RAILWAY_ENVIRONMENT", "not_set"),
+        "version": "0.9.2"
+    })
+
 @app.get("/sse")
 @app.post("/sse")
 @app.head("/sse")
