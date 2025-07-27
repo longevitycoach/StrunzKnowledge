@@ -364,7 +364,8 @@ async def health_check():
             "oauth": "/oauth/*"
         },
         "tools_count": len(TOOLS),
-        "protocol_version": "2025-03-26"
+        "protocol_version": "2025-03-26",
+        "deployment_time": datetime.utcnow().isoformat()
     })
 
 # SSE endpoint
