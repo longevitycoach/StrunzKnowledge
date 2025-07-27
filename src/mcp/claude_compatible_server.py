@@ -546,6 +546,14 @@ async def claude_ai_start_auth(org_id: str, auth_id: str, redirect_url: Optional
     
     return JSONResponse({"error": "OAuth not implemented"}, status_code=501)
 
+async def main():
+    """Main entry point for HTTP/SSE transport"""
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
