@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE/MCP Tester</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #252526; padding: 10px; margin: 10px 0; border-radius: 5px; overflow-x: auto; }
+        .success { color: #4fc1ff; }
+        .error { color: #f44747; }
+        .event { color: #dcdcaa; }
+        .data { color: #ce9178; }
+        h2 { color: #569cd6; }
+        input { padding: 5px; margin: 5px; width: 300px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 MCP Server Tester</h1>
+        
+        <div>
+            <input type="text" id="serverUrl" value="http://localhost:8000" placeholder="Server URL">
+            <button onclick="testHealth()">Test Health</button>
+            <button onclick="connectSSE()">Connect SSE</button>
+            <button onclick="testInitialize()">Test Initialize</button>
+            <button onclick="testTools()">List Tools</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+        
+        <h2>Connection Status</h2>
+        <div id="status" class="log">Not connected</div>
+        
+        <h2>Event Log</h2>
+        <div id="eventLog" class="log"></div>
+        
+        <h2>API Responses</h2>
+        <div id="apiLog" class="log"></div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        let sessionId = null;
+        
+        function log(message, target = 'eventLog', className = '') {
+            const log = document.getElementById(target);
+            const entry = document.createElement('div');
+            entry.className = className;
+            entry.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('eventLog').innerHTML = '';
+            document.getElementById('apiLog').innerHTML = '';
+        }
+        
+        async function testHealth() {
+            const url = document.getElementById('serverUrl').value;
+            try {
+                const response = await fetch(url + '/');
+                const data = await response.json();
+                log('Health check: ' + JSON.stringify(data, null, 2), 'apiLog', 'success');
+            } catch (error) {
+                log('Health check failed: ' + error.message, 'apiLog', 'error');
+            }
+        }
+        
+        function connectSSE() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            const url = document.getElementById('serverUrl').value + '/sse';
+            log('Connecting to SSE: ' + url, 'eventLog');
+            
+            eventSource = new EventSource(url);
+            document.getElementById('status').textContent = 'Connecting...';
+            
+            eventSource.onopen = function() {
+                document.getElementById('status').textContent = '✅ Connected';
+                document.getElementById('status').className = 'log success';
+                log('SSE connection opened', 'eventLog', 'success');
+            };
+            
+            eventSource.onerror = function(error) {
+                document.getElementById('status').textContent = '❌ Connection error';
+                document.getElementById('status').className = 'log error';
+                log('SSE error: ' + JSON.stringify(error), 'eventLog', 'error');
+            };
+            
+            eventSource.addEventListener('endpoint', function(e) {
+                log('Event: endpoint', 'eventLog', 'event');
+                log('Data: ' + e.data, 'eventLog', 'data');
+                
+                // Extract session ID
+                if (e.data.includes('session_id=')) {
+                    sessionId = e.data.split('session_id=')[1];
+                    log('Session ID captured: ' + sessionId, 'eventLog', 'success');
+                }
+            });
+            
+            eventSource.addEventListener('ping', function(e) {
+                log('Event: ping - ' + e.data, 'eventLog', 'event');
+            });
+            
+            eventSource.onmessage = function(e) {
+                log('Message: ' + e.data, 'eventLog', 'data');
+            };
+        }
+        
+        async function testInitialize() {
+            const url = document.getElementById('serverUrl').value + '/messages/';
+            const fullUrl = sessionId ? url + '?session_id=' + sessionId : url;
+            
+            const request = {
+                jsonrpc: "2.0",
+                id: "init-1",
+                method: "initialize",
+                params: {
+                    protocolVersion: "2025-03-26",
+                    capabilities: {},
+                    clientInfo: {name: "Browser Test", version: "1.0.0"}
+                }
+            };
+            
+            try {
+                const response = await fetch(fullUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(request)
+                });
+                const data = await response.json();
+                log('Initialize response: ' + JSON.stringify(data, null, 2), 'apiLog', 'success');
+            } catch (error) {
+                log('Initialize failed: ' + error.message, 'apiLog', 'error');
+            }
+        }
+        
+        async function testTools() {
+            const url = document.getElementById('serverUrl').value + '/messages/';
+            
+            const request = {
+                jsonrpc: "2.0",
+                id: "tools-1",
+                method: "tools/list"
+            };
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(request)
+                });
+                const data = await response.json();
+                
+                if (data.result && data.result.tools) {
+                    const tools = data.result.tools;
+                    log(`Found ${tools.length} tools:`, 'apiLog', 'success');
+                    
+                    tools.slice(0, 5).forEach(tool => {
+                        const props = tool.inputSchema?.properties || {};
+                        const params = Object.keys(props).join(', ') || 'no parameters';
+                        log(`  - ${tool.name}: ${params}`, 'apiLog');
+                    });
+                    
+                    if (tools.length > 5) {
+                        log(`  ... and ${tools.length - 5} more tools`, 'apiLog');
+                    }
+                } else {
+                    log('Tools response: ' + JSON.stringify(data, null, 2), 'apiLog');
+                }
+            } catch (error) {
+                log('Tools list failed: ' + error.message, 'apiLog', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
