@@ -18,6 +18,9 @@ os.environ['RAILWAY_ENVIRONMENT'] = 'production'
 os.environ.setdefault('RAILWAY_PUBLIC_DOMAIN', 'strunz.up.railway.app')
 os.environ.setdefault('RAILWAY_PRIVATE_DOMAIN', 'strunz.railway.internal')
 os.environ.setdefault('PORT', '8080')
+
+# Version and deployment info
+VERSION = "3.0.0"
 os.environ.setdefault('LOG_LEVEL', 'INFO')
 
 # Force HTTP transport for Railway
