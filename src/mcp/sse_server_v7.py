@@ -47,7 +47,7 @@ def initialize_knowledge_searcher():
 
 # Create FastMCP server with stateful session management
 mcp_server = FastMCP(
-    name="Dr. Strunz Knowledge Server v0.9.0",
+    name="Dr. Strunz Knowledge Server v2.2.0",
     # Enable stateful session management for proper SSE support
     stateless_http=False,
     # Disable JSON responses to use proper SSE streaming
@@ -470,7 +470,7 @@ async def health_check(request):
     return JSONResponse({
         "status": "ok",
         "service": "Dr. Strunz Knowledge MCP Server",
-        "version": "0.9.0",
+        "version": "2.2.0",
         "transport": "sse",
         "mcp_implementation": "Official MCP Python SDK (FastMCP)",
         "protocol_version": "2025-11-05",
