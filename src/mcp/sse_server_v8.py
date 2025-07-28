@@ -58,7 +58,7 @@ def initialize_knowledge_searcher():
 
 # Create FastMCP server with stateful session management
 mcp_server = FastMCP(
-    name="Dr. Strunz Knowledge Server v2.2.0",
+    name="Dr. Strunz Knowledge Server v2.3.0",
     # Enable stateful session management for proper SSE support
     stateless_http=False,
     # Disable JSON responses to use proper SSE streaming
@@ -130,7 +130,7 @@ def search_knowledge(
 # Create FastAPI app
 app = FastAPI(
     title="Dr. Strunz Knowledge MCP Server",
-    version="2.2.0",
+    version="2.3.0",
     description="MCP server with Gemini API integration and rate limiting"
 )
 
@@ -251,7 +251,7 @@ async def health_check(request: Request):
     return JSONResponse({
         "status": "ok",
         "service": "Dr. Strunz Knowledge MCP Server",
-        "version": "2.2.0",
+        "version": "2.3.0",
         "transport": "sse",
         "mcp_implementation": "Official MCP Python SDK (FastMCP)",
         "protocol_version": "2025-11-05",
