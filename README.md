@@ -1261,6 +1261,23 @@ The comprehensive visualization above shows:
 
 ## Getting Started
 
+### 🆕 Auth-less Client Integration (Browser Extension)
+
+The StrunzKnowledge MCP Client will be available as a browser extension, enabling seamless integration on any website:
+
+**Key Features:**
+- 🔑 **Single Key Setup**: Just add your Gemini API key - no OAuth or server authentication
+- 🌐 **Universal Access**: Works on any website through browser extension
+- 🔒 **Privacy First**: All processing happens in your browser
+- ⚡ **Instant Search**: Select text on any page to search Dr. Strunz's knowledge
+
+**Coming Soon:**
+- Chrome Extension (Q2 2025)
+- Firefox Extension (Q3 2025)
+- Edge Extension (Q3 2025)
+
+See [MCP Client Documentation](docs/mcp-client/) for development progress.
+
 ### Quick Start for Users
 
 1. **Access the Knowledge Base**
@@ -2638,6 +2655,30 @@ pip install -r requirements-dev.txt  # For development
 **📁 Implementation:** [`src/mcp/enhanced_server.py`](https://github.com/yourusername/StrunzKnowledge/blob/main/src/mcp/enhanced_server.py)
 
 Our enhanced MCP server transforms Dr. Strunz's knowledge into actionable health insights through specialized tools designed for different user roles and use cases.
+
+#### 🤖 NEW: Gemini-Enhanced Tools (Auth-less Client Support)
+
+When `GOOGLE_GEMINI_API_KEY` is configured, additional AI-powered tools become available:
+
+**🔮 `search_knowledge_gemini`** - Intelligent search with LLM synthesis
+- **Purpose**: Get AI-synthesized answers from search results
+- **Features**: Contextual understanding, key concept extraction, practical recommendations
+- **Auth-less**: Works directly with Gemini API key, no server auth needed
+
+**💬 `ask_strunz_gemini`** - Direct Q&A with AI assistant
+- **Purpose**: Ask health questions and get personalized answers based on Dr. Strunz's teachings
+- **Features**: Contextual responses, practical action steps, scientific backing
+- **Best for**: Quick health guidance and personalized recommendations
+
+**📊 `analyze_health_topic_gemini`** - Comprehensive topic analysis
+- **Purpose**: Deep dive into health topics with multi-perspective analysis
+- **Features**: Book/news/forum synthesis, aspect-based analysis, practical guidelines
+- **Best for**: Researchers and practitioners needing comprehensive overviews
+
+**✅ `validate_gemini_connection`** - Test API connectivity
+- **Purpose**: Verify Gemini API setup for auth-less client integration
+- **Features**: Connection testing, configuration validation
+- **Setup**: See [Gemini Setup Guide](docs/GEMINI_SETUP.md)
 
 #### 🔍 Core Search & Discovery Tools
 

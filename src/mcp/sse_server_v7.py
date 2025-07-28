@@ -27,6 +27,14 @@ from mcp.server.fastmcp import FastMCP
 # Import our knowledge search functionality
 from src.rag.search import KnowledgeSearcher
 
+# Import Gemini-enhanced tools (if API key is available)
+try:
+    from src.mcp.tools.gemini_enhanced_tools import register_gemini_tools
+    GEMINI_AVAILABLE = bool(os.environ.get('GOOGLE_GEMINI_API_KEY'))
+except ImportError:
+    GEMINI_AVAILABLE = False
+    register_gemini_tools = None
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -467,6 +475,11 @@ async def auth_callback(request):
 # Health check endpoint
 async def health_check(request):
     """Health check endpoint"""
+    # Calculate actual tools count
+    tools_count = 5  # Base tools
+    if GEMINI_AVAILABLE:
+        tools_count += 4  # Gemini-enhanced tools
+    
     return JSONResponse({
         "status": "ok",
         "service": "Dr. Strunz Knowledge MCP Server",
@@ -474,8 +487,13 @@ async def health_check(request):
         "transport": "sse",
         "mcp_implementation": "Official MCP Python SDK (FastMCP)",
         "protocol_version": "2025-11-05",
-        "tools_count": 5,
+        "tools_count": tools_count,
         "session_management": "stateful",
+        "gemini_integration": {
+            "available": GEMINI_AVAILABLE,
+            "auth_less_ready": GEMINI_AVAILABLE,
+            "enhanced_tools": ["search_knowledge_gemini", "ask_strunz_gemini", "analyze_health_topic_gemini", "validate_gemini_connection"] if GEMINI_AVAILABLE else []
+        },
         "endpoints": {
             "sse": "/",  # SSE is mounted at root
             "health": "/health",
@@ -495,7 +513,7 @@ async def health_check(request):
             "claude_ai_compatible",
             "enhanced_error_handling",
             "parameter_validation"
-        ],
+        ] + (["gemini_integration", "auth_less_client", "llm_synthesis", "intelligent_search"] if GEMINI_AVAILABLE else []),
         "improvements": [
             "Better error messages",
             "Parameter validation",
@@ -543,6 +561,17 @@ async def startup_event():
     logger.info("Using official MCP Python SDK (FastMCP)")
     logger.info("Enhanced with better error handling and parameter validation")
     initialize_knowledge_searcher()
+    
+    # Register Gemini-enhanced tools if available
+    if GEMINI_AVAILABLE and register_gemini_tools:
+        try:
+            register_gemini_tools(mcp_server, knowledge_searcher)
+            logger.info("✅ Gemini-enhanced tools registered successfully")
+            logger.info("🔑 Auth-less client integration ready with Gemini API")
+        except Exception as e:
+            logger.warning(f"Failed to register Gemini tools: {e}")
+    else:
+        logger.info("ℹ️  Gemini tools not available (no API key configured)")
 
 if __name__ == "__main__":
     import uvicorn
