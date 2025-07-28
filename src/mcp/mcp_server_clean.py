@@ -422,10 +422,7 @@ async def main():
         await app.run(
             read_stream,
             write_stream,
-            InitializationOptions(
-                server_name="strunz-knowledge",
-                server_version="2.0.0"
-            )
+            # InitializationOptions are passed by the client, not here
         )
 
 if __name__ == "__main__":
