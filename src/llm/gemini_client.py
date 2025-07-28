@@ -31,7 +31,7 @@ class GeminiClient:
             raise ValueError("GOOGLE_GEMINI_API_KEY not found in environment variables")
         
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
-        self.model = "models/gemini-pro"
+        self.model = "models/gemini-2.5-flash"
         self.session = None
         
     async def __aenter__(self):
@@ -230,7 +230,7 @@ class GeminiEnhancedSearch:
             'key_concepts': concepts,
             'raw_results': formatted_results[:k],
             'sources_used': list(set(r['source'] for r in formatted_results[:k])),
-            'enhanced_by': 'gemini-pro'
+            'enhanced_by': 'gemini-2.5-flash'
         }
 
 

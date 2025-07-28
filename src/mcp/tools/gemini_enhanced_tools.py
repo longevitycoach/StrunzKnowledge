@@ -256,7 +256,7 @@ Structure your analysis with:
                     "status": "success",
                     "api_key_valid": is_valid,
                     "api_key_configured": bool(os.getenv('GOOGLE_GEMINI_API_KEY')),
-                    "model": "gemini-pro",
+                    "model": "gemini-2.5-flash",
                     "test_response": test_response[:100] + "..." if len(test_response) > 100 else test_response,
                     "ready_for_client": is_valid,
                     "auth_less_compatible": True

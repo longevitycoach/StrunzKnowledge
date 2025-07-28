@@ -117,6 +117,7 @@ Free tier includes:
 - 60 requests per minute
 - 1,000,000 tokens per month
 - No charge for first tier
+- Model: gemini-2.5-flash (latest and fastest)
 
 Monitor usage:
 - Google Cloud Console > APIs & Services > Credentials
