@@ -2,7 +2,7 @@
 """
 Clean MCP SDK Server - Official Implementation
 Dr. Strunz Knowledge Base MCP Server using official MCP SDK
-Version: 2.0.0 - Clean implementation without web dependencies
+Version: 1.0.3 - Clean implementation without web dependencies
 """
 
 import os
@@ -1634,7 +1634,7 @@ Focus on evidence-based interventions that Dr. Strunz has validated in his pract
 
 async def main():
     """Main entry point for clean MCP SDK server"""
-    logger.info("=== CLEAN MCP SDK SERVER v2.0.0 ===")
+    logger.info("=== CLEAN MCP SDK SERVER v1.0.3 ===")
     logger.info("Starting Dr. Strunz Knowledge MCP Server with official SDK...")
     
     # Create server instance

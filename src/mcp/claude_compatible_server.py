@@ -357,7 +357,7 @@ async def health_check():
     return JSONResponse({
         "status": "ok",
         "service": "Dr. Strunz Knowledge MCP Server",
-        "version": "1.0.3",
+        "version": "2.0.0",
         "endpoints": {
             "sse": "/sse",
             "messages": "/messages",
@@ -433,7 +433,7 @@ async def messages_endpoint(request: Request, session_id: Optional[str] = Query(
                     },
                     "serverInfo": {
                         "name": "Dr. Strunz Knowledge MCP Server",
-                        "version": "1.0.3"
+                        "version": "2.0.0"
                     }
                 }
             }
