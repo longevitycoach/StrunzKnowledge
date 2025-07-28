@@ -13,14 +13,16 @@
             <p class="subtitle">AI-powered health insights from Dr. Ulrich Strunz's knowledge base</p>
         </header>
 
-        <!-- API Key Setup -->
+        <!-- Loading Panel -->
         <div id="setup-panel" class="setup-panel">
-            <h2>🔑 Setup</h2>
+            <h2>🔄 Connecting...</h2>
             <div class="setup-content">
-                <label for="gemini-key">Gemini API Key:</label>
-                <input type="password" id="gemini-key" placeholder="Enter your Gemini API key">
-                <button id="save-key" class="btn btn-primary">Save & Connect</button>
-                <p class="hint">Get your key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></p>
+                <p>Connecting to StrunzKnowledge server...</p>
+                <div class="loading-dots" style="margin: 20px auto; text-align: center;">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </div>
         </div>
 

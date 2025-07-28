@@ -5,14 +5,15 @@
 
 class StrunzKnowledgeChat {
     constructor() {
-        this.geminiKey = null;
-        this.mcpServerUrl = 'https://strunz.up.railway.app';
+        // Use localhost for development, Railway URL for production
+        this.mcpServerUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://strunz.up.railway.app';
         this.isConnected = false;
         
         this.initializeElements();
         this.attachEventListeners();
         this.checkMCPServer();
-        this.loadSavedKey();
     }
 
     initializeElements() {
@@ -36,25 +37,10 @@ class StrunzKnowledgeChat {
     }
 
     attachEventListeners() {
-        this.saveKeyBtn.addEventListener('click', () => this.saveApiKey());
         this.sendBtn.addEventListener('click', () => this.sendMessage());
         this.chatInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
-        
-        // Allow saving key with Enter
-        this.geminiKeyInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.saveApiKey();
-        });
-    }
-
-    loadSavedKey() {
-        const savedKey = localStorage.getItem('gemini_api_key');
-        if (savedKey) {
-            this.geminiKey = savedKey;
-            this.geminiKeyInput.value = savedKey;
-            this.connectWithKey();
-        }
     }
 
     async checkMCPServer() {
@@ -69,6 +55,11 @@ class StrunzKnowledgeChat {
                 // Check if Gemini tools are available
                 if (data.gemini_integration && data.gemini_integration.available) {
                     this.mcpStatus.textContent += ' (Gemini Enhanced)';
+                    
+                    // Auto-connect if server has Gemini configured
+                    if (data.gemini_integration.server_side_key) {
+                        this.connectToServer();
+                    }
                 }
             }
         } catch (error) {
@@ -77,38 +68,17 @@ class StrunzKnowledgeChat {
         }
     }
 
-    saveApiKey() {
-        const key = this.geminiKeyInput.value.trim();
-        if (!key) {
-            alert('Please enter your Gemini API key');
-            return;
-        }
-        
-        this.geminiKey = key;
-        localStorage.setItem('gemini_api_key', key);
-        this.connectWithKey();
+    connectToServer() {
+        this.isConnected = true;
+        this.setupPanel.style.display = 'none';
+        this.chatContainer.style.display = 'flex';
+        this.chatInput.disabled = false;
+        this.sendBtn.disabled = false;
+        this.statusText.textContent = '🟢 Connected';
+        this.statusText.classList.add('connected');
+        this.chatInput.focus();
     }
 
-    async connectWithKey() {
-        try {
-            // Test the Gemini API key
-            const testResponse = await this.callGeminiAPI('Hello, respond with "OK" if you can hear me.');
-            
-            if (testResponse.includes('OK') || testResponse.length > 0) {
-                this.isConnected = true;
-                this.setupPanel.style.display = 'none';
-                this.chatContainer.style.display = 'flex';
-                this.chatInput.disabled = false;
-                this.sendBtn.disabled = false;
-                this.statusText.textContent = '🟢 Connected';
-                this.statusText.classList.add('connected');
-                this.chatInput.focus();
-            }
-        } catch (error) {
-            alert('Invalid API key or connection error. Please check your key.');
-            console.error('Connection error:', error);
-        }
-    }
 
     async sendMessage() {
         const message = this.chatInput.value.trim();
@@ -149,27 +119,12 @@ class StrunzKnowledgeChat {
             
         } catch (error) {
             this.removeMessage(loadingId);
-            this.addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            this.addMessage(error.message || 'Sorry, I encountered an error. Please try again.', 'assistant');
             console.error('Chat error:', error);
         }
     }
 
     async searchKnowledge(query) {
-        // First, try to use MCP server's Gemini-enhanced search if available
-        try {
-            const response = await this.callMCPTool('search_knowledge_gemini', {
-                query: query,
-                limit: 5
-            });
-            
-            if (response.status === 'success') {
-                return this.formatSearchResponse(response);
-            }
-        } catch (error) {
-            console.log('Falling back to direct Gemini search');
-        }
-        
-        // Fallback to direct Gemini API
         const prompt = `
 As an expert on Dr. Ulrich Strunz's health and nutrition knowledge, search for information about: "${query}"
 
@@ -181,7 +136,7 @@ Provide relevant findings from Dr. Strunz's work, including:
 
 Format your response in a clear, helpful way.`;
 
-        return await this.callGeminiAPI(prompt);
+        return await this.callServerGemini(prompt, 'search');
     }
 
     async askDrStrunz(question) {
@@ -198,7 +153,7 @@ Provide:
 
 Keep the response helpful and actionable.`;
 
-        return await this.callGeminiAPI(prompt);
+        return await this.callServerGemini(prompt, 'ask');
     }
 
     async analyzeHealthTopic(topic) {
@@ -214,35 +169,38 @@ Include:
 
 Structure your analysis to be thorough yet accessible.`;
 
-        return await this.callGeminiAPI(prompt);
+        return await this.callServerGemini(prompt, 'analyze');
     }
 
-    async callGeminiAPI(prompt) {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.geminiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
+    async callServerGemini(prompt, toolType) {
+        try {
+            const response = await fetch(`${this.mcpServerUrl}/api/gemini/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    tool_type: toolType,
                     temperature: 0.7,
-                    topP: 0.95,
-                    maxOutputTokens: 2048,
+                    max_tokens: 2048
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                if (response.status === 429) {
+                    throw new Error(`Rate limit exceeded: ${error.detail.message}. Please try again in ${error.detail.retry_after} seconds.`);
                 }
-            })
-        });
+                throw new Error(`Server error: ${error.detail || response.statusText}`);
+            }
 
-        if (!response.ok) {
-            throw new Error(`Gemini API error: ${response.status}`);
+            const data = await response.json();
+            return data.response;
+        } catch (error) {
+            console.error('Server Gemini error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
     }
 
     async callMCPTool(toolName, params) {
@@ -337,17 +295,51 @@ Structure your analysis to be thorough yet accessible.`;
     }
 
     formatMarkdown(text) {
-        // Simple markdown formatting
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>')
-            .replace(/^/, '<p>')
-            .replace(/$/, '</p>')
-            .replace(/(\d+)\.\s+(.+?)(?=\n|$)/g, '<li>$2</li>')
-            .replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>')
-            .replace(/<\/li><li>/g, '</li><li>');
+        // Enhanced markdown to HTML conversion
+        let html = text;
+        
+        // Headers
+        html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+        
+        // Bold and italic
+        html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Lists - handle numbered lists
+        html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+        // Wrap consecutive <li> tags in <ol>
+        html = html.replace(/(<li>.*?<\/li>\n?)+/g, function(match) {
+            return '<ol>' + match + '</ol>';
+        });
+        
+        // Lists - handle bullet points
+        html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
+        // Wrap consecutive <li> tags that aren't in <ol> in <ul>
+        html = html.replace(/(<li>(?!.*<ol>).*?<\/li>\n?)+/g, function(match) {
+            if (!match.includes('<ol>')) {
+                return '<ul>' + match + '</ul>';
+            }
+            return match;
+        });
+        
+        // Paragraphs
+        html = html.split('\n\n').map(para => {
+            // Don't wrap headers, lists, or already wrapped content
+            if (para.match(/^<[houl]/i) || para.trim() === '') {
+                return para;
+            }
+            return '<p>' + para.replace(/\n/g, '<br>') + '</p>';
+        }).join('\n');
+        
+        // Clean up
+        html = html.replace(/<p><\/p>/g, '');
+        html = html.replace(/<p>(<[houl])/gi, '$1');
+        html = html.replace(/(<\/[houl]>)<\/p>/gi, '$1');
+        
+        return html;
     }
 
     escapeHtml(text) {

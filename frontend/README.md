@@ -1,16 +1,16 @@
 # StrunzKnowledge Chat Frontend
 
-A standalone web-based chat interface that uses the Gemini API to interact with Dr. Strunz's knowledge base. This is a true auth-less client implementation - no server authentication required, just your Gemini API key!
+A standalone web-based chat interface that uses the server-side Gemini API to interact with Dr. Strunz's knowledge base. No API keys needed - just open and chat!
 
 ## Features
 
-- 🔑 **Single Key Setup**: Just add your Gemini API key - no OAuth or complex authentication
-- 💬 **AI-Powered Chat**: Direct integration with Google's Gemini 2.5 Flash model
+- 🚀 **Zero Setup**: No API keys needed - uses server-side Gemini integration
+- 💬 **AI-Powered Chat**: Powered by Google's Gemini 2.5 Flash model
 - 🔍 **Smart Search**: Search Dr. Strunz's books, articles, and forum posts
 - 📊 **Health Analysis**: Get comprehensive analysis of health topics
 - 🎨 **Modern UI**: Clean, responsive chat interface
-- 🔒 **Privacy First**: All processing happens in your browser
-- 💾 **Local Storage**: Your API key is saved locally for convenience
+- 🛡️ **Rate Limiting**: Built-in protection against excessive usage
+- 💰 **Cost Control**: Server-side throttling to manage API costs
 
 ## Quick Start
 
@@ -35,15 +35,13 @@ Simply open `frontend/index.html` in your browser (some features may be limited 
 
 ## Setup
 
-1. **Get a Gemini API Key**:
-   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create a new API key
-   - Copy the key
+1. **Ensure Server is Running**:
+   - The MCP server must be running with `GOOGLE_GEMINI_API_KEY` configured
+   - Check server status at http://localhost:8000/health
 
 2. **Open the Chat Interface**:
    - Navigate to http://localhost:8080
-   - Paste your Gemini API key
-   - Click "Save & Connect"
+   - The interface will auto-connect to the server
 
 3. **Start Chatting**:
    - Use the search tool to find specific information
@@ -64,17 +62,21 @@ Get a comprehensive analysis of any health topic from Dr. Strunz's perspective, 
 ## Technical Details
 
 - **Frontend**: Pure HTML5, CSS3, and Vanilla JavaScript
-- **AI Model**: Google Gemini 2.5 Flash
-- **API**: Direct client-side calls to Gemini API
-- **Storage**: LocalStorage for API key persistence
-- **MCP Server**: Optional integration with https://strunz.up.railway.app
+- **AI Model**: Google Gemini 2.5 Flash (server-side)
+- **API**: Server-proxied calls with rate limiting
+- **Rate Limits**: 
+  - 5 requests per minute per IP
+  - 30 requests per hour per IP
+  - $5 daily cost limit
+- **MCP Server**: Required at https://strunz.up.railway.app or localhost
 
-## Security
+## Security & Rate Limiting
 
-- Your Gemini API key is stored locally in your browser
-- All API calls are made directly from your browser to Google's servers
-- No data is sent to any intermediate servers
-- The MCP server connection is optional and read-only
+- No API keys stored in browser
+- Server-side Gemini API key management
+- Automatic rate limiting per IP address
+- Daily cost controls to prevent excessive usage
+- All requests proxied through secure server
 
 ## Customization
 
@@ -94,17 +96,18 @@ Edit these files to customize the interface:
 
 ## Troubleshooting
 
-**API Key Issues**:
-- Ensure your key is valid in Google AI Studio
-- Check that the Generative Language API is enabled
-- Verify you haven't exceeded rate limits
-
 **Connection Issues**:
-- Check browser console for errors
-- Ensure CORS is not blocking requests
+- Ensure the MCP server is running (check http://localhost:8000/health)
+- Verify `GOOGLE_GEMINI_API_KEY` is set in server environment
+- Check browser console for CORS errors
 - Try using the Python server (`serve.py`)
+
+**Rate Limit Errors**:
+- Wait 60 seconds between requests if you hit the limit
+- Check rate limit stats at http://localhost:8000/api/gemini/stats
+- Daily limits reset at midnight
 
 **No Results**:
 - Try rephrasing your question
 - Use more specific health-related terms
-- Check that your API key has access to Gemini 2.5 Flash
+- Check server logs for Gemini API errors

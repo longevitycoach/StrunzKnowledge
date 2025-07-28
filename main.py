@@ -47,7 +47,7 @@ async def main():
     
     if transport == 'sse':
         # Run SSE server for web deployment
-        from src.mcp.sse_server_v7 import app
+        from src.mcp.sse_server_v8 import app
         import uvicorn
         
         port = int(os.environ.get("PORT", 8000))
