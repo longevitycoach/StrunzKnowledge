@@ -2099,6 +2099,18 @@ async def research_query():
 
 ## Technical Architecture
 
+### 🚀 Version 2.0.0: Complete MCP SDK Rewrite
+
+As of v2.0.0, the StrunzKnowledge MCP server has been completely rewritten using the official MCP Python SDK, providing:
+
+- **Official SDK Compliance**: Built entirely on the official `mcp` Python package
+- **Clean Architecture**: Separation of server logic from transport implementations
+- **Dual Transport Support**: 
+  - STDIO for Claude Desktop (local)
+  - SSE/HTTP for Claude.ai and web clients
+- **Full Protocol Compliance**: Implements MCP protocol v2025-11-05
+- **Comprehensive Testing**: Full test suite for all MCP capabilities
+
 ### OAuth 2.1 Implementation
 
 The MCP server implements full OAuth 2.1 with Dynamic Client Registration for secure authentication:

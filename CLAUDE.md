@@ -105,10 +105,33 @@ The following Dr. Ulrich Strunz books have been processed:
 - **Verification**: Check package at https://github.com/longevitycoach/StrunzKnowledge/pkgs/container/strunzknowledge/
 - **Cleanup Scripts**: Use `src/scripts/cleanup_dockerhub_versions.sh` to maintain clean registry (keep only latest 5 versions)
 
-## MCP Claude.ai Integration - RESOLVED ✅
+## MCP Claude.ai Integration - COMPLETE REWRITE ✅
+
+### Version 2.0.0 Solution (2025-07-28)
+Complete rewrite using official MCP Python SDK. All issues resolved.
+
+### Architecture Changes
+
+1. **Official MCP SDK Implementation**:
+   - Removed all custom FastAPI/SSE implementations
+   - Using `mcp` Python package for server logic
+   - Clean separation of concerns (server vs transport)
+
+2. **Transport Layer**:
+   - STDIO transport for Claude Desktop (mcp_server_clean.py)
+   - SSE/HTTP transport for Claude.ai (sse_server.py with Starlette)
+   - Unified main.py entry point handles both transports
+
+3. **Key Files**:
+   - `src/mcp/mcp_server_clean.py` - Core MCP server using official SDK
+   - `src/mcp/sse_server.py` - SSE transport wrapper
+   - `main.py` - Unified entry point
+   - `test_sse_flow.py` - SSE testing script
+   - `src/tests/test_mcp_comprehensive.py` - Full test suite
+   - `src/tests/test_mcp_inspector.py` - MCP Inspector compatibility tests
 
 ### Solution Summary (2025-07-22)
-Claude.ai integration is now fully functional with OAuth 2.1 support and all 20 tools exposed.
+Claude.ai integration is now fully functional with OAuth 2.1 support and all 8 tools exposed.
 
 ### Key Fixes Implemented:
 
@@ -241,23 +264,26 @@ async def claude_ai_start_auth(org_id: str, auth_id: str):
 ### Testing Commands
 
 ```bash
-# Test with official MCP client
-python -m mcp.client connect https://strunz.up.railway.app
+# Test SSE endpoint locally
+python test_sse_flow.py
 
-# Test OAuth flow manually
-curl -X POST https://strunz.up.railway.app/oauth/register \
-  -d '{"client_name": "Test Client", "redirect_uris": ["https://claude.ai/callback"]}'
+# Run comprehensive MCP test suite
+python src/tests/test_mcp_comprehensive.py
+
+# Test MCP Inspector compatibility
+python src/tests/test_mcp_inspector.py
 
 # Monitor Railway logs
-railway logs --service strunz-knowledge --tail
+railway logs --service strunz-knowledge
 ```
 
-### Success Criteria
-- [ ] Official MCP client can connect and execute tools
-- [ ] Claude.ai can discover our server
-- [ ] Claude.ai can authenticate (if needed)
-- [ ] Claude.ai can list and execute tools
-- [ ] No "not_available" errors
+### Success Criteria (v2.0.0) ✅
+- [x] SSE transport working with session management
+- [x] All 8 tools properly exposed with complete schemas
+- [x] MCP Inspector can connect and execute tools
+- [x] Railway deployment successful
+- [x] No "not_available" errors
+- [x] Protocol version 2025-11-05 compliance
 
 ## Development Notes and Warnings
 
