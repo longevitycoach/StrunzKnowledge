@@ -27,8 +27,13 @@ def get_transport():
     if os.environ.get('RAILWAY_ENVIRONMENT'):
         return 'sse'
     
-    # Check explicit transport setting
-    transport = os.environ.get('MCP_TRANSPORT', 'stdio').lower()
+    # Check explicit transport setting (support both TRANSPORT and MCP_TRANSPORT)
+    transport = os.environ.get('TRANSPORT', os.environ.get('MCP_TRANSPORT', 'stdio')).lower()
+    
+    # Map 'http' to 'sse' for backward compatibility
+    if transport == 'http':
+        transport = 'sse'
+    
     return transport
 
 async def main():
