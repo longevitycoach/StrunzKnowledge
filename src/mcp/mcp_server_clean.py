@@ -419,10 +419,21 @@ async def main():
     
     # Run the server using stdio transport
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
+        # Create initialization options with basic capabilities
+        init_options = InitializationOptions(
+            server_name="strunz-knowledge",
+            server_version="2.2.0",
+            capabilities=types.ServerCapabilities(
+                tools=types.ToolsCapability(),
+                prompts=types.PromptsCapability(),
+                resources=types.ResourcesCapability(),
+            ),
+        )
+        
         await app.run(
             read_stream,
             write_stream,
-            # InitializationOptions are passed by the client, not here
+            init_options
         )
 
 if __name__ == "__main__":
