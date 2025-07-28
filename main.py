@@ -40,7 +40,7 @@ async def main():
     """Main entry point"""
     transport = get_transport()
     
-    print("🚀 Starting StrunzKnowledge MCP Server v0.7.9")
+    print("🚀 Starting StrunzKnowledge MCP Server v0.9.0")
     print("📚 Using official MCP Python SDK")
     print(f"📡 Transport: {transport}")
     print(f"📍 Environment: {os.environ.get('RAILWAY_ENVIRONMENT', 'local')}")
