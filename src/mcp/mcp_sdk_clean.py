@@ -41,8 +41,20 @@ class StrunzKnowledgeServer:
     
     def __init__(self):
         self.server = Server(SERVER_NAME)
-        self.vector_store = None
+        self.knowledge_searcher = None
+        self.initialize_knowledge_searcher()
         self.setup_handlers()
+    
+    def initialize_knowledge_searcher(self):
+        """Initialize the knowledge searcher with vector store"""
+        try:
+            from src.rag.search import KnowledgeSearcher
+            logger.info("Initializing KnowledgeSearcher...")
+            self.knowledge_searcher = KnowledgeSearcher()
+            logger.info("KnowledgeSearcher initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize KnowledgeSearcher: {e}")
+            self.knowledge_searcher = None
         
     def setup_handlers(self):
         """Setup all MCP handlers"""
@@ -343,10 +355,6 @@ class StrunzKnowledgeServer:
         async def call_tool(name: str, arguments: dict) -> List[types.TextContent]:
             """Handle tool calls"""
             try:
-                # Initialize vector store if needed
-                if self.vector_store is None:
-                    await self._init_vector_store()
-                    
                 # Route to appropriate handler
                 if name == "knowledge_search":
                     return await self._handle_knowledge_search(arguments)
@@ -492,15 +500,6 @@ class StrunzKnowledgeServer:
                     ]
                 )
     
-    async def _init_vector_store(self):
-        """Initialize vector store with graceful fallback"""
-        try:
-            from src.rag.search import get_vector_store_singleton
-            self.vector_store = get_vector_store_singleton()
-            logger.info("Vector store initialized successfully")
-        except Exception as e:
-            logger.warning(f"Vector store initialization failed: {e}")
-            self.vector_store = None
     
     async def _handle_knowledge_search(self, arguments: dict) -> List[types.TextContent]:
         """Handle knowledge search requests"""
@@ -508,14 +507,14 @@ class StrunzKnowledgeServer:
         sources = arguments.get("sources", ["books", "news", "forum"])
         limit = arguments.get("limit", 10)
         
-        if not self.vector_store:
+        if not self.knowledge_searcher:
             return [types.TextContent(
                 type="text",
-                text="Vector store not available. Search functionality is temporarily disabled."
+                text="Knowledge searcher not available. Search functionality is temporarily disabled."
             )]
         
         try:
-            results = self.vector_store.search(query, k=limit, source_filter=sources)
+            results = self.knowledge_searcher.search(query, k=limit, sources=sources)
             
             if not results:
                 return [types.TextContent(
@@ -664,6 +663,22 @@ Dr. Strunz advocates for:
 - Positive mindset and stress management
 """
         
+        # Try to find additional biography information from the knowledge base
+        if self.knowledge_searcher:
+            try:
+                # Search for biography-related content
+                results = self.knowledge_searcher.search("Dr. Strunz Biographie Leben Werdegang", k=3)
+                if results:
+                    response_text += "\n## Insights from the Knowledge Base\n"
+                    # Add relevant results with high scores
+                    for result in results:
+                        if result.score > 0.6:  # Relevance threshold
+                            response_text += f"\n> {result.text[:150]}...\n"
+                            response_text += f"*Source: {result.metadata.get('title', 'Unknown')} ({result.metadata.get('year', 'N/A')})*\n"
+                            break  # Only include one high-quality excerpt
+            except Exception as e:
+                logger.debug(f"Biography search enhancement failed: {e}")
+        
         response_text += """
 ## Knowledge Base
 This MCP server contains knowledge from 13 of Dr. Strunz's books, over 6,900 news articles, and forum discussions spanning 2004-2025.
@@ -673,6 +688,16 @@ This MCP server contains knowledge from 13 of Dr. Strunz's books, over 6,900 new
     
     async def _handle_get_mcp_server_purpose(self, arguments: dict) -> List[types.TextContent]:
         """Handle server purpose explanation"""
+        # Get dynamic statistics if available
+        doc_count = "43,373"
+        vector_status = "Ready"
+        
+        if self.knowledge_searcher:
+            stats = self.knowledge_searcher.get_stats()
+            if stats.get("status") == "Ready":
+                doc_count = f"{stats.get('documents', 0):,}"
+                vector_status = stats.get("status", "Ready")
+        
         response_text = f"""# {SERVER_NAME} v{SERVER_VERSION}
 
 ## Purpose
@@ -681,7 +706,7 @@ This MCP (Model Context Protocol) server provides access to Dr. Ulrich Strunz's 
 ## Capabilities
 - **9 Core Tools** for searching and analyzing Dr. Strunz's knowledge
 - **3 Health Prompts** for Claude.ai integration
-- **Vector Search** through 43,373 documents
+- **Vector Search** through {doc_count} documents
 - **Multi-source Content**: Books, news articles, and forum discussions
 
 ## Content Sources
@@ -691,7 +716,7 @@ This MCP (Model Context Protocol) server provides access to Dr. Ulrich Strunz's 
 
 ## Technology
 - Official MCP SDK implementation
-- FAISS vector search with semantic understanding
+- FAISS vector search with semantic understanding ({vector_status})
 - Multilingual support (German/English)
 - Clean stdio transport for reliable integration
 
@@ -710,17 +735,52 @@ This server enables AI assistants to provide evidence-based health advice ground
     async def _handle_get_knowledge_statistics(self, arguments: dict) -> List[types.TextContent]:
         """Handle knowledge statistics request"""
         try:
-            # Get vector store statistics
-            if self.vector_store:
-                total_docs = len(self.vector_store.documents) if hasattr(self.vector_store, 'documents') else 0
+            # Get real statistics from knowledge searcher
+            if self.knowledge_searcher:
+                stats = self.knowledge_searcher.get_stats()
+                vector_store = self.knowledge_searcher.vector_store
                 
                 response_text = "# Knowledge Base Statistics\n\n"
-                response_text += f"## Total Documents: {total_docs:,}\n\n"
                 
-                response_text += "## By Source:\n"
-                response_text += "- Books: ~2,500 chunks\n"
-                response_text += "- News Articles: ~35,000 chunks\n"
-                response_text += "- Forum: ~5,873 chunks\n\n"
+                # Get real document count
+                if stats.get("status") == "Ready":
+                    response_text += f"## Total Documents: {stats.get('documents', 0):,}\n"
+                    response_text += f"## Index Size: {stats.get('index_size', 0):,} vectors\n"
+                    response_text += f"## Vector Dimensions: {stats.get('dimension', 0)}\n\n"
+                else:
+                    response_text += f"## Status: {stats.get('status', 'Unknown')}\n\n"
+                
+                # Count documents by source if available
+                if vector_store and hasattr(vector_store, 'documents') and vector_store.documents:
+                    source_counts = {}
+                    year_counts = {}
+                    
+                    for doc in vector_store.documents:
+                        source = doc.metadata.get('source', 'unknown')
+                        year = doc.metadata.get('year', 'unknown')
+                        
+                        source_counts[source] = source_counts.get(source, 0) + 1
+                        if year != 'unknown':
+                            year_counts[year] = year_counts.get(year, 0) + 1
+                    
+                    response_text += "## By Source:\n"
+                    response_text += f"- Books: {source_counts.get('book', 0):,} chunks\n"
+                    response_text += f"- News Articles: {source_counts.get('news', 0):,} chunks\n"
+                    response_text += f"- Forum: {source_counts.get('forum', 0):,} chunks\n\n"
+                    
+                    # Add year coverage
+                    if year_counts:
+                        sorted_years = sorted(year_counts.keys())
+                        response_text += "## Coverage by Year:\n"
+                        for year in sorted_years[-10:]:  # Last 10 years
+                            response_text += f"- {year}: {year_counts[year]:,} documents\n"
+                        response_text += "\n"
+                else:
+                    # Fallback to static data if documents not loaded
+                    response_text += "## By Source (estimated):\n"
+                    response_text += "- Books: ~2,500 chunks\n"
+                    response_text += "- News Articles: ~35,000 chunks\n"
+                    response_text += "- Forum: ~5,873 chunks\n\n"
                 
                 response_text += "## Book Collection:\n"
                 response_text += "- 13 books from 2002 to 2025\n"
@@ -736,7 +796,7 @@ This server enables AI assistants to provide evidence-based health advice ground
                 
                 return [types.TextContent(type="text", text=response_text)]
             else:
-                return [types.TextContent(type="text", text="Knowledge statistics not available.")]
+                return [types.TextContent(type="text", text="Knowledge searcher not initialized. Statistics unavailable.")]
                 
         except Exception as e:
             logger.error(f"Error getting statistics: {e}")
@@ -744,6 +804,18 @@ This server enables AI assistants to provide evidence-based health advice ground
     
     async def _handle_ping(self, arguments: dict) -> List[types.TextContent]:
         """Handle ping health check"""
+        # Check real vector store status
+        vector_status = "Not initialized"
+        doc_count = 0
+        
+        if self.knowledge_searcher:
+            stats = self.knowledge_searcher.get_stats()
+            if stats.get("status") == "Ready":
+                vector_status = "Ready"
+                doc_count = stats.get("documents", 0)
+            else:
+                vector_status = stats.get("status", "Unknown")
+        
         response_text = f"""# MCP Server Health Check
 
 **Status**: ✅ Healthy
@@ -751,7 +823,8 @@ This server enables AI assistants to provide evidence-based health advice ground
 **Version**: {SERVER_VERSION}
 **Protocol**: {PROTOCOL_VERSION}
 **Timestamp**: {datetime.utcnow().isoformat()}Z
-**Vector Store**: {"Initialized" if self.vector_store else "Not initialized"}
+**Vector Store**: {vector_status}
+**Documents Loaded**: {doc_count:,}
 **Migration Status**: Batch 1 enabled
 
 All systems operational."""

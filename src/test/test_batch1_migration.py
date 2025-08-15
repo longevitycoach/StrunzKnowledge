@@ -30,7 +30,11 @@ async def test_batch1_tools():
     
     # Test tool listing
     print("📋 Listing tools...")
-    tools = await server.server.list_tools()
+    # The list_tools is a decorated handler - call it directly through the setup
+    handler = server.setup_handlers.__code__.co_consts
+    # For now, let's directly check if the tools were registered
+    # by simulating what the MCP server would do
+    tools = await server.list_tools()
     tool_names = [tool.name for tool in tools]
     
     batch1_tools = [
