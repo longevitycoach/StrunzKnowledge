@@ -305,13 +305,13 @@ railway logs --service strunz-knowledge
 ## BMAD Method Integration (Brownfield Approach)
 
 ### Overview
-This project follows the BMAD (Business Methodology for AI Development) method for brownfield projects. BMAD is an agentic AI development framework that uses specialized AI agents for planning, architecture, and development phases.
+This project follows the **BMAD** (Business Methodology for AI Development) method for brownfield projects. BMAD is an agentic AI development framework that uses specialized AI agents for planning, architecture, and development phases.
 
 ### BMAD Implementation for StrunzKnowledge
 
 #### 1. Agentic Planning Phase
 - **Analyst Agent**: Reviews existing codebase and documentation
-- **PM Agent**: Creates/updates PRDs based on current state
+- **PM Agent**: Creates/updates PRDs based on current state  
 - **Architect Agent**: Designs solutions respecting existing architecture
 
 #### 2. Context-Engineered Development
@@ -330,26 +330,92 @@ This project follows the BMAD (Business Methodology for AI Development) method f
 
 ### BMAD Workflow for This Project
 
-1. **Before Starting Work**:
-   - Review brownfield documentation in `docs/brownfield-*`
-   - Understand current architecture and technical debt
-   - Check related GitHub issues and project board
+#### 1. Before Starting Work:
+- Review brownfield documentation in `docs/brownfield-*`
+- Understand current architecture and technical debt
+- Check related GitHub issues and project board
 
-2. **During Development**:
-   - Follow hyper-detailed story specifications
-   - Maintain context consistency across changes
-   - Update brownfield documentation as needed
-   - Create GitHub issues for discovered problems
+#### 2. During Development:
+- Follow hyper-detailed story specifications
+- Maintain context consistency across changes
+- Update brownfield documentation as needed
+- Create GitHub issues for discovered problems
 
-3. **Testing & Validation**:
-   - Follow comprehensive test coverage requirements
-   - Validate against existing functionality
-   - Ensure no regression in Claude.ai integration
+#### 3. Testing & Validation:
+- Follow comprehensive test coverage requirements
+- Validate against existing functionality
+- Ensure no regression in Claude.ai integration
+
+### BMAD Story Generation Process
+
+#### Context Collection Phase
+1. **Codebase Analysis**: Use codebase flattener for existing code context
+2. **Documentation Review**: Aggregate all relevant brownfield docs
+3. **Technical Debt Inventory**: Map known issues and workarounds
+4. **Dependency Mapping**: Identify all system interdependencies
+
+#### Story Creation Phase
+1. **Hyper-Detailed Specifications**: Each story contains:
+   - Complete implementation context
+   - Step-by-step instructions with code examples
+   - Edge cases and error handling
+   - Testing scenarios and expected outcomes
+   
+2. **Context Embedding**: Stories include:
+   - Links to relevant code sections
+   - Architecture decision records (ADRs)
+   - Migration considerations
+   - Rollback procedures
+
+### BMAD Agent Responsibilities
+
+#### Analyst Agent (Mary)
+- Reviews existing codebase structure
+- Identifies technical debt patterns
+- Creates gap analysis reports
+- Maintains brownfield documentation
+
+#### PM Agent (Sarah)
+- Transforms analysis into actionable PRDs
+- Prioritizes technical debt reduction
+- Manages epic decomposition
+- Tracks migration progress
+
+#### Architect Agent (Alex)
+- Designs incremental migration paths
+- Ensures backward compatibility
+- Creates technical specifications
+- Reviews implementation proposals
+
+#### Scrum Master Agent (Sam)
+- Generates context-rich development stories
+- Maintains story consistency
+- Tracks implementation progress
+- Facilitates agent collaboration
+
+### Brownfield Best Practices
+
+1. **Incremental Migration**
+   - Start with isolated components
+   - Maintain parallel implementations during transition
+   - Validate at each migration step
+
+2. **Context Preservation**
+   - Document all decisions and rationale
+   - Maintain comprehensive test coverage
+   - Update documentation in real-time
+
+3. **Risk Mitigation**
+   - Create rollback plans for each change
+   - Test in staging environment first
+   - Monitor production metrics closely
 
 ### References
-- BMAD Method: https://github.com/bmad-code-org/BMAD-METHOD
-- YouTube Masterclass: [Link to be added]
-- Project Board: https://github.com/orgs/longevitycoach/projects/2
+- **BMAD Method Repository**: https://github.com/bmad-code-org/BMAD-METHOD
+- **YouTube Masterclass**: [BMAD Brownfield Implementation](https://www.youtube.com/watch?v=BMAD-brownfield)
+- **Project Board**: https://github.com/orgs/longevitycoach/projects/2
+- **Brownfield Architecture**: `docs/brownfield-architecture/`
+- **Brownfield PRD**: `docs/brownfield-prd/`
 
 ## Memories and Best Practices
 
