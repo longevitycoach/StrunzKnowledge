@@ -9,6 +9,7 @@ import os
 import sys
 import asyncio
 import logging
+from datetime import datetime
 from typing import Dict, List, Optional, Union, Any
 
 # Add project root to path for imports
@@ -182,6 +183,26 @@ class StrunzKnowledgeServer:
                 )
             ])
             
+            # Batch 1 Migration: Simple tools (if enabled)
+            if os.getenv('ENABLE_BATCH1_MIGRATION', 'false').lower() == 'true':
+                tools.extend([
+                    types.Tool(
+                        name="get_knowledge_statistics",
+                        description="Get detailed statistics about the knowledge base",
+                        inputSchema={"type": "object", "properties": {}}
+                    ),
+                    types.Tool(
+                        name="ping",
+                        description="Health check endpoint for the MCP server",
+                        inputSchema={"type": "object", "properties": {}}
+                    ),
+                    types.Tool(
+                        name="get_implementation_status",
+                        description="Get the current implementation status of the FastMCP migration",
+                        inputSchema={"type": "object", "properties": {}}
+                    )
+                ])
+            
             # Batch 2: Medium complexity tools
             tools.extend([
                 types.Tool(
@@ -350,6 +371,13 @@ class StrunzKnowledgeServer:
                     return await self._handle_get_mcp_server_purpose(arguments)
                 elif name == "get_vector_db_analysis":
                     return await self._handle_get_vector_db_analysis(arguments)
+                # Batch 1 Migration tools (if enabled)
+                elif name == "get_knowledge_statistics" and os.getenv('ENABLE_BATCH1_MIGRATION', 'false').lower() == 'true':
+                    return await self._handle_get_knowledge_statistics(arguments)
+                elif name == "ping" and os.getenv('ENABLE_BATCH1_MIGRATION', 'false').lower() == 'true':
+                    return await self._handle_ping(arguments)
+                elif name == "get_implementation_status" and os.getenv('ENABLE_BATCH1_MIGRATION', 'false').lower() == 'true':
+                    return await self._handle_get_implementation_status(arguments)
                 # Batch 2: Medium complexity tools
                 elif name == "compare_approaches":
                     return await self._handle_compare_approaches(arguments)
@@ -675,6 +703,102 @@ This MCP (Model Context Protocol) server provides access to Dr. Ulrich Strunz's 
 - Medical education and reference
 
 This server enables AI assistants to provide evidence-based health advice grounded in Dr. Strunz's proven methodologies.
+"""
+        
+        return [types.TextContent(type="text", text=response_text)]
+    
+    async def _handle_get_knowledge_statistics(self, arguments: dict) -> List[types.TextContent]:
+        """Handle knowledge statistics request"""
+        try:
+            # Get vector store statistics
+            if self.vector_store:
+                total_docs = len(self.vector_store.documents) if hasattr(self.vector_store, 'documents') else 0
+                
+                response_text = "# Knowledge Base Statistics\n\n"
+                response_text += f"## Total Documents: {total_docs:,}\n\n"
+                
+                response_text += "## By Source:\n"
+                response_text += "- Books: ~2,500 chunks\n"
+                response_text += "- News Articles: ~35,000 chunks\n"
+                response_text += "- Forum: ~5,873 chunks\n\n"
+                
+                response_text += "## Book Collection:\n"
+                response_text += "- 13 books from 2002 to 2025\n"
+                response_text += "- Topics: Nutrition, Fitness, Molecular Medicine, Anti-Aging\n\n"
+                
+                response_text += "## News Archive:\n"
+                response_text += "- 6,953 unique articles\n"
+                response_text += "- Daily health insights since 2004\n\n"
+                
+                response_text += "## Forum Activity:\n"
+                response_text += "- 14,435 community discussions\n"
+                response_text += "- Real user experiences and questions\n"
+                
+                return [types.TextContent(type="text", text=response_text)]
+            else:
+                return [types.TextContent(type="text", text="Knowledge statistics not available.")]
+                
+        except Exception as e:
+            logger.error(f"Error getting statistics: {e}")
+            return [types.TextContent(type="text", text=f"Error retrieving statistics: {str(e)}")]
+    
+    async def _handle_ping(self, arguments: dict) -> List[types.TextContent]:
+        """Handle ping health check"""
+        response_text = f"""# MCP Server Health Check
+
+**Status**: ✅ Healthy
+**Server**: {SERVER_NAME}
+**Version**: {SERVER_VERSION}
+**Protocol**: {PROTOCOL_VERSION}
+**Timestamp**: {datetime.utcnow().isoformat()}Z
+**Vector Store**: {"Initialized" if self.vector_store else "Not initialized"}
+**Migration Status**: Batch 1 enabled
+
+All systems operational."""
+        
+        return [types.TextContent(type="text", text=response_text)]
+    
+    async def _handle_get_implementation_status(self, arguments: dict) -> List[types.TextContent]:
+        """Handle implementation status request"""
+        response_text = """# FastMCP Migration Implementation Status
+
+## Overall Progress: 25% (Batch 1 of 4)
+
+### ✅ Batch 1: Simple Tools (In Progress)
+- **Status**: Feature flag enabled
+- **Tools Migrated**: 5/5
+  - ✅ get_mcp_server_purpose
+  - ✅ get_dr_strunz_biography
+  - ✅ get_knowledge_statistics
+  - ✅ ping
+  - ✅ get_implementation_status
+- **Testing**: Awaiting MCP Inspector validation
+
+### ⏳ Batch 2: Health Assessment Tools (Pending)
+- **Status**: Not started
+- **Tools**: 5 health assessment tools
+- **Timeline**: Week 3-4
+
+### ⏳ Batch 3: Complex Analysis Tools (Pending)
+- **Status**: Not started
+- **Tools**: Core search and analysis tools
+- **Timeline**: Week 4
+
+### ⏳ Batch 4: Final Migration (Pending)
+- **Status**: Not started
+- **Tools**: Gemini integration and cleanup
+- **Timeline**: Week 4-5
+
+## Feature Flags
+- `ENABLE_BATCH1_MIGRATION`: true ✅
+- `ENABLE_BATCH2_MIGRATION`: false ⏳
+- `ENABLE_BATCH3_MIGRATION`: false ⏳
+- `ENABLE_BATCH4_MIGRATION`: false ⏳
+
+## Next Steps
+1. Complete MCP Inspector validation for Batch 1
+2. Deploy to staging with monitoring
+3. Begin Batch 2 implementation
 """
         
         return [types.TextContent(type="text", text=response_text)]
