@@ -330,21 +330,31 @@ This project follows the **BMAD** (Business Methodology for AI Development) meth
 
 ### BMAD Workflow for This Project
 
+#### 0. Orchestrator Assessment (Default Entry):
+- Orchestrator Agent (Oscar) receives request
+- Analyzes request complexity and domain
+- Determines appropriate agent(s) for task
+- Establishes coordination pattern (sequential/parallel/iterative)
+- Initiates specialized agent workflow
+
 #### 1. Before Starting Work:
 - Review brownfield documentation in `docs/brownfield-*`
 - Understand current architecture and technical debt
 - Check related GitHub issues and project board
+- Orchestrator ensures all context is gathered
 
 #### 2. During Development:
 - Follow hyper-detailed story specifications
 - Maintain context consistency across changes
 - Update brownfield documentation as needed
 - Create GitHub issues for discovered problems
+- Orchestrator monitors progress and coordinates hand-offs
 
 #### 3. Testing & Validation:
 - Follow comprehensive test coverage requirements
 - Validate against existing functionality
 - Ensure no regression in Claude.ai integration
+- Orchestrator aggregates results from all agents
 
 ### BMAD Story Generation Process
 
@@ -393,6 +403,68 @@ This project follows the **BMAD** (Business Methodology for AI Development) meth
 - Tracks implementation progress
 - Facilitates agent collaboration
 
+### BMAD Default Behavior - Orchestrator Agent
+
+#### Orchestrator Agent (Oscar) - Default Entry Point
+When no specific BMAD role is chosen, the **Orchestrator Agent** automatically activates. This is the recommended default behavior for brownfield projects due to their inherent complexity and need for careful coordination.
+
+**Primary Responsibilities:**
+- Analyzes incoming requests to determine appropriate agent routing
+- Assesses project context and current state
+- Coordinates multi-agent workflows
+- Maintains holistic view of brownfield constraints
+- Ensures smooth hand-offs between specialized agents
+
+#### When No Role is Specified
+
+**Automatic Activation Flow:**
+1. **Request Reception**: Orchestrator receives unrouted request
+2. **Context Analysis**: Evaluates request against project state
+3. **Complexity Assessment**: Determines single vs. multi-agent need
+4. **Agent Selection**: Routes to appropriate specialist(s)
+5. **Oversight**: Monitors execution and results
+6. **Feedback Loop**: Updates routing patterns based on outcomes
+
+**Example Scenarios:**
+- "Fix the login bug" → Routes to Analyst (investigation) → Developer (fix)
+- "Update documentation" → Routes directly to Scrum Master
+- "Improve performance" → Routes to Architect (design) → Developer (implement)
+- "What's our technical debt?" → Routes to Analyst for assessment
+
+#### Orchestrator Decision Matrix
+
+| Request Type | Primary Agent | Secondary Agent | Orchestrator Action |
+|-------------|---------------|-----------------|-------------------|
+| Bug Report | Analyst | Developer | Investigate → Fix → Validate |
+| New Feature | PM | Architect | Requirements → Design → Story |
+| Refactoring | Architect | Developer | Design → Implement → Test |
+| Documentation | Scrum Master | - | Direct routing |
+| Performance Issue | Analyst | Architect | Profile → Design → Optimize |
+| Technical Debt | Analyst | PM | Assess → Prioritize → Plan |
+| Migration Task | Architect | Developer | Plan → Implement → Validate |
+| Unknown/Ambiguous | Orchestrator | Analyst | Clarify → Route → Monitor |
+
+#### Multi-Agent Coordination Patterns
+
+**Sequential Coordination:**
+```
+Orchestrator → Analyst (assess) → Architect (design) → Developer (implement) → QA (validate)
+```
+
+**Parallel Coordination:**
+```
+Orchestrator ┬→ Analyst (current state)
+             ├→ Architect (target state)
+             └→ PM (requirements)
+             ↓
+             Synthesis & Story Generation
+```
+
+**Iterative Coordination:**
+```
+Orchestrator ⟲ Agent A ⟲ Agent B ⟲ Validation ⟲ Refinement
+```
+
 ### Brownfield Best Practices
 
 1. **Incremental Migration**
@@ -409,6 +481,62 @@ This project follows the **BMAD** (Business Methodology for AI Development) meth
    - Create rollback plans for each change
    - Test in staging environment first
    - Monitor production metrics closely
+
+### Orchestrator Best Practices for Brownfield Projects
+
+#### When to Use Orchestrator (Default)
+- **First-time contributors**: Orchestrator helps navigate complex brownfield landscape
+- **Ambiguous requests**: When the appropriate agent isn't immediately clear
+- **Cross-domain tasks**: Work spanning multiple areas of expertise
+- **Discovery tasks**: When you need to understand the current state first
+- **Risk assessment**: For changes with potential system-wide impact
+
+#### When to Bypass Orchestrator
+- **Expert users**: Who know exactly which agent they need
+- **Routine tasks**: Well-defined, single-agent operations
+- **Emergency fixes**: Time-critical issues with clear ownership
+- **Direct follow-ups**: Continuing work with a specific agent
+
+#### Orchestrator Brownfield Patterns
+
+**1. Technical Debt Discovery Pattern**
+```
+Request: "Improve system performance"
+Orchestrator → Analyst (identify bottlenecks)
+            → Architect (design solutions)
+            → PM (prioritize based on impact)
+            → Developer (implement top priority)
+```
+
+**2. Migration Coordination Pattern**
+```
+Request: "Migrate component X to new framework"
+Orchestrator → Analyst (current state assessment)
+            → Architect (migration strategy)
+            → Developer (incremental implementation)
+            → QA (regression testing)
+```
+
+**3. Risk Mitigation Pattern**
+```
+Request: "Update critical dependency"
+Orchestrator → Analyst (impact analysis)
+            → Architect (risk assessment)
+            → Developer (staged rollout plan)
+            → All Agents (monitoring phase)
+```
+
+#### Context Preservation Strategies
+- **Hand-off Documentation**: Orchestrator creates context summaries between agents
+- **Decision Tracking**: All routing decisions logged with rationale
+- **Pattern Learning**: Orchestrator improves routing based on outcomes
+- **Knowledge Base**: Maintains project-specific routing preferences
+
+#### Integration with Existing Tools
+- **GitHub Issues**: Orchestrator can create issues for discovered problems
+- **Project Board**: Updates story status as agents complete work
+- **Documentation**: Ensures all agents update relevant docs
+- **CI/CD Pipeline**: Coordinates testing and deployment workflows
 
 ### References
 - **BMAD Method Repository**: https://github.com/bmad-code-org/BMAD-METHOD
