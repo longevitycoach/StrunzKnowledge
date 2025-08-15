@@ -302,6 +302,55 @@ railway logs --service strunz-knowledge
   - Railway Production: `https://strunz.up.railway.app`
 ```
 
+## BMAD Method Integration (Brownfield Approach)
+
+### Overview
+This project follows the BMAD (Business Methodology for AI Development) method for brownfield projects. BMAD is an agentic AI development framework that uses specialized AI agents for planning, architecture, and development phases.
+
+### BMAD Implementation for StrunzKnowledge
+
+#### 1. Agentic Planning Phase
+- **Analyst Agent**: Reviews existing codebase and documentation
+- **PM Agent**: Creates/updates PRDs based on current state
+- **Architect Agent**: Designs solutions respecting existing architecture
+
+#### 2. Context-Engineered Development
+- **Scrum Master Agent**: Transforms plans into detailed development stories
+- Stories embed full context including:
+  - Current implementation details
+  - Technical debt considerations
+  - Migration path specifications
+  - Testing requirements
+
+#### 3. Brownfield-Specific Considerations
+- **Existing Documentation**: See `docs/brownfield-architecture/` and `docs/brownfield-prd/`
+- **Technical Debt**: Documented in `docs/brownfield-architecture/technical-debt-issues.md`
+- **Migration Strategy**: FastMCP to Official MCP SDK (Epic #1)
+- **Incremental Approach**: Apply BMAD to specific components/epics
+
+### BMAD Workflow for This Project
+
+1. **Before Starting Work**:
+   - Review brownfield documentation in `docs/brownfield-*`
+   - Understand current architecture and technical debt
+   - Check related GitHub issues and project board
+
+2. **During Development**:
+   - Follow hyper-detailed story specifications
+   - Maintain context consistency across changes
+   - Update brownfield documentation as needed
+   - Create GitHub issues for discovered problems
+
+3. **Testing & Validation**:
+   - Follow comprehensive test coverage requirements
+   - Validate against existing functionality
+   - Ensure no regression in Claude.ai integration
+
+### References
+- BMAD Method: https://github.com/bmad-code-org/BMAD-METHOD
+- YouTube Masterclass: [Link to be added]
+- Project Board: https://github.com/orgs/longevitycoach/projects/2
+
 ## Memories and Best Practices
 
 ### Workflow Recommendations
