@@ -2,7 +2,7 @@
 """
 Dr. Strunz Knowledge Base MCP Server - SSE Transport
 Using official MCP SDK with Starlette for web deployment
-Version: 2.0.0
+Version: 3.0.0
 """
 
 import os
@@ -24,8 +24,8 @@ from starlette.middleware.cors import CORSMiddleware
 # Import MCP SDK
 from mcp.server.sse import SseServerTransport
 
-# Import our server implementation
-from src.mcp.mcp_server_clean import app as mcp_app, initialize_vector_store
+# Import our server implementation (final version without feature flags)
+from src.mcp.mcp_server_final import app as mcp_app, initialize_vector_store
 from mcp.server import NotificationOptions
 
 # Configure logging
@@ -62,7 +62,7 @@ async def health_check(request):
     return JSONResponse({
         "status": "ok",
         "service": "Dr. Strunz Knowledge MCP Server",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "transport": "sse",
         "endpoints": {
             "sse": "/sse",
@@ -107,7 +107,7 @@ async def handle_messages(request):
 @app.on_event("startup")
 async def startup_event():
     """Initialize on startup"""
-    logger.info("Starting Dr. Strunz Knowledge MCP Server v2.0.0 (SSE Transport)")
+    logger.info("Starting Dr. Strunz Knowledge MCP Server v3.0.0 (SSE Transport)")
     logger.info("Using official MCP Python SDK")
     await initialize_vector_store()
 

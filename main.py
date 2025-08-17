@@ -40,14 +40,14 @@ async def main():
     """Main entry point"""
     transport = get_transport()
     
-    print("🚀 Starting StrunzKnowledge MCP Server v2.3.0")
+    print("🚀 Starting StrunzKnowledge MCP Server v3.0.0")
     print("📚 Using official MCP Python SDK")
     print(f"📡 Transport: {transport}")
     print(f"📍 Environment: {os.environ.get('RAILWAY_ENVIRONMENT', 'local')}")
     
     if transport == 'sse':
         # Run SSE server for web deployment
-        from src.mcp.sse_server_v8 import app
+        from src.mcp.sse_server import app
         import uvicorn
         
         port = int(os.environ.get("PORT", 8000))
@@ -63,7 +63,7 @@ async def main():
         await server.serve()
     else:
         # Run stdio server for Claude Desktop
-        from src.mcp.mcp_server_clean import main as stdio_main
+        from src.mcp.mcp_server_final import main as stdio_main
         print("🖥️  Starting stdio server for Claude Desktop")
         await stdio_main()
 
