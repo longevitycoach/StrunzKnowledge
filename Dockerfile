@@ -28,8 +28,8 @@ RUN apt-get update && \
 # Create app directory
 WORKDIR $APP_HOME
 
-# Copy unified requirements for better caching
-COPY requirements-unified.txt .
+# Copy requirements for better caching
+COPY requirements.txt .
 
 # Install Python dependencies with memory optimization
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
@@ -38,8 +38,8 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 # First install numpy separately as it's a large dependency
 RUN pip install --no-cache-dir numpy==1.26.3
 
-# Then install the rest using unified requirements
-RUN pip install --no-cache-dir -r requirements-unified.txt
+# Then install the rest using requirements
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code
 COPY src/ ./src/
@@ -80,7 +80,7 @@ CMD ["python", "-u", "main.py"]
 
 # Labels for container metadata (OCI compliant)
 LABEL maintainer="Strunz Knowledge Base Team" \
-      version="2.2.0" \
+      version="3.0.0" \
       org.opencontainers.image.title="StrunzKnowledge MCP Server" \
       org.opencontainers.image.description="Dr. Strunz Knowledge Base MCP Server - A comprehensive health and nutrition knowledge system based on Dr. Ulrich Strunz's work. Provides semantic search across 13 books, 6,953 news articles, and forum content via the Model Context Protocol (MCP) for Claude Desktop and Claude.ai integration." \
       org.opencontainers.image.authors="longevitycoach" \
@@ -90,4 +90,4 @@ LABEL maintainer="Strunz Knowledge Base Team" \
       org.opencontainers.image.vendor="longevitycoach" \
       org.opencontainers.image.url="https://strunz.up.railway.app" \
       org.opencontainers.image.created="2025-07-24" \
-      org.opencontainers.image.version="2.2.0"
+      org.opencontainers.image.version="3.0.0"
