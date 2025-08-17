@@ -163,6 +163,52 @@ header h1 {
     margin: 4px 0;
 }
 
+/* Capability info styling */
+.capability-info {
+    background-color: #f0f4ff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+.capability-info strong {
+    color: #2d3748;
+}
+
+.capabilities-help {
+    line-height: 1.8;
+}
+
+.capabilities-help h2 {
+    color: #667eea;
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+}
+
+.capabilities-help h3 {
+    color: #4a5568;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.capabilities-help ul, .capabilities-help ol {
+    margin-left: 20px;
+}
+
+.capabilities-help li {
+    margin-bottom: 8px;
+}
+
+.capabilities-help ul ul {
+    margin-top: 6px;
+    font-size: 0.9rem;
+    color: #718096;
+}
+
 /* Loading Animation */
 .message.loading .message-content {
     display: flex;

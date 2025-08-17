@@ -45,3 +45,5 @@ value = "true"
 [[envs]]
 name = "CLAUDE_AI_SKIP_OAUTH"
 value = "true"
+
+# Feature flags removed in v3.0.0 - all migrations permanent

@@ -45,26 +45,46 @@ class StrunzKnowledgeChat {
 
     async checkMCPServer() {
         try {
-            const response = await fetch(`${this.mcpServerUrl}/health`);
+            console.log(`Checking MCP server at: ${this.mcpServerUrl}/health`);
+            
+            const response = await fetch(`${this.mcpServerUrl}/health`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                mode: 'cors',
+                timeout: 5000  // 5 second timeout
+            });
+            
+            // Check if response is OK before trying to parse JSON
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
+            console.log('Health check response:', data);
             
             if (data.status === 'ok') {
                 this.mcpStatus.textContent = '✅ Connected';
                 this.mcpStatus.style.color = '#48bb78';
                 
-                // Check if Gemini tools are available
-                if (data.gemini_integration && data.gemini_integration.available) {
-                    this.mcpStatus.textContent += ' (Gemini Enhanced)';
-                    
-                    // Auto-connect if server has Gemini configured
-                    if (data.gemini_integration.server_side_key) {
-                        this.connectToServer();
-                    }
+                // Auto-connect since server is available and has server-side Gemini key
+                this.connectToServer();
+                
+                // Update status to show tools available
+                if (data.tools_available) {
+                    this.mcpStatus.textContent += ` (${data.tools_available} tools)`;
                 }
             }
         } catch (error) {
+            console.error('MCP Server connection error:', error);
             this.mcpStatus.textContent = '❌ Offline';
             this.mcpStatus.style.color = '#e53e3e';
+            
+            // Show more detailed error in console
+            if (error.message.includes('Failed to fetch')) {
+                console.error('CORS or network error. Make sure the server is running and CORS is enabled.');
+            }
         }
     }
 
@@ -79,10 +99,78 @@ class StrunzKnowledgeChat {
         this.chatInput.focus();
     }
 
+    async callMCPTool(toolName, args) {
+        // For now, use direct API endpoints instead of MCP SSE
+        // This will be more reliable until SSE is properly debugged
+        
+        try {
+            switch (toolName) {
+                case 'search_knowledge':
+                    return await this.callDirectSearch(args.query, args.limit || 10);
+                case 'analyze_health_topic':
+                    return await this.callDirectAnalyze(args.topic);
+                case 'create_health_protocol':
+                    return await this.callDirectProtocol(args.condition);
+                case 'analyze_forum_trends':
+                    return await this.callDirectForum(args.topic);
+                default:
+                    throw new Error(`Tool ${toolName} not implemented yet`);
+            }
+        } catch (error) {
+            console.error(`Direct tool call failed for ${toolName}:`, error);
+            throw error;
+        }
+    }
+
+    async callDirectSearch(query, limit) {
+        // Call the search tool via REST API
+        const response = await fetch(`${this.mcpServerUrl}/api/search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, limit })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Search failed: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        
+        return result.content || 'No results found';
+    }
+
+    async callDirectAnalyze(topic) {
+        // For now, use Gemini fallback
+        const prompt = `Analyze "${topic}" from Dr. Strunz's knowledge base comprehensively.`;
+        return await this.callServerGemini(prompt, 'analyze');
+    }
+
+    async callDirectProtocol(condition) {
+        // For now, use Gemini fallback
+        const prompt = `Create a health protocol for "${condition}" based on Dr. Strunz's recommendations.`;
+        return await this.callServerGemini(prompt, 'ask');
+    }
+
+    async callDirectForum(topic) {
+        // For now, use search fallback
+        return await this.callDirectSearch(`forum ${topic}`, 10);
+    }
+
 
     async sendMessage() {
         const message = this.chatInput.value.trim();
         if (!message || !this.isConnected) return;
+        
+        // Check for help command
+        if (message.toLowerCase() === 'help' || message.toLowerCase() === '/help' || message.toLowerCase() === 'capabilities') {
+            this.addMessage(message, 'user');
+            this.chatInput.value = '';
+            this.showCapabilities();
+            return;
+        }
         
         // Get selected tool
         const selectedTool = document.querySelector('input[name="tool"]:checked').value;
@@ -96,26 +184,39 @@ class StrunzKnowledgeChat {
         
         try {
             let response;
+            let capability;
             
             switch (selectedTool) {
                 case 'search':
+                    capability = '🔍 Search Knowledge';
                     response = await this.searchKnowledge(message);
                     break;
                 case 'ask':
+                    capability = '💊 Ask Dr. Strunz';
                     response = await this.askDrStrunz(message);
                     break;
                 case 'analyze':
+                    capability = '📊 Analyze Topic';
                     response = await this.analyzeHealthTopic(message);
                     break;
                 default:
+                    capability = '🔍 Search Knowledge';
                     response = await this.searchKnowledge(message);
             }
             
             // Remove loading message
             this.removeMessage(loadingId);
             
+            // Add capability header to response
+            const enhancedResponse = `<div class="capability-info">
+                <strong>Capability Used:</strong> ${capability}<br>
+                <strong>Knowledge Sources:</strong> Books, News Articles, Forum Discussions
+            </div>
+            <hr style="margin: 10px 0; border: none; border-top: 1px solid #e0e0e0;">
+            ${response}`;
+            
             // Add assistant response
-            this.addMessage(response, 'assistant', true);
+            this.addMessage(enhancedResponse, 'assistant', true);
             
         } catch (error) {
             this.removeMessage(loadingId);
@@ -125,7 +226,23 @@ class StrunzKnowledgeChat {
     }
 
     async searchKnowledge(query) {
-        const prompt = `
+        // Use Gemini API directly as primary method
+        const forumKeywords = ['forum', 'diskutiert', 'gesprochen', 'community', 'diskussion', 'beiträge', 'posts'];
+        const isForumQuery = forumKeywords.some(keyword => query.toLowerCase().includes(keyword));
+            
+            const prompt = isForumQuery ? `
+Search the Dr. Strunz knowledge base SPECIFICALLY for FORUM discussions about: "${query}"
+
+IMPORTANT: Focus on forum content and community discussions!
+
+Please provide:
+1. Relevant forum posts and discussions
+2. Community experiences and user questions
+3. How often the topic is discussed (if asked)
+4. Different perspectives from forum members
+5. Practical experiences shared by the community
+
+Include metadata like post dates and authors when available.` : `
 As an expert on Dr. Ulrich Strunz's health and nutrition knowledge, search for information about: "${query}"
 
 Provide relevant findings from Dr. Strunz's work, including:
@@ -134,12 +251,42 @@ Provide relevant findings from Dr. Strunz's work, including:
 3. Practical applications
 4. Specific vitamins, minerals, or supplements mentioned
 
-Format your response in a clear, helpful way.`;
+Search across books, news articles, and forum discussions.`;
 
         return await this.callServerGemini(prompt, 'search');
     }
 
     async askDrStrunz(question) {
+        // Check if the question is asking about forum discussions or community topics
+        const forumKeywords = ['forum', 'diskutiert', 'gesprochen', 'community', 'diskussion', 'beiträge', 'posts'];
+        const isForumQuery = forumKeywords.some(keyword => question.toLowerCase().includes(keyword));
+        
+        if (isForumQuery) {
+            // Use forum analysis tool for forum queries
+            try {
+                return await this.callMCPTool('analyze_forum_trends', { topic: question });
+            } catch (error) {
+                console.error('MCP tool call failed, falling back to search:', error);
+                return await this.searchKnowledge(question);
+            }
+        }
+
+        // Use Gemini API directly for health protocols
+            const searchPrompt = `
+Search the Dr. Strunz knowledge base specifically for FORUM discussions about: "${question}"
+
+Focus on:
+1. Forum posts and community discussions
+2. User experiences and questions
+3. Community insights and shared knowledge
+4. Frequency of discussion if asked
+
+Please search specifically in forum content and provide relevant forum discussions.`;
+            
+            return await this.callServerGemini(searchPrompt, 'search');
+        }
+        
+        // Original ask prompt for non-forum questions
         const prompt = `
 You are an AI assistant with deep knowledge of Dr. Ulrich Strunz's health philosophy and recommendations.
 
@@ -157,6 +304,7 @@ Keep the response helpful and actionable.`;
     }
 
     async analyzeHealthTopic(topic) {
+        // Use Gemini API directly for health topic analysis
         const prompt = `
 Provide a comprehensive analysis of "${topic}" from Dr. Strunz's perspective.
 
@@ -169,7 +317,8 @@ Include:
 
 Structure your analysis to be thorough yet accessible.`;
 
-        return await this.callServerGemini(prompt, 'analyze');
+            return await this.callServerGemini(prompt, 'analyze');
+        }
     }
 
     async callServerGemini(prompt, toolType) {
@@ -188,11 +337,22 @@ Structure your analysis to be thorough yet accessible.`;
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                if (response.status === 429) {
-                    throw new Error(`Rate limit exceeded: ${error.detail.message}. Please try again in ${error.detail.retry_after} seconds.`);
+                let errorMessage = `Server error: ${response.statusText}`;
+                
+                // Try to parse error details from JSON, but handle if it's not JSON
+                try {
+                    const error = await response.json();
+                    if (response.status === 429 && error.detail) {
+                        errorMessage = `Rate limit exceeded: ${error.detail.message}. Please try again in ${error.detail.retry_after} seconds.`;
+                    } else if (error.detail) {
+                        errorMessage = `Server error: ${error.detail}`;
+                    }
+                } catch (jsonError) {
+                    // Response body is not JSON, use the default error message
+                    console.warn('Failed to parse error response as JSON:', jsonError);
                 }
-                throw new Error(`Server error: ${error.detail || response.statusText}`);
+                
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -346,6 +506,37 @@ Structure your analysis to be thorough yet accessible.`;
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    showCapabilities() {
+        const capabilitiesInfo = `
+<div class="capabilities-help" style="font-size: 0.95rem;">
+    <h2 style="font-size: 1.3rem; margin-bottom: 12px;">📋 Help - Dr. Strunz Knowledge Assistant</h2>
+    
+    <p style="margin-bottom: 12px;"><strong>📚 Knowledge Base:</strong> 13 Books • 6,953 News Articles • 14,435 Forum Discussions</p>
+    
+    <p style="margin-bottom: 8px;"><strong>🛠️ Capabilities:</strong></p>
+    <div style="margin-left: 0; margin-bottom: 12px; line-height: 1.6;">
+        <div style="margin-bottom: 4px;">🔍 <strong>Search</strong> - Find information across all sources</div>
+        <div style="margin-bottom: 4px;">💊 <strong>Ask Dr. Strunz</strong> - Get personalized health recommendations</div>
+        <div style="margin-bottom: 4px;">📊 <strong>Analyze</strong> - Deep dive into any health topic</div>
+        <div style="margin-bottom: 4px;">🧪 <strong>Stack Analysis</strong> - Optimize supplement combinations</div>
+        <div style="margin-bottom: 4px;">🔄 <strong>Contradictions</strong> - Find evolving recommendations</div>
+        <div style="margin-bottom: 4px;">📈 <strong>Evolution</strong> - Track topic changes over time</div>
+        <div style="margin-bottom: 4px;">👨‍⚕️ <strong>Biography</strong> - Learn about Dr. Strunz</div>
+    </div>
+    
+    <p style="margin-bottom: 8px;"><strong>💡 Quick Tips:</strong></p>
+    <div style="margin-left: 15px; margin-bottom: 12px; line-height: 1.5;">
+        <div style="margin-bottom: 3px;">• Select a tool below (Search/Ask/Analyze) before asking</div>
+        <div style="margin-bottom: 3px;">• For forum discussions, include "forum" in your query</div>
+        <div style="margin-bottom: 3px;">• Type <strong>help</strong> anytime to see this again</div>
+    </div>
+    
+    <p style="margin-top: 12px; font-style: italic; font-size: 0.9rem;">✨ I'll show which capability I'm using and where the information comes from!</p>
+</div>`;
+        
+        this.addMessage(capabilitiesInfo, 'assistant', true);
     }
 }
 

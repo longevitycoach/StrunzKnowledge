@@ -19,6 +19,12 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.end_headers()
+    
+    def do_GET(self):
+        # Serve index.html for root path
+        if self.path == '/':
+            self.path = '/index.html'
+        return super().do_GET()
 
 if __name__ == "__main__":
     PORT = 8080

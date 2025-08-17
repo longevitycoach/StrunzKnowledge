@@ -1,0 +1,101 @@
+=== Running Complete Test Suite ===
+
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.13/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/ma3u/projects/StrunzKnowledge
+configfile: pytest.ini
+plugins: anyio-4.9.0, asyncio-1.0.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 35 items
+
+src/test/test_batch2_integration.py::test_batch2_integration PASSED      [  2%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_knowledge_search_basic PASSED [  5%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_knowledge_search_with_sources PASSED [  8%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_knowledge_search_large_k PASSED [ 11%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_find_contradictions PASSED [ 14%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_find_contradictions_with_time_window PASSED [ 17%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_search_by_date_range PASSED [ 20%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_search_by_date_invalid_format PASSED [ 22%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_get_vector_db_analysis PASSED [ 25%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_ping_health_check PASSED [ 28%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_error_handling_no_search_tool PASSED [ 31%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_knowledge_search_empty_results PASSED [ 34%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_parameter_validation PASSED [ 37%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_metadata_handling PASSED [ 40%]
+src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_contradiction_detection_algorithm FAILED [ 42%]
+src/test/test_batch3_analysis_tools.py::TestBatch3Integration::test_batch3_feature_flag_enabled FAILED [ 45%]
+src/test/test_batch3_analysis_tools.py::TestBatch3Integration::test_batch3_feature_flag_disabled FAILED [ 48%]
+src/test/test_batch3_analysis_tools.py::TestBatch3Integration::test_batch3_tool_schemas PASSED [ 51%]
+src/test/test_batch3_analysis_tools.py::TestBatch3Performance::test_search_performance PASSED [ 54%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_search_knowledge_gemini_no_api_key PASSED [ 57%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_search_knowledge_gemini_with_api_key PASSED [ 60%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_ask_strunz_gemini_no_api_key PASSED [ 62%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_ask_strunz_gemini_with_api_key PASSED [ 65%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_analyze_health_topic_gemini_no_api_key PASSED [ 68%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_analyze_health_topic_gemini_with_api_key PASSED [ 71%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_validate_gemini_connection_no_key PASSED [ 74%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_validate_gemini_connection_with_key FAILED [ 77%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_parameter_validation PASSED [ 80%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_error_handling PASSED [ 82%]
+src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_no_search_results_handling PASSED [ 85%]
+src/test/test_batch4_gemini_tools.py::TestBatch4Integration::test_batch4_feature_flag_enabled PASSED [ 88%]
+src/test/test_batch4_gemini_tools.py::TestBatch4Integration::test_batch4_feature_flag_disabled PASSED [ 91%]
+src/test/test_batch4_gemini_tools.py::TestBatch4Integration::test_batch4_tool_schemas PASSED [ 94%]
+src/test/test_batch4_gemini_tools.py::TestBatch4CompleteMigration::test_no_fastmcp_imports_in_main_server PASSED [ 97%]
+src/test/test_batch4_gemini_tools.py::TestBatch4CompleteMigration::test_all_batches_integrated PASSED [100%]
+
+=================================== FAILURES ===================================
+____ TestBatch3ComplexAnalysisTools.test_contradiction_detection_algorithm _____
+src/test/test_batch3_analysis_tools.py:285: in test_contradiction_detection_algorithm
+    assert "positive statements" in result.lower() or "cautionary statements" in result.lower()
+E   assert ('positive statements' in "# contradiction analysis: test supplement\n\n*analyzed 10 passages for potential contradictions*\n\n## analysis by source\n\n### books\n✅ consistent messaging found (5 passages)\n\n### news\n✅ consistent messaging found (5 passages)\n\n## summary\n\n✅ no significant contradictions detected.\ndr. strunz's statements on this topic appear consistent.\n\n*contradiction analysis powered by faiss vector search*" or 'cautionary statements' in "# contradiction analysis: test supplement\n\n*analyzed 10 passages for potential contradictions*\n\n## analysis by source\n\n### books\n✅ consistent messaging found (5 passages)\n\n### news\n✅ consistent messaging found (5 passages)\n\n## summary\n\n✅ no significant contradictions detected.\ndr. strunz's statements on this topic appear consistent.\n\n*contradiction analysis powered by faiss vector search*")
+E    +  where "# contradiction analysis: test supplement\n\n*analyzed 10 passages for potential contradictions*\n\n## analysis by source\n\n### books\n✅ consistent messaging found (5 passages)\n\n### news\n✅ consistent messaging found (5 passages)\n\n## summary\n\n✅ no significant contradictions detected.\ndr. strunz's statements on this topic appear consistent.\n\n*contradiction analysis powered by faiss vector search*" = <built-in method lower of str object at 0x70cc3b100>()
+E    +    where <built-in method lower of str object at 0x70cc3b100> = "# Contradiction Analysis: test supplement\n\n*Analyzed 10 passages for potential contradictions*\n\n## Analysis by Source\n\n### Books\n✅ Consistent messaging found (5 passages)\n\n### News\n✅ Consistent messaging found (5 passages)\n\n## Summary\n\n✅ No significant contradictions detected.\nDr. Strunz's statements on this topic appear consistent.\n\n*Contradiction analysis powered by FAISS vector search*".lower
+E    +  and   "# contradiction analysis: test supplement\n\n*analyzed 10 passages for potential contradictions*\n\n## analysis by source\n\n### books\n✅ consistent messaging found (5 passages)\n\n### news\n✅ consistent messaging found (5 passages)\n\n## summary\n\n✅ no significant contradictions detected.\ndr. strunz's statements on this topic appear consistent.\n\n*contradiction analysis powered by faiss vector search*" = <built-in method lower of str object at 0x70cc3b100>()
+E    +    where <built-in method lower of str object at 0x70cc3b100> = "# Contradiction Analysis: test supplement\n\n*Analyzed 10 passages for potential contradictions*\n\n## Analysis by Source\n\n### Books\n✅ Consistent messaging found (5 passages)\n\n### News\n✅ Consistent messaging found (5 passages)\n\n## Summary\n\n✅ No significant contradictions detected.\nDr. Strunz's statements on this topic appear consistent.\n\n*Contradiction analysis powered by FAISS vector search*".lower
+____________ TestBatch3Integration.test_batch3_feature_flag_enabled ____________
+src/test/test_batch3_analysis_tools.py:301: in test_batch3_feature_flag_enabled
+    with patch('src.mcp.mcp_server_clean.KnowledgeSearcher') as mock_searcher:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:1497: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:1467: in get_original
+    raise AttributeError(
+E   AttributeError: <module 'src.mcp.mcp_server_clean' from '/Users/ma3u/projects/StrunzKnowledge/src/mcp/mcp_server_clean.py'> does not have the attribute 'KnowledgeSearcher'
+___________ TestBatch3Integration.test_batch3_feature_flag_disabled ____________
+src/test/test_batch3_analysis_tools.py:315: in test_batch3_feature_flag_disabled
+    assert ENABLE_BATCH3_MIGRATION == False
+E   assert True == False
+________ TestBatch4GeminiTools.test_validate_gemini_connection_with_key ________
+src/test/test_batch4_gemini_tools.py:215: in test_validate_gemini_connection_with_key
+    assert "API Key Status: Valid" in result
+E   assert 'API Key Status: Valid' in "# Gemini Connection Status\n\n## ✅ Connected Successfully\n\n**API Key Status**: Valid and working\n**Model**: gemini-2.5-flash\n**Ready for Use**: Yes\n\n### Test Response\n\n> AI-generated response: Briefly describe Dr. Strunz's approach to health in one sentence.... This is a synthesized answer based on Dr. Strunz's teachings.\n\n### Available Gemini Tools\n\n- `search_knowledge_gemini` - Enhanced search with AI synthesis\n- `ask_strunz_gemini` - Direct Q&A with personalized answers\n- `analyze_health_topic_gemini` - Comprehensive topic analysis\n- `validate_gemini_connection` - This validation tool\n\n**Status**: All Gemini tools operational"
+=============================== warnings summary ===============================
+src/test/test_batch2_integration.py::test_batch2_integration
+  /opt/homebrew/lib/python3.13/site-packages/faiss/loader.py:49: DeprecationWarning: numpy.core._multiarray_umath is deprecated and has been renamed to numpy._core._multiarray_umath. The numpy._core namespace contains private NumPy internals and its use is discouraged, as NumPy internals can change without warning in any release. In practice, most real-world usage of numpy.core is to access functionality in the public NumPy API. If that is the case, use the public NumPy API. If not, you are using NumPy internals. If you would still like to access an internal attribute, use numpy._core._multiarray_umath.__cpu_features__.
+    from numpy.core._multiarray_umath import __cpu_features__
+
+src/test/test_batch2_integration.py::test_batch2_integration
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+src/test/test_batch2_integration.py::test_batch2_integration
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+src/test/test_batch2_integration.py::test_batch2_integration
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+src/test/test_batch2_integration.py::test_batch2_integration
+  /opt/homebrew/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but src/test/test_batch2_integration.py::test_batch2_integration returned <class 'int'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED src/test/test_batch3_analysis_tools.py::TestBatch3ComplexAnalysisTools::test_contradiction_detection_algorithm
+FAILED src/test/test_batch3_analysis_tools.py::TestBatch3Integration::test_batch3_feature_flag_enabled
+FAILED src/test/test_batch3_analysis_tools.py::TestBatch3Integration::test_batch3_feature_flag_disabled
+FAILED src/test/test_batch4_gemini_tools.py::TestBatch4GeminiTools::test_validate_gemini_connection_with_key
+=================== 4 failed, 31 passed, 5 warnings in 3.23s ===================

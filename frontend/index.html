@@ -32,14 +32,23 @@
                 <div class="message assistant">
                     <div class="message-content">
                         <strong>🤖 Assistant:</strong>
-                        <p>Hello! I'm your Dr. Strunz knowledge assistant. I can help you with:</p>
-                        <ul>
-                            <li>🔍 Search Dr. Strunz's books, articles, and forum posts</li>
-                            <li>💊 Vitamin and supplement recommendations</li>
-                            <li>🏃‍♂️ Fitness and nutrition advice</li>
-                            <li>🧬 Molecular medicine insights</li>
+                        <p>Hello! I'm your Dr. Strunz knowledge assistant. I have access to:</p>
+                        <ul style="margin-bottom: 10px;">
+                            <li>📚 <strong>13 Books</strong> by Dr. Strunz (2002-2025)</li>
+                            <li>📰 <strong>6,953 News Articles</strong> (2004-2025)</li>
+                            <li>💬 <strong>14,435 Forum Discussions</strong> from the community</li>
                         </ul>
-                        <p>What would you like to know about health optimization?</p>
+                        <p style="margin-bottom: 5px;"><strong>My Capabilities:</strong></p>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li>🔍 <strong>Search Knowledge</strong> - Semantic search across all sources</li>
+                            <li>💊 <strong>Health Protocols</strong> - Personalized supplement recommendations</li>
+                            <li>📊 <strong>Topic Analysis</strong> - Track topic evolution over time</li>
+                            <li>🧪 <strong>Supplement Analysis</strong> - Optimize supplement combinations</li>
+                            <li>🔄 <strong>Find Contradictions</strong> - Identify conflicting information</li>
+                            <li>👨‍⚕️ <strong>Dr. Strunz Info</strong> - Biography and philosophy</li>
+                        </ul>
+                        <p style="margin-top: 10px;">Choose a tool below (Search/Ask/Analyze) and ask your question!</p>
+                        <p style="margin-top: 5px;"><em>Tip: I'll show you which capability I'm using and where the information comes from.</em></p>
                     </div>
                 </div>
             </div>
@@ -73,6 +82,19 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // Simple cache busting
+        var version = 'v1.0.3-' + Date.now();
+    </script>
+    <script>
+        // Load app.js with cache busting
+        var script = document.createElement('script');
+        script.src = 'app.js?' + version;
+        script.onerror = function() {
+            console.error('Failed to load app.js');
+            alert('Failed to load app.js. Please check console.');
+        };
+        document.body.appendChild(script);
+    </script>
 </body>
 </html>

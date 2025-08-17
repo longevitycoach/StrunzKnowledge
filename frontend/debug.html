@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Connection</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .log {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .error {
+            background: #fee;
+            color: #c00;
+        }
+        .success {
+            background: #efe;
+            color: #080;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connection Debug</h1>
+    <div id="logs"></div>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function log(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+        
+        async function testConnection() {
+            log('Starting connection test...');
+            
+            // Test 1: Check current location
+            log(`Current URL: ${window.location.href}`);
+            log(`Hostname: ${window.location.hostname}`);
+            log(`Port: ${window.location.port || 'default'}`);
+            
+            // Test 2: Simple fetch
+            try {
+                log('Testing simple fetch to /health...');
+                const response = await fetch('http://localhost:8000/health');
+                log(`Response status: ${response.status}`, 'success');
+                
+                const data = await response.json();
+                log(`Server status: ${data.status}`, 'success');
+                log(`Server version: ${data.version}`, 'success');
+                log(`Gemini available: ${data.gemini_integration?.available}`, 'success');
+            } catch (error) {
+                log(`Fetch error: ${error.message}`, 'error');
+                log(`Error type: ${error.name}`, 'error');
+                
+                // Test CORS
+                try {
+                    log('Testing with CORS headers...');
+                    const corsResponse = await fetch('http://localhost:8000/health', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                    log(`CORS Response: ${corsResponse.status}`, 'success');
+                } catch (corsError) {
+                    log(`CORS error: ${corsError.message}`, 'error');
+                }
+            }
+            
+            // Test 3: Check browser console for more details
+            log('Check browser console (F12) for detailed errors');
+        }
+        
+        // Run test immediately
+        testConnection();
+        
+        // Also add a button to retry
+        const button = document.createElement('button');
+        button.textContent = 'Retry Test';
+        button.onclick = () => {
+            logs.innerHTML = '';
+            testConnection();
+        };
+        document.body.insertBefore(button, logs);
+    </script>
+</body>
+</html>

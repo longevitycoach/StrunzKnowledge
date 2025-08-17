@@ -242,9 +242,9 @@ async def auth_callback(request: Request):
 # Health check endpoint
 @app.get("/health")
 async def health_check(request: Request):
-    """Health check endpoint"""
+    """Health check endpoint - minimal public information"""
     # Calculate actual tools count
-    tools_count = 5  # Base tools
+    tools_count = 12  # Standard tools (including search_knowledge)
     if GEMINI_AVAILABLE:
         tools_count += 4  # Gemini-enhanced tools
     
@@ -252,50 +252,13 @@ async def health_check(request: Request):
         "status": "ok",
         "service": "Dr. Strunz Knowledge MCP Server",
         "version": "2.3.0",
-        "transport": "sse",
-        "mcp_implementation": "Official MCP Python SDK (FastMCP)",
-        "protocol_version": "2025-11-05",
-        "tools_count": tools_count,
-        "session_management": "stateful",
-        "gemini_integration": {
-            "available": GEMINI_AVAILABLE,
-            "auth_less_ready": False,  # Now using server-side key
-            "server_side_key": GEMINI_AVAILABLE,
-            "rate_limiting": True,
-            "enhanced_tools": ["search_knowledge_gemini", "ask_strunz_gemini", "analyze_health_topic_gemini", "validate_gemini_connection"] if GEMINI_AVAILABLE else []
-        },
-        "endpoints": {
-            "sse": "/",
-            "health": "/health",
-            "oauth_register": "/oauth/register",
-            "oauth_authorize": "/oauth/authorize",
-            "oauth_token": "/oauth/token",
-            "start_auth": "/api/organizations/{org_id}/mcp/start-auth/{auth_id}",
-            "auth_callback": "/api/mcp/auth_callback",
-            "gemini_chat": "/api/gemini/chat",
-            "gemini_stats": "/api/gemini/stats",
-            "gemini_limits": "/api/gemini/limits"
-        },
-        "features": [
-            "semantic_search",
-            "content_filtering", 
-            "book_content_access",
-            "news_search",
-            "statistics",
-            "oauth_2_1_compatible",
-            "claude_ai_compatible",
-            "enhanced_error_handling",
-            "parameter_validation",
-            "gemini_api_rate_limiting"
-        ] + (["gemini_integration", "server_side_gemini", "cost_control"] if GEMINI_AVAILABLE else []),
-        "improvements": [
-            "Better error messages",
-            "Parameter validation",
-            "Detailed logging",
-            "Graceful error handling",
-            "API rate limiting",
-            "Cost control"
-        ]
+        "mcp_version": "2025-11-05",
+        "tools_available": tools_count,
+        "knowledge_base": {
+            "books": 13,
+            "news_articles": 6953,
+            "forum_discussions": 14435
+        }
     })
 
 # Root endpoint
@@ -303,6 +266,63 @@ async def health_check(request: Request):
 async def root():
     """Root endpoint"""
     return await health_check(None)
+
+# Simple search API endpoint for frontend
+@app.post("/api/search")
+async def api_search(request: Request):
+    """Simple search endpoint for frontend compatibility"""
+    try:
+        body = await request.json()
+        query = body.get('query', '')
+        limit = body.get('limit', 10)
+    except:
+        return JSONResponse({"error": "Invalid JSON request"}, status_code=400)
+    
+    if not knowledge_searcher:
+        initialize_knowledge_searcher()
+    
+    try:
+        # Validate and sanitize parameters like the MCP tool does
+        if not query or not isinstance(query, str):
+            return JSONResponse({"error": "Query must be a non-empty string"}, status_code=400)
+        
+        # Clean query
+        query = query.strip()
+        if not query:
+            return JSONResponse({"error": "Query cannot be empty"}, status_code=400)
+        
+        # Validate limit
+        limit = max(1, min(limit, 50))
+        
+        logger.info(f"API Search for: '{query}' with limit={limit}")
+        
+        # Perform search - use the same call pattern as the MCP tool
+        results = knowledge_searcher.search(query=query, k=limit)
+        
+        if not results:
+            return JSONResponse({"content": f"No results found for query: {query}"})
+        
+        # Format results for frontend
+        formatted_results = []
+        for i, result in enumerate(results, 1):
+            content_preview = result.text[:200] + "..." if len(result.text) > 200 else result.text
+            
+            formatted_result = f"""**Result {i}:**
+**Source:** {result.source}
+**Content:** {content_preview}
+**Relevance Score:** {result.score:.3f}
+"""
+            formatted_results.append(formatted_result)
+        
+        response_text = f"""Found {len(results)} results for "{query}":
+
+{chr(10).join(formatted_results)}"""
+        
+        return JSONResponse({"content": response_text})
+        
+    except Exception as e:
+        logger.error(f"Search error: {e}", exc_info=True)
+        return JSONResponse({"error": f"Search failed: {str(e)}"}, status_code=500)
 
 # Startup event
 @app.on_event("startup")
@@ -312,6 +332,14 @@ async def startup_event():
     logger.info("Using official MCP Python SDK (FastMCP)")
     logger.info("Enhanced with Gemini API endpoints and rate limiting")
     initialize_knowledge_searcher()
+    
+    # Register ALL standard tools first
+    try:
+        from src.mcp.tools.all_tools import register_all_tools
+        register_all_tools(mcp_server, knowledge_searcher)
+        logger.info("✅ All 12 standard tools registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register standard tools: {e}")
     
     # Register Gemini-enhanced tools if available
     if GEMINI_AVAILABLE and register_gemini_tools:
@@ -329,8 +357,11 @@ async def startup_event():
         await create_gemini_endpoint(app)
         logger.info("✅ Gemini API endpoints created with rate limiting")
 
-# Mount MCP SSE app at root (CRITICAL for MCP protocol)
-app.mount("/", mcp_server.sse_app())
+# Mount MCP SSE app at specific endpoints to avoid intercepting all routes
+# This allows health checks and other endpoints to work properly
+sse_app = mcp_server.sse_app()
+app.mount("/sse", sse_app)
+app.mount("/messages", sse_app)
 
 if __name__ == "__main__":
     import uvicorn

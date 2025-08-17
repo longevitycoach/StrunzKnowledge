@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connection Test</title>
+</head>
+<body>
+    <h1>StrunzKnowledge Connection Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        async function testConnection() {
+            // Test 1: Direct health check
+            try {
+                results.innerHTML += '<h2>Test 1: Direct Health Check</h2>';
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                results.innerHTML += '<pre style="background: #f0f0f0; padding: 10px;">' + JSON.stringify(data, null, 2) + '</pre>';
+                results.innerHTML += '<p style="color: green;">✅ Backend is running!</p>';
+            } catch (error) {
+                results.innerHTML += '<p style="color: red;">❌ Backend connection failed: ' + error.message + '</p>';
+                results.innerHTML += '<p>Make sure the backend is running on port 8000</p>';
+            }
+            
+            // Test 2: CORS test
+            try {
+                results.innerHTML += '<h2>Test 2: CORS Test</h2>';
+                const response = await fetch('http://localhost:8000/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                results.innerHTML += '<p style="color: green;">✅ CORS is properly configured!</p>';
+            } catch (error) {
+                results.innerHTML += '<p style="color: red;">❌ CORS error: ' + error.message + '</p>';
+            }
+            
+            // Test 3: Frontend location
+            results.innerHTML += '<h2>Test 3: Frontend Info</h2>';
+            results.innerHTML += '<p>Current URL: ' + window.location.href + '</p>';
+            results.innerHTML += '<p>Hostname: ' + window.location.hostname + '</p>';
+            results.innerHTML += '<p>Port: ' + window.location.port + '</p>';
+        }
+        
+        // Run tests
+        testConnection();
+    </script>
+</body>
+</html>

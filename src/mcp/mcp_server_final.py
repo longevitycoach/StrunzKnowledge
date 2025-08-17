@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Dr. Strunz Knowledge Base MCP Server
-Clean implementation using official MCP Python SDK
-Following the SDK documentation exactly
-Version: 2.0.0
+Dr. Strunz Knowledge Base MCP Server - FINAL VERSION
+Official MCP Python SDK implementation with all migrations complete
+No feature flags - all tools permanently enabled
+Version: 3.0.0
 """
 
 import os
@@ -17,7 +17,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-# Import MCP SDK correctly
+# Import MCP SDK
 from mcp.server import Server
 from mcp.server.models import InitializationOptions
 import mcp.server.stdio
@@ -30,50 +30,43 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global variables
+# Global variables for all tool modules
 search_tool = None
 health_tools = None
 analysis_tools = None
 gemini_tools = None
 
-# Feature flags
-ENABLE_BATCH2_MIGRATION = os.environ.get("ENABLE_BATCH2_MIGRATION", "true").lower() == "true"
-ENABLE_BATCH3_MIGRATION = os.environ.get("ENABLE_BATCH3_MIGRATION", "true").lower() == "true"
-ENABLE_BATCH4_MIGRATION = os.environ.get("ENABLE_BATCH4_MIGRATION", "true").lower() == "true"
-
 async def initialize_vector_store():
-    """Initialize the vector store"""
+    """Initialize the vector store and all tool modules"""
     global search_tool, health_tools, analysis_tools, gemini_tools
     try:
+        # Initialize base search tool
         from src.rag.search import KnowledgeSearcher
         search_tool = KnowledgeSearcher()
+        logger.info("Knowledge searcher initialized")
         
-        # Initialize Batch 2 health tools if enabled
-        if ENABLE_BATCH2_MIGRATION:
-            from src.mcp.batch2_health_tools import HealthAssessmentTools
-            health_tools = HealthAssessmentTools(search_tool)
-            logger.info("Batch 2 health assessment tools initialized")
+        # Initialize all tool batches (no more feature flags!)
+        from src.mcp.batch2_health_tools import HealthAssessmentTools
+        health_tools = HealthAssessmentTools(search_tool)
+        logger.info("Health assessment tools initialized")
         
-        # Initialize Batch 3 analysis tools if enabled
-        if ENABLE_BATCH3_MIGRATION:
-            from src.mcp.batch3_analysis_tools import ComplexAnalysisTools
-            analysis_tools = ComplexAnalysisTools(search_tool)
-            logger.info("Batch 3 complex analysis tools initialized")
+        from src.mcp.batch3_analysis_tools import ComplexAnalysisTools
+        analysis_tools = ComplexAnalysisTools(search_tool)
+        logger.info("Complex analysis tools initialized")
         
-        # Initialize Batch 4 Gemini tools if enabled
-        if ENABLE_BATCH4_MIGRATION:
-            from src.mcp.batch4_gemini_tools import GeminiEnhancedTools
-            gemini_tools = GeminiEnhancedTools(search_tool)
-            logger.info("Batch 4 Gemini-enhanced tools initialized")
-            if os.environ.get('GOOGLE_GEMINI_API_KEY'):
-                logger.info("Gemini API key detected - enhanced features available")
-            else:
-                logger.warning("No Gemini API key - enhanced features will be limited")
+        from src.mcp.batch4_gemini_tools import GeminiEnhancedTools
+        gemini_tools = GeminiEnhancedTools(search_tool)
+        logger.info("Gemini-enhanced tools initialized")
         
-        logger.info("Vector store initialized successfully")
+        if os.environ.get('GOOGLE_GEMINI_API_KEY'):
+            logger.info("Gemini API key detected - AI features available")
+        else:
+            logger.info("No Gemini API key - AI features will use fallback messages")
+        
+        logger.info("All tool modules initialized successfully")
         return True
     except Exception as e:
-        logger.error(f"Failed to initialize vector store: {e}")
+        logger.error(f"Failed to initialize tools: {e}")
         return False
 
 # Create the MCP server
@@ -102,8 +95,9 @@ async def list_resources() -> list[types.Resource]:
 
 @app.list_tools()
 async def list_tools() -> list[types.Tool]:
-    """List available tools"""
-    return [
+    """List all available tools - no more feature flags!"""
+    tools = [
+        # Core search tool
         types.Tool(
             name="knowledge_search",
             description="Search through Dr. Strunz's knowledge base with semantic search",
@@ -127,6 +121,8 @@ async def list_tools() -> list[types.Tool]:
                 "required": ["query"]
             }
         ),
+        
+        # Basic information tools
         types.Tool(
             name="get_mcp_server_purpose",
             description="Get information about this MCP server",
@@ -152,34 +148,8 @@ async def list_tools() -> list[types.Tool]:
                 }
             }
         ),
-        types.Tool(
-            name="find_contradictions",
-            description="Find contradictions or conflicts in Dr. Strunz's knowledge base",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "topic": {
-                        "type": "string",
-                        "description": "Topic to analyze for contradictions"
-                    }
-                },
-                "required": ["topic"]
-            }
-        ),
-        types.Tool(
-            name="trace_topic_evolution",
-            description="Track how a health topic evolved over time in Dr. Strunz's content",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "topic": {
-                        "type": "string",
-                        "description": "Health topic to trace"
-                    }
-                },
-                "required": ["topic"]
-            }
-        ),
+        
+        # Health assessment tools (Batch 2)
         types.Tool(
             name="create_health_protocol",
             description="Create a personalized health protocol based on Dr. Strunz's knowledge",
@@ -259,6 +229,36 @@ async def list_tools() -> list[types.Tool]:
             }
         ),
         types.Tool(
+            name="trace_topic_evolution",
+            description="Track how a health topic evolved over time in Dr. Strunz's content",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Health topic to trace"
+                    }
+                },
+                "required": ["topic"]
+            }
+        ),
+        
+        # Complex analysis tools (Batch 3)
+        types.Tool(
+            name="find_contradictions",
+            description="Find contradictions or conflicts in Dr. Strunz's knowledge base",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Topic to analyze for contradictions"
+                    }
+                },
+                "required": ["topic"]
+            }
+        ),
+        types.Tool(
             name="get_vector_db_analysis",
             description="Get detailed analysis of the vector database content and statistics",
             inputSchema={
@@ -304,90 +304,85 @@ async def list_tools() -> list[types.Tool]:
         )
     ]
     
-    # Add Batch 4 Gemini tools if enabled
-    if ENABLE_BATCH4_MIGRATION:
-        gemini_tools_list = [
-            types.Tool(
-                name="search_knowledge_gemini",
-                description="Search with Gemini-powered AI synthesis for intelligent answers",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Search query"
-                        },
-                        "limit": {
-                            "type": "integer",
-                            "description": "Number of results to synthesize (1-20)",
-                            "minimum": 1,
-                            "maximum": 20,
-                            "default": 10
-                        },
-                        "sources": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "Filter by sources: books, news, forum"
-                        }
+    # Add Gemini tools if API key is configured
+    gemini_tools_list = [
+        types.Tool(
+            name="search_knowledge_gemini",
+            description="Search with Gemini-powered AI synthesis for intelligent answers",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search query"
                     },
-                    "required": ["query"]
-                }
-            ),
-            types.Tool(
-                name="ask_strunz_gemini",
-                description="Ask a direct question about Dr. Strunz's health philosophy with AI-powered answers",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "question": {
-                            "type": "string",
-                            "description": "Your health or nutrition question"
-                        },
-                        "context": {
-                            "type": "string",
-                            "description": "Optional context about your situation"
-                        }
+                    "limit": {
+                        "type": "integer",
+                        "description": "Number of results to synthesize (1-20)",
+                        "minimum": 1,
+                        "maximum": 20,
+                        "default": 10
                     },
-                    "required": ["question"]
-                }
-            ),
-            types.Tool(
-                name="analyze_health_topic_gemini",
-                description="Get comprehensive AI-synthesized analysis of a health topic",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "topic": {
-                            "type": "string",
-                            "description": "Health topic to analyze"
-                        },
-                        "aspects": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "Specific aspects to focus on"
-                        }
+                    "sources": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Filter by sources: books, news, forum"
+                    }
+                },
+                "required": ["query"]
+            }
+        ),
+        types.Tool(
+            name="ask_strunz_gemini",
+            description="Ask a direct question about Dr. Strunz's health philosophy with AI-powered answers",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "Your health or nutrition question"
                     },
-                    "required": ["topic"]
-                }
-            ),
-            types.Tool(
-                name="validate_gemini_connection",
-                description="Validate Gemini API connection and configuration status",
-                inputSchema={
-                    "type": "object",
-                    "properties": {}
-                }
-            )
-        ]
-        
-        # Only add Gemini tools if API key is configured
-        if os.environ.get('GOOGLE_GEMINI_API_KEY'):
-            result.extend(gemini_tools_list)
-        else:
-            # Add just the validation tool to inform users
-            result.append(gemini_tools_list[-1])  # validate_gemini_connection
+                    "context": {
+                        "type": "string",
+                        "description": "Optional context about your situation"
+                    }
+                },
+                "required": ["question"]
+            }
+        ),
+        types.Tool(
+            name="analyze_health_topic_gemini",
+            description="Get comprehensive AI-synthesized analysis of a health topic",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Health topic to analyze"
+                    },
+                    "aspects": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Specific aspects to focus on"
+                    }
+                },
+                "required": ["topic"]
+            }
+        ),
+        types.Tool(
+            name="validate_gemini_connection",
+            description="Validate Gemini API connection and configuration status",
+            inputSchema={
+                "type": "object",
+                "properties": {}
+            }
+        )
+    ]
     
-    return result
+    # Always include Gemini tools (they handle unavailability gracefully)
+    tools.extend(gemini_tools_list)
+    
+    return tools
 
 @app.list_prompts()
 async def list_prompts() -> list[types.Prompt]:
@@ -434,7 +429,6 @@ async def get_prompt(
     result = await prompt_handler.get_prompt(name, arguments)
     
     if "error" in result:
-        # Return empty prompt on error
         return types.GetPromptResult(
             description=result["error"],
             messages=[]
@@ -450,14 +444,15 @@ async def call_tool(
     name: str, 
     arguments: dict | None
 ) -> Sequence[types.TextContent | types.ImageContent | types.EmbeddedResource]:
-    """Handle tool calls"""
+    """Handle tool calls - all tools permanently enabled"""
     
     if not arguments:
         arguments = {}
     
     try:
+        # Core search tool (Batch 3 enhanced)
         if name == "knowledge_search":
-            if ENABLE_BATCH3_MIGRATION and analysis_tools:
+            if analysis_tools:
                 query = arguments.get("query", "")
                 if not query:
                     return [types.TextContent(
@@ -465,7 +460,7 @@ async def call_tool(
                         text="Please provide a search query."
                     )]
                 
-                k = arguments.get("k", arguments.get("limit", 10))  # Support both k and limit
+                k = arguments.get("k", arguments.get("limit", 10))
                 sources = arguments.get("sources")
                 
                 result = await analysis_tools.knowledge_search(
@@ -475,45 +470,12 @@ async def call_tool(
                 )
                 return [types.TextContent(type="text", text=result)]
             else:
-                # Fallback to old implementation
-                if not search_tool:
-                    return [types.TextContent(
-                        type="text",
-                        text="Vector store not initialized. Please try again later."
-                    )]
-                
-                query = arguments.get("query", "")
-                sources = arguments.get("sources", ["books", "news", "forum"])
-                limit = arguments.get("limit", 10)
-                
-                # Perform search
-                results = search_tool.search(
-                    query=query,
-                    k=limit,
-                    sources=sources if isinstance(sources, list) else None
-                )
-                
-                if not results:
-                    return [types.TextContent(
-                        type="text",
-                        text="No results found for your query."
-                    )]
-                
-                # Format results
-                formatted_results = []
-                for i, result in enumerate(results):
-                    formatted_results.append(
-                        f"**Result {i+1}:**\n"
-                        f"Source: {result.source}\n"
-                        f"Score: {result.score:.2f}\n"
-                        f"Content: {result.text}\n"
-                    )
-                
                 return [types.TextContent(
                     type="text",
-                    text="\n---\n".join(formatted_results)
+                    text="Knowledge base not initialized."
                 )]
         
+        # Basic information tools
         elif name == "get_mcp_server_purpose":
             return [types.TextContent(
                 type="text",
@@ -523,12 +485,12 @@ This MCP server provides access to Dr. Ulrich Strunz's comprehensive health and 
 
 ## Features:
 - Semantic search across 13 books, 6,953 news articles, and forum content
-- Find contradictions and trace topic evolution
-- Create personalized health protocols
-- Access Dr. Strunz's biography and philosophy
+- AI-enhanced search with Gemini integration (when configured)
+- Health protocol creation and supplement analysis
+- Contradiction detection and topic evolution tracking
 
-## Version: 2.0.0
-Clean implementation using the official MCP Python SDK."""
+## Version: 3.0.0
+Final version with complete FastMCP migration to Official MCP SDK."""
             )]
         
         elif name == "get_dr_strunz_biography":
@@ -565,34 +527,102 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
             
             return [types.TextContent(type="text", text=bio)]
         
-        elif name == "get_vector_db_analysis":
-            if ENABLE_BATCH3_MIGRATION and analysis_tools:
-                result = await analysis_tools.get_vector_db_analysis()
+        # Health assessment tools (Batch 2)
+        elif name == "create_health_protocol":
+            if health_tools:
+                condition = arguments.get("condition", "")
+                if not condition:
+                    return [types.TextContent(
+                        type="text",
+                        text="Please provide a health condition or goal."
+                    )]
+                
+                result = await health_tools.create_health_protocol(
+                    condition=condition,
+                    age=arguments.get("age"),
+                    gender=arguments.get("gender"),
+                    activity_level=arguments.get("activity_level")
+                )
                 return [types.TextContent(type="text", text=result)]
             else:
-                # Fallback to static implementation
-                analysis = """# Vector Database Analysis
-
-## Content Statistics:
-- **Books**: 13 books by Dr. Ulrich Strunz (2002-2025)
-- **News Articles**: 6,953 unique articles (2004-2025)
-- **Forum Content**: 6,400 chunks
-- **Total Documents**: 43,373 searchable documents
-
-## Coverage:
-- Topics: Nutrition, supplements, exercise, stress management, longevity
-- Languages: German (primary), some English content
-- Time span: Over 20 years of health insights
-
-## Technical Details:
-- Vector Store: FAISS with sentence transformers
-- Embedding Model: paraphrase-multilingual-MiniLM-L12-v2
-- Search Method: Semantic similarity search"""
-                
-                return [types.TextContent(type="text", text=analysis)]
+                return [types.TextContent(
+                    type="text",
+                    text="Health tools not initialized."
+                )]
         
+        elif name == "analyze_supplement_stack":
+            if health_tools:
+                supplements = arguments.get("supplements", [])
+                if not supplements:
+                    return [types.TextContent(
+                        type="text",
+                        text="Please provide a list of supplements to analyze."
+                    )]
+                
+                result = await health_tools.analyze_supplement_stack(supplements)
+                return [types.TextContent(type="text", text=result)]
+            else:
+                return [types.TextContent(
+                    type="text",
+                    text="Health tools not initialized."
+                )]
+        
+        elif name == "analyze_health_topic":
+            if health_tools:
+                topic = arguments.get("topic", "")
+                if not topic:
+                    return [types.TextContent(
+                        type="text",
+                        text="Please provide a health topic to analyze."
+                    )]
+                
+                depth = arguments.get("depth", "moderate")
+                result = await health_tools.analyze_health_topic(topic, depth)
+                return [types.TextContent(type="text", text=result)]
+            else:
+                return [types.TextContent(
+                    type="text",
+                    text="Health tools not initialized."
+                )]
+        
+        elif name == "analyze_forum_trends":
+            if health_tools:
+                topic = arguments.get("topic", "")
+                if not topic:
+                    return [types.TextContent(
+                        type="text",
+                        text="Please provide a topic to analyze."
+                    )]
+                
+                time_period = arguments.get("time_period")
+                result = await health_tools.analyze_forum_trends(topic, time_period)
+                return [types.TextContent(type="text", text=result)]
+            else:
+                return [types.TextContent(
+                    type="text",
+                    text="Health tools not initialized."
+                )]
+        
+        elif name == "trace_topic_evolution":
+            if health_tools:
+                topic = arguments.get("topic", "")
+                if not topic:
+                    return [types.TextContent(
+                        type="text",
+                        text="Please provide a topic to trace."
+                    )]
+                
+                result = await health_tools.trace_topic_evolution(topic)
+                return [types.TextContent(type="text", text=result)]
+            else:
+                return [types.TextContent(
+                    type="text",
+                    text="Health tools not initialized."
+                )]
+        
+        # Complex analysis tools (Batch 3)
         elif name == "find_contradictions":
-            if ENABLE_BATCH3_MIGRATION and analysis_tools:
+            if analysis_tools:
                 topic = arguments.get("topic", "")
                 if not topic:
                     return [types.TextContent(
@@ -607,183 +637,23 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
                 )
                 return [types.TextContent(type="text", text=result)]
             else:
-                # Fallback to old implementation
-                topic = arguments.get("topic", "")
-                if not topic:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a topic to analyze for contradictions."
-                    )]
-                
-                if not search_tool:
-                    return [types.TextContent(
-                        type="text",
-                        text="Vector store not initialized."
-                    )]
-                
-                # Search for the topic
-                results = search_tool.search(query=topic, k=20)
-                
-                response = f"# Contradiction Analysis: {topic}\n\n"
-                response += f"Found {len(results)} relevant passages to analyze.\n\n"
-                response += "This feature searches across different time periods and sources to identify potential contradictions or evolving viewpoints."
-                
-                return [types.TextContent(type="text", text=response)]
-        
-        elif name == "trace_topic_evolution":
-            if ENABLE_BATCH2_MIGRATION and health_tools:
-                topic = arguments.get("topic", "")
-                if not topic:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a topic to trace."
-                    )]
-                
-                result = await health_tools.trace_topic_evolution(topic)
-                return [types.TextContent(type="text", text=result)]
-            else:
-                # Fallback to old implementation
-                topic = arguments.get("topic", "")
-                if not topic:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a topic to trace."
-                    )]
-                
-                if not search_tool:
-                    return [types.TextContent(
-                        type="text",
-                        text="Vector store not initialized."
-                    )]
-                
-                results = search_tool.search(query=topic, k=20)
-                
-                response = f"# Topic Evolution: {topic}\n\n"
-                response += f"Found {len(results)} relevant passages across time.\n\n"
-                response += "This feature tracks how Dr. Strunz's views and recommendations on this topic have developed over the years."
-                
-                return [types.TextContent(type="text", text=response)]
-        
-        elif name == "create_health_protocol":
-            if ENABLE_BATCH2_MIGRATION and health_tools:
-                condition = arguments.get("condition", "")
-                if not condition:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a health condition or goal."
-                    )]
-                
-                age = arguments.get("age")
-                gender = arguments.get("gender")
-                activity_level = arguments.get("activity_level")
-                
-                result = await health_tools.create_health_protocol(
-                    condition=condition,
-                    age=age,
-                    gender=gender,
-                    activity_level=activity_level
-                )
-                return [types.TextContent(type="text", text=result)]
-            else:
-                # Fallback to old implementation
-                condition = arguments.get("condition", "")
-                if not condition:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a health condition or goal."
-                    )]
-                
-                age = arguments.get("age", "Not specified")
-                gender = arguments.get("gender", "Not specified")
-                activity = arguments.get("activity_level", "Not specified")
-                
-                if not search_tool:
-                    return [types.TextContent(
-                        type="text",
-                        text="Vector store not initialized."
-                    )]
-                
-                results = search_tool.search(query=condition, k=15)
-                
-                response = f"# Health Protocol: {condition}\n\n"
-                response += f"**Profile:**\n"
-                response += f"- Age: {age}\n"
-                response += f"- Gender: {gender}\n"
-                response += f"- Activity Level: {activity}\n\n"
-                response += f"Based on {len(results)} relevant recommendations from Dr. Strunz's knowledge base."
-                
-                return [types.TextContent(type="text", text=response)]
-        
-        elif name == "analyze_supplement_stack":
-            if ENABLE_BATCH2_MIGRATION and health_tools:
-                supplements = arguments.get("supplements", [])
-                if not supplements:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a list of supplements to analyze."
-                    )]
-                
-                result = await health_tools.analyze_supplement_stack(supplements)
-                return [types.TextContent(type="text", text=result)]
-            else:
-                # Fallback to old implementation
-                supplements = arguments.get("supplements", [])
-                if not supplements:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a list of supplements to analyze."
-                    )]
-                
-                response = f"# Supplement Stack Analysis\n\n"
-                response += f"**Analyzing:** {', '.join(supplements)}\n\n"
-                response += "This feature checks for:\n"
-                response += "- Potential interactions\n"
-                response += "- Optimal timing and dosing\n"
-                response += "- Synergistic combinations\n"
-                response += "- Cost optimization opportunities"
-                
-                return [types.TextContent(type="text", text=response)]
-        
-        elif name == "analyze_health_topic":
-            if ENABLE_BATCH2_MIGRATION and health_tools:
-                topic = arguments.get("topic", "")
-                if not topic:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a health topic to analyze."
-                    )]
-                
-                depth = arguments.get("depth", "moderate")
-                result = await health_tools.analyze_health_topic(topic, depth)
-                return [types.TextContent(type="text", text=result)]
-            else:
-                # Fallback implementation
                 return [types.TextContent(
                     type="text",
-                    text="This tool requires Batch 2 migration to be enabled."
+                    text="Analysis tools not initialized."
                 )]
         
-        elif name == "analyze_forum_trends":
-            if ENABLE_BATCH2_MIGRATION and health_tools:
-                topic = arguments.get("topic", "")
-                if not topic:
-                    return [types.TextContent(
-                        type="text",
-                        text="Please provide a topic to analyze in forum discussions."
-                    )]
-                
-                time_period = arguments.get("time_period")
-                result = await health_tools.analyze_forum_trends(topic, time_period)
+        elif name == "get_vector_db_analysis":
+            if analysis_tools:
+                result = await analysis_tools.get_vector_db_analysis()
                 return [types.TextContent(type="text", text=result)]
             else:
-                # Fallback implementation
                 return [types.TextContent(
                     type="text",
-                    text="This tool requires Batch 2 migration to be enabled."
+                    text="Analysis tools not initialized."
                 )]
         
         elif name == "search_by_date_range":
-            if ENABLE_BATCH3_MIGRATION and analysis_tools:
+            if analysis_tools:
                 query = arguments.get("query", "")
                 if not query:
                     return [types.TextContent(
@@ -791,38 +661,32 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
                         text="Please provide a search query."
                     )]
                 
-                start_date = arguments.get("start_date")
-                end_date = arguments.get("end_date")
-                k = arguments.get("k", 10)
-                
                 result = await analysis_tools.search_by_date_range(
                     query=query,
-                    start_date=start_date,
-                    end_date=end_date,
-                    k=k
+                    start_date=arguments.get("start_date"),
+                    end_date=arguments.get("end_date"),
+                    k=arguments.get("k", 10)
                 )
                 return [types.TextContent(type="text", text=result)]
             else:
-                # Fallback implementation
                 return [types.TextContent(
                     type="text",
-                    text="This tool requires Batch 3 migration to be enabled."
+                    text="Analysis tools not initialized."
                 )]
         
         elif name == "ping":
-            if ENABLE_BATCH3_MIGRATION and analysis_tools:
+            if analysis_tools:
                 result = await analysis_tools.ping()
                 return [types.TextContent(type="text", text=result)]
             else:
-                # Simple fallback implementation
                 return [types.TextContent(
                     type="text",
                     text="# System Health Check\n\n✅ MCP Server is operational\n\n*Health check endpoint*"
                 )]
         
-        # Batch 4 Gemini tools
+        # Gemini-enhanced tools (Batch 4)
         elif name == "search_knowledge_gemini":
-            if ENABLE_BATCH4_MIGRATION and gemini_tools:
+            if gemini_tools:
                 query = arguments.get("query", "")
                 if not query:
                     return [types.TextContent(
@@ -830,23 +694,20 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
                         text="Please provide a search query."
                     )]
                 
-                limit = arguments.get("limit", 10)
-                sources = arguments.get("sources")
-                
                 result = await gemini_tools.search_knowledge_gemini(
                     query=query,
-                    limit=limit,
-                    sources=sources
+                    limit=arguments.get("limit", 10),
+                    sources=arguments.get("sources")
                 )
                 return [types.TextContent(type="text", text=result)]
             else:
                 return [types.TextContent(
                     type="text",
-                    text="This tool requires Batch 4 migration to be enabled and Gemini API key configured."
+                    text="Gemini tools not initialized."
                 )]
         
         elif name == "ask_strunz_gemini":
-            if ENABLE_BATCH4_MIGRATION and gemini_tools:
+            if gemini_tools:
                 question = arguments.get("question", "")
                 if not question:
                     return [types.TextContent(
@@ -854,21 +715,19 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
                         text="Please provide a question."
                     )]
                 
-                context = arguments.get("context")
-                
                 result = await gemini_tools.ask_strunz_gemini(
                     question=question,
-                    context=context
+                    context=arguments.get("context")
                 )
                 return [types.TextContent(type="text", text=result)]
             else:
                 return [types.TextContent(
                     type="text",
-                    text="This tool requires Batch 4 migration to be enabled and Gemini API key configured."
+                    text="Gemini tools not initialized."
                 )]
         
         elif name == "analyze_health_topic_gemini":
-            if ENABLE_BATCH4_MIGRATION and gemini_tools:
+            if gemini_tools:
                 topic = arguments.get("topic", "")
                 if not topic:
                     return [types.TextContent(
@@ -876,27 +735,25 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
                         text="Please provide a health topic to analyze."
                     )]
                 
-                aspects = arguments.get("aspects")
-                
                 result = await gemini_tools.analyze_health_topic_gemini(
                     topic=topic,
-                    aspects=aspects
+                    aspects=arguments.get("aspects")
                 )
                 return [types.TextContent(type="text", text=result)]
             else:
                 return [types.TextContent(
                     type="text",
-                    text="This tool requires Batch 4 migration to be enabled and Gemini API key configured."
+                    text="Gemini tools not initialized."
                 )]
         
         elif name == "validate_gemini_connection":
-            if ENABLE_BATCH4_MIGRATION and gemini_tools:
+            if gemini_tools:
                 result = await gemini_tools.validate_gemini_connection()
                 return [types.TextContent(type="text", text=result)]
             else:
                 return [types.TextContent(
                     type="text",
-                    text="# Gemini Validation\n\nBatch 4 migration is not enabled.\nSet ENABLE_BATCH4_MIGRATION=true to enable Gemini tools."
+                    text="# Gemini Validation\n\nGemini tools not initialized."
                 )]
         
         else:
@@ -914,15 +771,15 @@ Dr. med. Ulrich Strunz is a German physician specializing in molecular medicine 
 
 async def main():
     """Main entry point"""
-    # Initialize vector store
+    # Initialize all tool modules
     await initialize_vector_store()
     
     # Run the server using stdio transport
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        # Create initialization options with basic capabilities
+        # Create initialization options
         init_options = InitializationOptions(
             server_name="strunz-knowledge",
-            server_version="2.2.0",
+            server_version="3.0.0",
             capabilities=types.ServerCapabilities(
                 tools=types.ToolsCapability(),
                 prompts=types.PromptsCapability(),

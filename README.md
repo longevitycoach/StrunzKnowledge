@@ -1261,6 +1261,34 @@ The comprehensive visualization above shows:
 
 ## Getting Started
 
+### 🚀 Quick Start - Web Interface
+
+```bash
+# Clone the repository
+git clone https://github.com/longevitycoach/StrunzKnowledge.git
+cd StrunzKnowledge
+
+# Start both servers
+./start_servers.sh
+
+# Open in browser
+# Frontend: http://localhost:8080
+# Backend: http://localhost:8000/health
+```
+
+**Important**: Access the web interface at `http://localhost:8080` (not the file directly)
+
+### 📖 MCP Server Documentation
+
+For detailed MCP capabilities, tools, prompts, and integration:
+- See [README_MCP.md](README_MCP.md) for comprehensive MCP documentation
+- 16 specialized health tools
+- 50 contextual samples
+- 20+ prompt templates
+- Hierarchical resource navigation
+
+## Getting Started (Detailed)
+
 ### 🆕 Auth-less Client Integration (Browser Extension)
 
 The StrunzKnowledge MCP Client will be available as a browser extension, enabling seamless integration on any website:
@@ -1573,11 +1601,101 @@ Claude.ai automatically handles:
 
 ## Claude Desktop Configuration
 
-### Quick Setup
+### Quick Setup (Production Server)
 
 Download Claude Desktop from the [official website](https://claude.ai/download) and add this configuration to your settings/connectors:
 
 ![alt text](docs/images/ClaudeDesktop.png)
+
+### Local Setup (Development)
+
+For local development with Claude Desktop, you can run the server on your machine:
+
+#### 1. Update Claude Desktop Config
+
+Edit your Claude Desktop configuration file:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+Add this configuration:
+
+```json
+{
+  "mcpServers": {
+    "strunz-knowledge": {
+      "command": "python3",
+      "args": [
+        "/path/to/StrunzKnowledge/main.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/path/to/StrunzKnowledge",
+        "PYTHONUNBUFFERED": "1",
+        "TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
+
+Replace `/path/to/StrunzKnowledge` with your actual project path.
+
+#### 2. Install Dependencies
+
+```bash
+cd /path/to/StrunzKnowledge
+pip3 install -r requirements-unified.txt
+```
+
+#### 3. Restart Claude Desktop
+
+Completely quit and restart Claude Desktop for the changes to take effect.
+
+#### 4. Verify Connection
+
+Check the server logs if you encounter issues:
+- **macOS**: `tail -f ~/Library/Logs/Claude/mcp-server-strunz-knowledge.log`
+- **Windows**: Check `%APPDATA%\Claude\logs\`
+- **Linux**: Check `~/.config/Claude/logs/`
+
+#### Troubleshooting Local Setup
+
+**Common Issues:**
+
+1. **"Server disconnected" error**
+   - Check the log file for Python errors
+   - Ensure all dependencies are installed: `pip3 install -r requirements-unified.txt`
+
+2. **"No module named 'faiss'"**
+   - Install FAISS: `pip3 install faiss-cpu`
+
+3. **Python version issues**
+   - Requires Python 3.9+: `python3 --version`
+
+4. **Test the server manually:**
+   ```bash
+   cd /path/to/StrunzKnowledge
+   echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-11-05","clientInfo":{"name":"test","version":"1.0"}},"id":1}' | python3 main.py
+   ```
+
+#### Alternative: Use Production Server
+
+If local setup is problematic, use the production server via SSE:
+
+```json
+{
+  "mcpServers": {
+    "strunz-production": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sse@latest",
+        "https://strunz.up.railway.app/sse"
+      ]
+    }
+  }
+}
+```
 
 ### Authentication & Security
 
@@ -3333,13 +3451,72 @@ See the full [Migration Test Report](docs/test-reports/MCP_SDK_MIGRATION_COMPREH
 
 ## 🔗 MCP Integration & Specifications
 
-### Model Context Protocol (MCP)
+### Model Context Protocol (MCP) Implementation
 
-This project implements the **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** specification to enable seamless integration with AI assistants like Claude.
+This project fully implements the **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** specification v2025-11-05, providing structured access to Dr. Strunz's comprehensive health knowledge base.
 
-**MCP Versions Supported:**
-- **[2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26/)** - Primary version for Claude.ai compatibility
-- **[2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/)** - Future-ready implementation available
+#### ✅ MCP Capabilities Implemented
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| **Tools** | ✅ 16 tools | Specialized health analysis and search tools |
+| **Prompts** | ✅ 20+ templates | Structured health query templates |
+| **Resources** | ✅ Hierarchical | Browse knowledge by category/year/topic |
+| **Sampling** | ✅ 50 samples | Contextual discovery with progression |
+| **Transport** | ✅ SSE + stdio | Web and desktop support |
+
+#### 🛠️ Available Tools (16 total)
+
+**Search & Discovery:**
+- `search_knowledge` - Semantic search across 43,373 documents
+- `search_by_date_range` - Time-filtered content search
+- `analyze_forum_trends` - Community discussion insights
+
+**Analysis & Insights:**
+- `analyze_health_topic` - Comprehensive topic analysis
+- `find_contradictions` - Track evolving recommendations
+- `trace_topic_evolution` - Historical perspective
+- `get_knowledge_statistics` - Database metrics
+
+**Personalization:**
+- `create_health_protocol` - Custom health protocols
+- `analyze_supplement_stack` - Supplement optimization
+
+**Information:**
+- `get_mcp_server_purpose` - Server capabilities
+- `get_dr_strunz_biography` - Background & philosophy
+- `get_vector_db_analysis` - Technical statistics
+
+**Enhanced (with Gemini API):**
+- 4 AI-enhanced versions of core tools
+
+#### 📝 Prompt Templates
+
+Structured templates for common health queries:
+- **Diagnostic**: Blood test interpretation, symptom analysis
+- **Therapeutic**: Supplement protocols, treatment approaches
+- **Preventive**: Disease prevention, longevity strategies
+- **Optimization**: Performance enhancement, cognitive boost
+- **Educational**: Topic explanations, controversy analysis
+
+#### 📂 Resource Navigation
+
+Browse the knowledge base hierarchically:
+```
+/books/by-year/2025/
+/books/by-topic/nutrition/
+/news/by-category/supplements/
+/forum/by-category/fitness/
+```
+
+#### 🎯 Contextual Sampling
+
+50 carefully crafted samples across difficulty levels:
+- **Beginner** (15): Basic health questions
+- **Intermediate** (20): Specific conditions
+- **Advanced** (15): Complex analysis
+
+**Full MCP documentation**: See [README_MCP.md](README_MCP.md)
 
 **Why MCP?**
 - 🤖 **AI-Native**: Designed specifically for LLM integration
