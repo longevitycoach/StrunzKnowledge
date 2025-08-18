@@ -189,21 +189,20 @@ class HealthAssessmentTools:
     async def analyze_health_topic(self, topic: str, depth: str = "moderate") -> str:
         """
         Comprehensive analysis of a health topic from Dr. Strunz's perspective.
-        Performs deep FAISS search with multiple query variations.
         Uses streaming for comprehensive depth to prevent timeouts.
         """
         if not self.search_tool:
             return "Error: Knowledge base not available."
         
-        # Quick fix: Limit comprehensive analysis to prevent timeouts
-        # TODO: Implement proper streaming in Phase 2
+        # Use streaming version for comprehensive analysis
         if depth == "comprehensive":
-            # Limit to 25 documents to stay under 10 seconds
-            k = 25
-        else:
-            # Determine search depth for non-comprehensive
-            k_values = {"basic": 10, "moderate": 20}
-            k = k_values.get(depth, 20)
+            from .streaming_health_tools import StreamingHealthTools
+            streaming_tools = StreamingHealthTools(self.search_tool)
+            return await streaming_tools.analyze_health_topic_streaming(topic, depth)
+        
+        # For basic and moderate, use regular approach
+        k_values = {"basic": 10, "moderate": 20}
+        k = k_values.get(depth, 20)
         
         # Search with main topic
         main_results = self.search_tool.search(query=topic, k=k)

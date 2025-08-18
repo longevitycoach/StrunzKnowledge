@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 try:
     from sentence_transformers import SentenceTransformer
 except ImportError:
-    # Use lightweight alternative if sentence-transformers not available
-    from ..mcp.lightweight_embeddings import SentenceTransformer
-    logger.warning("Using lightweight embeddings instead of sentence-transformers")
+    # Use fixed lightweight alternative that always works
+    from ..mcp.fixed_lightweight_embeddings import SentenceTransformer
+    logger.warning("Using fixed lightweight embeddings instead of sentence-transformers")
 
 
 @dataclass
