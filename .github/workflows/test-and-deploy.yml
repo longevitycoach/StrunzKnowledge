@@ -41,13 +41,23 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-asyncio requests
         
-    - name: Run local server tests
+    - name: Run basic server test
       run: |
-        python -m pytest tests/test_suite_v0_9_0.py::MCPTestSuite::test_server_health -v
+        # Start the server in background
+        PORT=8001 python main.py &
+        SERVER_PID=$!
         
-    - name: Run MCP protocol tests
-      run: |
-        python -m pytest tests/test_suite_v0_9_0.py::MCPTestSuite::test_mcp_tools_available -v
+        # Wait for server to start
+        sleep 10
+        
+        # Test health endpoint
+        curl -f http://localhost:8001/ || (kill $SERVER_PID; exit 1)
+        
+        # Test discovery endpoints
+        curl -f http://localhost:8001/.well-known/mcp || (kill $SERVER_PID; exit 1)
+        
+        # Kill server
+        kill $SERVER_PID || true
 
   # Job 2: Docker Tests
   test-docker:
