@@ -1,4 +1,4 @@
-# Railway deployment configuration - Updated for v1.0.1
+# Railway deployment configuration - Updated for v3.1.0 with performance optimizations
 [build]
 builder = "dockerfile"
 dockerfilePath = "Dockerfile"
@@ -8,6 +8,9 @@ startCommand = "python railway-deploy.py"
 restartPolicyType = "always"
 healthcheckPath = "/"
 healthcheckTimeout = 300
+# Upgrade resources for better performance
+memorySize = "2GB"  # Upgrade from default 512MB
+cpuSize = "2"       # Upgrade to 2 vCPUs
 
 # Environment variables (will be overridden by Railway dashboard)
 [[envs]]
@@ -45,5 +48,19 @@ value = "true"
 [[envs]]
 name = "CLAUDE_AI_SKIP_OAUTH"
 value = "true"
+
+# Enable SSE streaming for progressive updates
+[[envs]]
+name = "ENABLE_SSE_STREAMING"
+value = "true"
+
+# Performance optimizations
+[[envs]]
+name = "FAISS_NUM_THREADS"
+value = "2"
+
+[[envs]]
+name = "MAX_WORKERS"
+value = "4"
 
 # Feature flags removed in v3.0.0 - all migrations permanent

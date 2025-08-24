@@ -72,11 +72,69 @@ async def health_check(request):
         "protocol_version": "2025-11-05"
     })
 
+async def oauth_protected_resource(request):
+    """OAuth 2.0 Protected Resource Metadata (RFC9728) for MCP discovery"""
+    return JSONResponse({
+        "resource": "https://strunz.up.railway.app",
+        "authorization_servers": ["https://strunz.up.railway.app"],
+        "bearertokentype": "bearer",
+        "scopes_supported": ["mcp:read", "mcp:write"],
+        "mcp_version": "2025-11-05"
+    })
+
+async def oauth_authorization_server(request):
+    """OAuth 2.0 Authorization Server Metadata (RFC8414) for MCP"""
+    base_url = "https://strunz.up.railway.app"
+    return JSONResponse({
+        "issuer": base_url,
+        "authorization_endpoint": f"{base_url}/authorize",
+        "token_endpoint": f"{base_url}/token",
+        "registration_endpoint": f"{base_url}/register",
+        "response_types_supported": ["code", "token"],
+        "grant_types_supported": ["authorization_code", "implicit", "refresh_token"],
+        "code_challenge_methods_supported": ["S256", "plain"],
+        "token_endpoint_auth_methods_supported": ["none"],
+        "scopes_supported": ["mcp:read", "mcp:write"],
+        "service_documentation": f"{base_url}/docs",
+        "mcp_implementation": {
+            "version": "2025-11-05",
+            "transport": "sse",
+            "features": ["tools", "resources"]
+        }
+    })
+
+async def mcp_discovery(request):
+    """MCP-specific discovery endpoint"""
+    return JSONResponse({
+        "mcp_version": "2025-11-05",
+        "server_name": "Dr. Strunz Knowledge Base",
+        "server_description": "Comprehensive health knowledge based on Dr. Ulrich Strunz's work",
+        "server_url": "https://strunz.up.railway.app",
+        "transport": "sse",
+        "endpoints": {
+            "sse": "/sse",
+            "messages": "/messages/"
+        },
+        "oauth_required": False,
+        "authentication": {
+            "type": "none",
+            "description": "No authentication required"
+        },
+        "capabilities": {
+            "tools": True,
+            "resources": False,
+            "prompts": False
+        }
+    })
+
 # Create Starlette routes
 routes = [
     Route("/", endpoint=health_check, methods=["GET"]),
     Route("/health", endpoint=health_check, methods=["GET"]),
     Route("/sse", endpoint=handle_sse, methods=["GET"]),
+    Route("/.well-known/oauth-protected-resource", endpoint=oauth_protected_resource, methods=["GET"]),
+    Route("/.well-known/oauth-authorization-server", endpoint=oauth_authorization_server, methods=["GET"]),
+    Route("/.well-known/mcp", endpoint=mcp_discovery, methods=["GET"]),
 ]
 
 # Add the messages endpoint separately after creating the app
@@ -102,6 +160,45 @@ async def handle_messages(request):
     await sse_transport.handle_post_message(request.scope, request.receive, request._send)
     # Return empty response after handling
     return Response(status_code=200)
+
+# OAuth placeholder endpoints for Claude.ai compatibility
+@app.route("/authorize", methods=["GET"])
+async def oauth_authorize(request):
+    """OAuth authorization endpoint (simplified for no-auth mode)"""
+    # Since we don't require authentication, immediately redirect with success
+    redirect_uri = request.query_params.get("redirect_uri", "https://claude.ai/callback")
+    state = request.query_params.get("state", "")
+    code = "no_auth_required"
+    
+    from starlette.responses import RedirectResponse
+    return RedirectResponse(url=f"{redirect_uri}?code={code}&state={state}")
+
+@app.route("/token", methods=["POST"])
+async def oauth_token(request):
+    """OAuth token endpoint (simplified for no-auth mode)"""
+    return JSONResponse({
+        "access_token": "no_auth_required",
+        "token_type": "bearer",
+        "expires_in": 3600,
+        "scope": "mcp:read mcp:write"
+    })
+
+@app.route("/register", methods=["POST"])
+async def oauth_register(request):
+    """OAuth dynamic client registration (simplified)"""
+    try:
+        data = await request.json()
+    except:
+        data = {}
+    
+    return JSONResponse({
+        "client_id": data.get("client_name", "claude_ai"),
+        "client_secret": "not_required",
+        "grant_types": ["authorization_code", "implicit"],
+        "redirect_uris": data.get("redirect_uris", ["https://claude.ai/callback"]),
+        "client_name": data.get("client_name", "Claude AI"),
+        "scope": "mcp:read mcp:write"
+    })
 
 # Startup event
 @app.on_event("startup")

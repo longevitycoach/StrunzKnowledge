@@ -4,6 +4,7 @@ Dynamic FAISS vector DB integration for health-related MCP tools
 """
 
 import logging
+import os
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import asyncio
@@ -194,8 +195,29 @@ class HealthAssessmentTools:
         if not self.search_tool:
             return "Error: Knowledge base not available."
         
-        # Use streaming version for comprehensive analysis
-        if depth == "comprehensive":
+        # Use progressive SSE streaming for comprehensive analysis if enabled
+        if depth == "comprehensive" and os.environ.get("ENABLE_SSE_STREAMING") == "true":
+            from .sse_progressive_streaming import SSEProgressiveStreamer
+            streamer = SSEProgressiveStreamer(self.search_tool)
+            
+            # Collect all streamed events and return final content
+            final_content = ""
+            async for event in streamer.stream_health_analysis(topic, depth):
+                # Parse the SSE event to extract content
+                if "data: " in event:
+                    import json
+                    data_line = event.split("data: ")[1].split("\n")[0]
+                    try:
+                        data = json.loads(data_line)
+                        if "content" in data:
+                            final_content = data["content"]
+                    except:
+                        pass
+            
+            return final_content if final_content else "Analysis failed"
+        
+        # Use regular streaming version for comprehensive analysis
+        elif depth == "comprehensive":
             from .streaming_health_tools import StreamingHealthTools
             streaming_tools = StreamingHealthTools(self.search_tool)
             return await streaming_tools.analyze_health_topic_streaming(topic, depth)
