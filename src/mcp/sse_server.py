@@ -147,6 +147,10 @@ async def claude_ai_start_auth(request):
     # If OAuth is needed in the future
     return JSONResponse({"error": "OAuth not implemented"}, status_code=501)
 
+async def test_auth_endpoint(request):
+    """Test endpoint to verify auth routes work"""
+    return JSONResponse({"test": "auth endpoint works"})
+
 # Create Starlette routes
 routes = [
     Route("/", endpoint=health_check, methods=["GET"]),
@@ -156,6 +160,7 @@ routes = [
     Route("/.well-known/oauth-authorization-server", endpoint=oauth_authorization_server, methods=["GET"]),
     Route("/.well-known/mcp", endpoint=mcp_discovery, methods=["GET"]),
     Route("/api/organizations/{org_id}/mcp/start-auth/{auth_id}", endpoint=claude_ai_start_auth, methods=["GET"]),
+    Route("/api/test-auth", endpoint=test_auth_endpoint, methods=["GET"]),
 ]
 
 # Add the messages endpoint separately after creating the app
@@ -163,6 +168,11 @@ routes = [
 
 # Create Starlette app
 app = Starlette(routes=routes, debug=False)
+
+# Log all registered routes
+logger.info("Registered routes:")
+for route in routes:
+    logger.info(f"  - {route.path} [{', '.join(route.methods)}]")
 
 # Add CORS middleware for browser compatibility
 app.add_middleware(
@@ -228,6 +238,8 @@ async def startup_event():
     logger.info("Starting Dr. Strunz Knowledge MCP Server v3.0.0 (SSE Transport)")
     logger.info("Using official MCP Python SDK")
     await initialize_vector_store()
+    logger.info(f"Claude.ai auth endpoint registered: /api/organizations/{{org_id}}/mcp/start-auth/{{auth_id}}")
+    logger.info(f"Test auth endpoint registered: /api/test-auth")
 
 if __name__ == "__main__":
     import uvicorn
