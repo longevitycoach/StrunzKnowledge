@@ -127,6 +127,26 @@ async def mcp_discovery(request):
         }
     })
 
+async def claude_ai_start_auth(request):
+    """Claude.ai specific auth endpoint"""
+    org_id = request.path_params.get('org_id', 'unknown')
+    auth_id = request.path_params.get('auth_id', 'unknown')
+    redirect_url = request.query_params.get('redirect_url', None)
+    
+    logger.info(f"Claude.ai auth request: org={org_id}, auth={auth_id}, redirect={redirect_url}")
+    
+    # Skip OAuth for now (simplified mode)
+    if os.environ.get("CLAUDE_AI_SKIP_OAUTH", "true").lower() == "true":
+        return JSONResponse({
+            "status": "success",
+            "auth_not_required": True,
+            "server_url": "https://strunz.up.railway.app",
+            "message": "MCP server ready for use"
+        })
+    
+    # If OAuth is needed in the future
+    return JSONResponse({"error": "OAuth not implemented"}, status_code=501)
+
 # Create Starlette routes
 routes = [
     Route("/", endpoint=health_check, methods=["GET"]),
@@ -135,6 +155,7 @@ routes = [
     Route("/.well-known/oauth-protected-resource", endpoint=oauth_protected_resource, methods=["GET"]),
     Route("/.well-known/oauth-authorization-server", endpoint=oauth_authorization_server, methods=["GET"]),
     Route("/.well-known/mcp", endpoint=mcp_discovery, methods=["GET"]),
+    Route("/api/organizations/{org_id}/mcp/start-auth/{auth_id}", endpoint=claude_ai_start_auth, methods=["GET"]),
 ]
 
 # Add the messages endpoint separately after creating the app
